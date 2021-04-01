@@ -219,7 +219,6 @@
                  (let ((code (char-code (char body pos)))
                        (line (line lexer))
                        (col (- (1+ pos) (line-start lexer))))
-                   (print (code-char code))
                    (case code
                      (;; BOM, \t, space, ','
                       (#xfeff 9 32 44) (incf pos))

@@ -1,4 +1,9 @@
 ;;;; package.lisp
 
 (defpackage #:cl-gql
-  (:use #:cl))
+  (:use #:cl)
+  (:export
+   #:advance
+   #:lookahead
+   #:read-token
+   #:make-lexer))
