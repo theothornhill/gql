@@ -31,24 +31,29 @@
                  :start 0 :end 3
                  :line 1 :column 1
                  :value "foo")
+
     (check-token :str (format nil "~cfoo" #\Newline)
                  :start 1 :end 4
                  :line 2 :column 1
                  :value "foo")
+
     (check-token :str (format nil "~cfoo" #\Return)
                  :start 1 :end 4
                  :line 2 :column 1
                  :value "foo")
+
     (check-token :str (format nil "~c~cfoo" #\Return #\Linefeed)
                  :start 2 :end 5
                  :line 2 :column 1
                  :value "foo")
+
     (check-token :str (format nil "~c~c~c~cfoo"
                               #\Return #\Return
                               #\Newline #\Newline)
                  :start 4 :end 7
                  :line 4 :column 1
                  :value "foo")
+
     (check-token :str (format nil "~c~c~c~cfoo"
                               #\Newline #\Newline
                               #\Return #\Return)
@@ -73,6 +78,7 @@
                  :start 6 :end 9
                  :line 3 :column 5
                  :value "foo")
+
     (check-token :str "
     #comment
     foo#comment
@@ -80,6 +86,7 @@
                  :start 18 :end 21
                  :line 3 :column 5
                  :value "foo")
+
     (check-token :str ",,,foo,,,"
                  :start 3 :end 6
                  :line 1 :column 4
