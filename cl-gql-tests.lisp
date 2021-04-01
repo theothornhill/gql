@@ -6,9 +6,9 @@
 (defun test-lexer-one-step (str)
   (advance (make-lexer str)))
 
-(defun check-token (&key str (sym 'cl-gql::name) start end line column value)
+(defun check-token (&key str (kind 'cl-gql::name) start end line column value)
   (let ((token (test-lexer-one-step str)))
-    (ok (eq (cl-gql::kind token) sym))
+    (ok (eq (cl-gql::kind token) kind))
     (ok (eq (cl-gql::start token) start))
     (ok (eq (cl-gql::end token) end))
     (ok (eq (cl-gql::line token) line))
@@ -17,7 +17,8 @@
 
 (deftest lexer
   (testing "Disallows uncommon control characters"
-    (ng (test-lexer-one-step (format nil "~c" #\U+0007))))
+    (ok (signals (test-lexer-one-step (format nil "~c" #\U+0007))
+            'simple-error)))
 
   (testing "Accepts BOM headers"
     (check-token :str (format nil "~c foo" #\U+FEFF)
@@ -78,4 +79,44 @@
 "
                  :start 18 :end 21
                  :line 3 :column 5
-                 :value "foo")))
+                 :value "foo")
+    (check-token :str ",,,foo,,,"
+                 :start 3 :end 6
+                 :line 1 :column 4
+                 :value "foo"))
+
+  (testing "String lexing"
+    ;; TODO: Need to work without ending space
+    (check-token :str "\"\" "
+                 :kind 'cl-gql::string
+                 :start 0 :end 2
+                 :line 1 :column 1
+                 :value "")
+
+    (check-token :str "\"simple\""
+                 :kind 'cl-gql::string
+                 :start 0 :end 8
+                 :line 1 :column 1
+                 :value "simple")
+
+    (check-token :str "\" white space \""
+                 :kind 'cl-gql::string
+                 :start 0 :end 15
+                 :line 1 :column 1
+                 :value " white space ")
+
+    (check-token :str (format nil "\"quote ~c~c\"" #\\ #\\)
+                 :kind 'cl-gql::string
+                 :start 0 :end 10
+                 :line 1 :column 1
+                 :value "quote \\")
+
+    (check-token :str (format nil "\"escaped \\n\\r\\b\\t\\f\"")
+                 :kind 'cl-gql::string
+                 :start 0 :end 20
+                 :line 1 :column 1
+                 :value (format nil "escaped ~c~c~c~c~c"
+                                #\Newline #\Return #\Backspace #\Tab #\Page)))
+
+  ;; Unicode test https://github.com/graphql/graphql-js/blob/main/src/language/__tests__/lexer-test.js#L259
+  )

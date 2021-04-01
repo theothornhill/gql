@@ -193,25 +193,57 @@
       with pos = start
       with code = (char-code (char body (incf pos)))
       do (setf code (char-code (char body pos)))
-      while (and code
-                 (or (> code #x001F)
-                     (= code #x0009)))
+      while (and code (or (> code #x001F)
+                          (= code #x0009)))
       do (incf pos)
-      finally (return
-                (make-token 'comment
-                            start
-                            pos
-                            line
-                            col
-                            prev
-                            (subseq body (1+ start) pos))))))
+      finally (return (make-token 'comment start pos line col prev
+                                  (subseq body (1+ start) pos))))))
 
-(defun read-string (body pos line col prev)
-  (declare (ignore line col prev))
-  (if (and (eq (char body (+ pos 1)) #\")
-           (eq (char body (+ pos 2)) #\"))
-      (error "Block string not handled yet")
-      (error "String not handled yet")))
+(defun cat (&rest args)
+  (apply #'concatenate 'string args))
+
+(defun read-string (source start line col prev)
+  (with-slots (body) source
+    (loop
+      with pos = (1+ start)
+      with chunk-start = pos
+      with code = 0
+      with value = ""
+      while (and (< pos (length body))
+                 (setf code (char-code (char body pos)))
+                 (/= code #x000A)
+                 (/= code #x000D))
+      do
+         (when (= code 34)
+           ;; When on closing quote
+           (setf value (cat value (subseq body chunk-start pos)))
+           (return-from read-string
+             (make-token 'string start (1+ pos) line col prev value)))
+
+         (when (and (< code #x0020) (/= #x0009))
+           (error "Invalid character within string"))
+
+         (incf pos)
+
+         (when (= code 92)
+           ;; \
+           (setf value (cat value (subseq body chunk-start (1- pos))))
+           (setf code (char-code (char body pos)))
+           (case code
+             (34  (setf value (cat value (format nil "~c" #\"))))
+             (47  (setf value (cat value "/")))
+             (92  (setf value (cat value (format nil "~c" #\\))))
+             (98  (setf value (cat value (format nil "~c" #\Backspace))))
+             (102 (setf value (cat value (format nil "~c" #\Page))))
+             (110 (setf value (cat value (format nil "~c" #\Newline))))
+             (114 (setf value (cat value (format nil "~c" #\Return))))
+             (116 (setf value (cat value (format nil "~c" #\Tab))))
+             ;; https://github.com/graphql/graphql-js/blob/main/src/language/lexer.js#L505
+             (117 (error "Can't handle unicode values like 'u0003'"))
+             (t (error "Invalid character escape sequence")))
+           (incf pos)
+           (setf chunk-start pos)))
+    (error "Unterminated string!")))
 
 (defun read-number (source pos code line col prev)
   (declare (ignore source pos code line col prev))
@@ -288,8 +320,12 @@
                             (make-token 'pipe pos (1+ pos) line col prev)))
                      (125 (return-from read-token ;; }
                             (make-token 'brace-r pos (1+ pos) line col prev)))
-                     (34 (return-from read-token ;; "
-                           (read-string body pos line col prev)))
+                     (34 (if (and (eq (char body (+ pos 1)) #\")
+                                  (eq (char body (+ pos 2)) #\"))
+                             (return-from read-token ;; "
+                               (read-string source pos line col prev))
+                             (return-from read-token ;; "
+                               (read-string source pos line col prev))))
                      (;; 0 1 2 3 4 5 6 7 8 9
                       (45 48 49 50 51 52 53 54 55 56 57)
                       (return-from read-token
