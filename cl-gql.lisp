@@ -69,10 +69,12 @@
     :documentation "For non-punctuation tokens, represents the interpreted value of the token.")
    (prev
     :initarg :prev
+    :initform nil
     :accessor prev
     :documentation "The previous token.")
    (next
     :initarg :next
+    :initform nil
     :accessor next
     :documentation "The next token.")))
 
@@ -165,19 +167,44 @@
 (defgeneric read-token (lexer prev-token))
 
 (defmethod advance ((lexer lexer))
-  ;; Does not yet set next on prev
-  (setf (last-token lexer) (token lexer))
-  (setf (token lexer) (lookahead lexer)))
+  (with-slots (token last-token) lexer
+    (setf last-token token)
+    (setf token (lookahead lexer))))
 
 (defmethod lookahead ((lexer lexer))
-  (with-slots (token) lexer
-    (unless (eq (kind token) 'eof)
-      (setf token (read-token lexer (last-token lexer))))))
+  (let ((tok (token lexer)))
+    (unless (eq (kind tok) 'eof)
+      (loop
+        do (with-slots (next) tok
+             (setf tok
+                   (if next next
+                       (setf next (read-token lexer tok))))
+             (unless (eq (kind next) 'comment)
+               (return-from lookahead tok)))))))
 
 (defun read-spread (body pos line col prev)
   (when (and (eq (char body (+ pos 1)) #\.)
              (eq (char body (+ pos 2)) #\.))
     (make-token 'spread pos (+ pos 3) line col prev)))
+
+(defun read-comment (source start line col prev)
+  (with-slots (body) source
+    (loop
+      with pos = start
+      with code = (char-code (char body (incf pos)))
+      do (setf code (char-code (char body pos)))
+      while (and code
+                 (or (> code #x001F)
+                     (= code #x0009)))
+      do (incf pos)
+      finally (return
+                (make-token 'comment
+                            start
+                            pos
+                            line
+                            col
+                            prev
+                            (subseq body (1+ start) pos))))))
 
 (defun read-string (body pos line col prev)
   (declare (ignore line col prev))
@@ -232,7 +259,8 @@
                            (setf (line-start lexer) pos)))
                      (33 (return-from read-token ;; !
                            (make-token 'bang pos (1+ pos) line col prev)))
-                     (35 (error "Comments are unhandled!"))
+                     (35 (return-from read-token
+                           (read-comment source pos line col prev)))
                      (36 (return-from read-token ;; $
                            (make-token 'dollar pos (1+ pos) line col prev)))
                      (38 (return-from read-token ;; &

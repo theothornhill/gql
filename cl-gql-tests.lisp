@@ -17,7 +17,7 @@
 
 (deftest lexer
   (testing "Disallows uncommon control characters"
-    (ok (test-lexer-one-step (format nil "~c" #\U+0007))))
+    (ng (test-lexer-one-step (format nil "~c" #\U+0007))))
 
   (testing "Accepts BOM headers"
     (check-token :str (format nil "~c foo" #\U+FEFF)
@@ -38,7 +38,7 @@
                  :start 1 :end 4
                  :line 2 :column 1
                  :value "foo")
-    (check-token :str (format nil "~c~cfoo" #\Return #\Newline)
+    (check-token :str (format nil "~c~cfoo" #\Return #\Linefeed)
                  :start 2 :end 5
                  :line 2 :column 1
                  :value "foo")
@@ -70,5 +70,12 @@
 
 "
                  :start 6 :end 9
+                 :line 3 :column 5
+                 :value "foo")
+    (check-token :str "
+    #comment
+    foo#comment
+"
+                 :start 18 :end 21
                  :line 3 :column 5
                  :value "foo")))
