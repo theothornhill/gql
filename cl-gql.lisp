@@ -130,9 +130,7 @@
     with tok = (token lexer)
     until (eq (kind tok) 'eof)
     do (with-slots (next) tok
-         (setf tok
-               (if next next
-                   (setf next (read-token lexer tok))))
+         (setf tok (if next next (setf next (read-token lexer tok))))
          (unless (eq (kind next) 'comment)
            (return-from lookahead tok)))))
 
@@ -147,8 +145,7 @@
       with pos = start
       with code = (char-code (char body (incf pos)))
       do (setf code (char-code (char body pos)))
-      while (and code (or (> code #x001F)
-                          (= code #x0009)))
+      while (and code (or (> code #x001F) (= code #x0009)))
       do (incf pos)
       finally (return (make-token 'comment start pos line col prev
                                   (subseq body (1+ start) pos))))))
