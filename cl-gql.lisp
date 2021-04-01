@@ -172,15 +172,15 @@
     (setf token (lookahead lexer))))
 
 (defmethod lookahead ((lexer lexer))
-  (let ((tok (token lexer)))
-    (unless (eq (kind tok) 'eof)
-      (loop
-        do (with-slots (next) tok
-             (setf tok
-                   (if next next
-                       (setf next (read-token lexer tok))))
-             (unless (eq (kind next) 'comment)
-               (return-from lookahead tok)))))))
+  (loop
+    with tok = (token lexer)
+    until (eq (kind tok) 'eof)
+    do (with-slots (next) tok
+         (setf tok
+               (if next next
+                   (setf next (read-token lexer tok))))
+         (unless (eq (kind next) 'comment)
+           (return-from lookahead tok)))))
 
 (defun read-spread (body pos line col prev)
   (when (and (eq (char body (+ pos 1)) #\.)
