@@ -114,6 +114,10 @@
     :accessor location-offset
     :documentation "TODO")))
 
+(deftype punctuation ()
+  '(member bang dollar paren-l paren-r spread colon
+    equals at bracket-l bracket-r brace-l pipe brace-r))
+
 (defgeneric advance (lexer)
   (:documentation "Advance the token stream to the next non-ignored token."))
 (defgeneric lookahead (lexer)
