@@ -144,61 +144,60 @@
     (make-token 'spread pos (+ pos 3) line col prev)))
 
 (defun read-comment (source start line col prev)
-  (with-slots (body) source
-    (loop
-      with pos = start
-      with code = (char-code (char body (incf pos)))
-      do (setf code (char-code (char body pos)))
-      while (and code (or (> code #x001F) (= code #x0009)))
-      do (incf pos)
-      finally (return (make-token 'comment start pos line col prev
-                                  (subseq body (1+ start) pos))))))
+  (loop
+    with body = (body source)
+    with pos = start
+    with code = (char-code (char body (incf pos)))
+    do (setf code (char-code (char body pos)))
+    while (and code (or (> code #x001F) (= code #x0009)))
+    do (incf pos)
+    finally (return (make-token 'comment start pos line col prev
+                                (subseq body (1+ start) pos)))))
 
 (defun cat (&rest args)
   (apply #'concatenate 'string args))
 
 (defun read-string (source start line col prev)
-  (with-slots (body) source
-    (loop
-      with pos = (1+ start)
-      with chunk-start = pos
-      with code = 0
-      with value = ""
-      while (and (< pos (length body))
-                 (setf code (char-code (char body pos)))
-                 (/= code #x000A)
-                 (/= code #x000D))
-      do
-         (when (= code 34)
-           ;; When on closing quote
-           (setf value (cat value (subseq body chunk-start pos)))
-           (return-from read-string
-             (make-token 'string start (1+ pos) line col prev value)))
+  (loop
+    with body = (body source)
+    with pos = (1+ start)
+    with chunk-start = pos
+    with code = 0
+    with value = ""
+    while (and (< pos (length body))
+               (setf code (char-code (char body pos)))
+               (/= code #x000A)
+               (/= code #x000D))
+    do
+       (when (= code 34)
+         ;; When on closing quote
+         (setf value (cat value (subseq body chunk-start pos)))
+         (return-from read-string
+           (make-token 'string start (1+ pos) line col prev value)))
 
-         (when (and (< code #x0020) (/= #x0009))
-           (error "Invalid character within string"))
+       (when (and (< code #x0020) (/= #x0009))
+         (error "Invalid character within string"))
 
+       (incf pos)
+
+       (when (= code 92)
+         ;; \
+         (setf value (cat value (subseq body chunk-start (1- pos))))
+         (setf code (char-code (char body pos)))
+         (case code
+           (34  (setf value (cat value (format nil "~c" #\"))))
+           (47  (setf value (cat value "/")))
+           (92  (setf value (cat value (format nil "~c" #\\))))
+           (98  (setf value (cat value (format nil "~c" #\Backspace))))
+           (102 (setf value (cat value (format nil "~c" #\Page))))
+           (110 (setf value (cat value (format nil "~c" #\Newline))))
+           (114 (setf value (cat value (format nil "~c" #\Return))))
+           (116 (setf value (cat value (format nil "~c" #\Tab))))
+           ;; https://github.com/graphql/graphql-js/blob/main/src/language/lexer.js#L505
+           (117 (error "Can't handle unicode values like 'u0003'"))
+           (t (error "Invalid character escape sequence")))
          (incf pos)
-
-         (when (= code 92)
-           ;; \
-           (setf value (cat value (subseq body chunk-start (1- pos))))
-           (setf code (char-code (char body pos)))
-           (case code
-             (34  (setf value (cat value (format nil "~c" #\"))))
-             (47  (setf value (cat value "/")))
-             (92  (setf value (cat value (format nil "~c" #\\))))
-             (98  (setf value (cat value (format nil "~c" #\Backspace))))
-             (102 (setf value (cat value (format nil "~c" #\Page))))
-             (110 (setf value (cat value (format nil "~c" #\Newline))))
-             (114 (setf value (cat value (format nil "~c" #\Return))))
-             (116 (setf value (cat value (format nil "~c" #\Tab))))
-             ;; https://github.com/graphql/graphql-js/blob/main/src/language/lexer.js#L505
-             (117 (error "Can't handle unicode values like 'u0003'"))
-             (t (error "Invalid character escape sequence")))
-           (incf pos)
-           (setf chunk-start pos)))
-    (error "Unterminated string!")))
+         (setf chunk-start pos))))
 
 (defun read-number (source pos code line col prev)
   (declare (ignore source pos code line col prev))
