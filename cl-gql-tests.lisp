@@ -204,12 +204,26 @@ line\"\"\"")
                  :kind 'cl-gql::name
                  :start 37 :end 49
                  :line 8 :column 2
-                 :value "second_token")
+                 :value "second_token"))
 
-    ;; Unicode test https://github.com/graphql/graphql-js/blob/main/src/language/__tests__/lexer-test.js#L259
-    )
-
-
+  (testing "Number lexing"
+    ;; TODO: Crashes without trailing space again. Figure this out soon.
+    (check-token :str "4 "           :kind 'cl-gql::int :value "4")
+    (check-token :str "4.123 "       :kind 'cl-gql::float :end 5 :value "4.123")
+    (check-token :str "-4 "          :kind 'cl-gql::int :end 2 :value "-4")
+    (check-token :str "9 "           :kind 'cl-gql::int :value "9")
+    (check-token :str "0 "           :kind 'cl-gql::int :value "0")
+    (check-token :str "-4.123 "      :kind 'cl-gql::float :end 6 :value "-4.123")
+    (check-token :str "0.123 "       :kind 'cl-gql::float :end 5 :value "0.123")
+    (check-token :str "123e4 "       :kind 'cl-gql::float :end 5 :value "123e4")
+    (check-token :str "123E4 "       :kind 'cl-gql::float :end 5 :value "123E4")
+    (check-token :str "123e-4 "      :kind 'cl-gql::float :end 6 :value "123e-4")
+    (check-token :str "123e+4 "      :kind 'cl-gql::float :end 6 :value "123e+4")
+    (check-token :str "-1.123e4 "    :kind 'cl-gql::float :end 8 :value "-1.123e4")
+    (check-token :str "-1.123E4 "    :kind 'cl-gql::float :end 8 :value "-1.123E4")
+    (check-token :str "-1.123e-4 "   :kind 'cl-gql::float :end 9 :value "-1.123e-4")
+    (check-token :str "-1.123e+4 "   :kind 'cl-gql::float :end 9 :value "-1.123e+4")
+    (check-token :str "-1.123e4567 " :kind 'cl-gql::float :end 11 :value "-1.123e4567"))
 
 
   (testing "Punctuation lexing"

@@ -215,7 +215,7 @@
          (setf raw-value (cat raw-value (subseq body chunk-start pos)))
          (return-from read-block-string
            (make-token 'block-string start (+ pos 3) line col prev
-                       ;; dedentblockstringvalue - https://github.com/graphql/graphql-js/blob/main/src/language/lexer.js#L574
+                       ;; dedentblockstringvalue - https://github.com/graphql/graphql-js/blob/98feb57b9e0af59b3a0dfa5179565cb3acf4fa9e/src/language/blockString.js#L9
                        raw-value)))
 
        (when (and (< code #x0020) (/= code #x0009) (/= code #x000A) (/= code #x000D))
@@ -243,9 +243,56 @@
          (t (incf pos))))
   (error "Unterminated string"))
 
-(defun read-number (source pos code line col prev)
-  (declare (ignore source pos code line col prev))
-  (error "Numbers not handled yet"))
+(defun read-digits (source start first-code)
+  ;; TODO: some error handling?
+  (loop
+    with body = (body source)
+    with pos = start
+    with code = first-code
+    while (<= 48 code 57)
+    do (setf code (char-code (char body (incf pos))))
+    finally (return pos)))
+
+(defun read-number (source start first-code line col prev)
+  (with-slots (body) source
+    (let ((code first-code)
+          (pos start)
+          is-float)
+      (when (= code 45) ;; -
+        (setf code (char-code (char body (incf pos)))))
+
+      (if (= code 48) ;; 0
+        (progn
+          (setf code (char-code (char body (incf pos))))
+          (when (<= 48 code 57)
+            (error "Invalid number, unexpected digit after: foo")))
+        (progn
+          (setf pos (read-digits source pos code))
+          (setf code (char-code (char body pos)))))
+
+      (when (= code 46) ;; .
+        (setf is-float t)
+        (setf code (char-code (char body (incf pos))))
+        (setf pos (read-digits source pos code))
+        (setf code (char-code (char body pos))))
+
+      (when (or (= code 69) (= code 101)) ;; E e
+        (setf is-float t)
+        (setf code (char-code (char body (incf pos))))
+        (when (or (= code 43) (= code 45)) ;; + -
+          (setf code (char-code (char body (incf pos)))))
+        (setf pos (read-digits source pos code))
+        (setf code (char-code (char body pos))))
+
+      (when (or (= code 46)
+                ;; _ A-Z a-z
+                (or (= code 95)
+                    (<= 65 code 90)
+                    (<= 97 code 122)))
+        (error "Invalid number. Expected digit, got foo"))
+
+      (make-token (if is-float 'float 'int) start pos line col prev
+                  (subseq body start pos)))))
 
 (defun read-name (source start line col prev)
   (with-slots (body) source
