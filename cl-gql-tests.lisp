@@ -6,10 +6,15 @@
 (defun test-lexer-one-step (str)
   (advance (make-lexer str)))
 
+(defun test-lexer-two-steps (str)
+  (let ((lexer (make-lexer str)))
+    (advance lexer)
+    (advance lexer)))
+
 (defun check-token (&key str
                       (kind 'cl-gql::name) (start 0) (end 1)
-                      (line 1) (column 1) value)
-  (let ((token (test-lexer-one-step str)))
+                      (line 1) (column 1) value (fn #'test-lexer-one-step))
+  (let ((token (funcall fn str)))
     (ok (eq (cl-gql::kind token) kind))
     (ok (eq (cl-gql::start token) start))
     (ok (eq (cl-gql::end token) end))
@@ -108,9 +113,104 @@
     (check-token :str (format nil "\"escaped \\n\\r\\b\\t\\f\"")
                  :kind 'cl-gql::string :end 20
                  :value (format nil "escaped ~c~c~c~c~c"
-                                #\Newline #\Return #\Backspace #\Tab #\Page)))
+                                #\Newline #\Return #\Backspace #\Tab #\Page))
 
-  ;; Unicode test https://github.com/graphql/graphql-js/blob/main/src/language/__tests__/lexer-test.js#L259
+    ;; Unicode test https://github.com/graphql/graphql-js/blob/main/src/language/__tests__/lexer-test.js#L259
+    )
+
+  (testing "Block string lexing"
+    ;; TODO: Need to work without ending space
+    (check-token :str (format nil "\"\"\"\"\"\"")
+                 :kind 'cl-gql::block-string
+                 :end 6 :value "")
+
+    (check-token :str "\"\"\"simple\"\"\""
+                 :kind 'cl-gql::block-string :end 12
+                 :value "simple")
+
+    (check-token :str "\"\"\" white space \"\"\""
+                 :kind 'cl-gql::block-string :end 19
+                 :value " white space ")
+
+    (check-token :str (format nil "\"\"\"contains \" quote\"\"\"")
+                 :kind 'cl-gql::block-string :end 22
+                 :value "contains \" quote")
+
+    (check-token :str (format nil "\"\"\"contains \\\"\"\" triple quote\"\"\"")
+                 :kind 'cl-gql::block-string :end 32
+                 :value "contains \"\"\" triple quote")
+
+    (check-token :str (format nil "\"\"\"multi
+line\"\"\"")
+                 :kind 'cl-gql::block-string :end 16
+                 :value "multi
+line")
+
+    (check-token :str (format nil "\"\"\"multi~cline\"\"\"" #\Newline)
+                 :kind 'cl-gql::block-string :end 16
+                 :value "multi
+line")
+
+    (check-token :str  (format nil "\"\"\"multi
+line\"\"\"")
+                 :kind 'cl-gql::block-string :end 16
+                 :value (format nil "multi~cline" #\Newline))
+
+    (check-token :str (format nil "\"\"\"unescaped \\n\\r\\b\\t\\f\\u1234\"\"\"")
+                 :kind 'cl-gql::block-string :end 32
+                 :value (format nil "unescaped \\n\\r\\b\\t\\f\\u1234"))
+
+    (check-token :str (format nil "\"\"\"slashes \\\\ \\/\"\"\"")
+                 :kind 'cl-gql::block-string :end 19
+                 :value (format nil "slashes \\\\ \\/"))
+
+    (check-token :str "\"\"\"
+
+        spans
+          multiple
+            lines
+
+        \"\"\""
+                 :kind 'cl-gql::block-string :end 68
+                 :value  "
+
+        spans
+          multiple
+            lines
+
+        ")
+
+    (check-token :str (format nil "\"\"\"
+
+        spans
+          multiple
+            lines
+
+        ~c \"\"\" second_token" #\Newline)
+                 :fn #'test-lexer-two-steps
+                 :kind 'cl-gql::name
+                 :start 71 :end 83
+                 :line 8 :column 6
+                 :value "second_token")
+
+    (check-token :str (concatenate
+                       'string
+                       (format nil "\"\"\" ~c" #\Newline)
+                       (format nil "spans ~c~c" #\Return #\Newline)
+                       (format nil "multiple ~c~c" #\Newline #\Return)
+                       (format nil "lines ~c~c" #\Newline #\Newline)
+                       (format nil "\"\"\"~c second_token" #\Newline))
+                 :fn #'test-lexer-two-steps
+                 :kind 'cl-gql::name
+                 :start 37 :end 49
+                 :line 8 :column 2
+                 :value "second_token")
+
+    ;; Unicode test https://github.com/graphql/graphql-js/blob/main/src/language/__tests__/lexer-test.js#L259
+    )
+
+
+
 
   (testing "Punctuation lexing"
     (check-token :str "!"   :kind 'cl-gql::bang)

@@ -199,6 +199,50 @@
          (incf pos)
          (setf chunk-start pos))))
 
+(defun read-block-string (source start line col prev lexer)
+  (loop
+    with body = (body source)
+    with pos = (+ start 3)
+    with chunk-start = pos
+    with code = 0
+    with raw-value = ""
+    while (and (< pos (length body))
+               (setf code (char-code (char body pos))))
+    do
+       (when (and (= 34 code)
+                  (= 34 (char-code (char body (+ pos 1))))
+                  (= 34 (char-code (char body (+ pos 2)))))
+         (setf raw-value (cat raw-value (subseq body chunk-start pos)))
+         (return-from read-block-string
+           (make-token 'block-string start (+ pos 3) line col prev
+                       ;; dedentblockstringvalue - https://github.com/graphql/graphql-js/blob/main/src/language/lexer.js#L574
+                       raw-value)))
+
+       (when (and (< code #x0020) (/= code #x0009) (/= code #x000A) (/= code #x000D))
+         (error (format nil "Invalid character within String: ~a" (code-char code))))
+
+       (cond
+         ((= code 10)
+          ;; newline
+          (incf pos)
+          (incf (line lexer))
+          (setf (line-start lexer) pos))
+         ((= code 13)
+          ;; carriage return
+          (incf pos (if (eq (char body (1+ pos)) #\Newline) 2 1))
+          (incf (line lexer))
+          (setf (line-start lexer) pos))
+         ((and (= code 92)
+               (= 34 (char-code (char body (+ pos 1))))
+               (= 34 (char-code (char body (+ pos 2))))
+               (= 34 (char-code (char body (+ pos 3)))))
+          ;; escape triple quote
+          (setf raw-value (cat raw-value (subseq body chunk-start pos) "\"\"\""))
+          (incf pos 4)
+          (setf chunk-start pos))
+         (t (incf pos))))
+  (error "Unterminated string"))
+
 (defun read-number (source pos code line col prev)
   (declare (ignore source pos code line col prev))
   (error "Numbers not handled yet"))
@@ -277,7 +321,7 @@
                      (34 (if (and (eq (char body (+ pos 1)) #\")
                                   (eq (char body (+ pos 2)) #\"))
                              (return-from read-token ;; "
-                               (read-string source pos line col prev))
+                               (read-block-string source pos line col prev lexer))
                              (return-from read-token ;; "
                                (read-string source pos line col prev))))
                      (;; 0 1 2 3 4 5 6 7 8 9
