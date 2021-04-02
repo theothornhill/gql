@@ -11,16 +11,22 @@
     (advance lexer)
     (advance lexer)))
 
-(defun check-token (&key str
-                      (kind 'cl-gql::name) (start 0) (end 1)
-                      (line 1) (column 1) value (fn #'test-lexer-one-step))
+(defun check-token (&key
+                      str
+                      (kind 'cl-gql::name)
+                      (start 0)
+                      (end 1)
+                      (line 1)
+                      (column 1)
+                      value
+                      (fn #'test-lexer-one-step))
   (let ((token (funcall fn str)))
-    (ok (eq (cl-gql::kind token) kind))
-    (ok (eq (cl-gql::start token) start))
-    (ok (eq (cl-gql::end token) end))
-    (ok (eq (cl-gql::line token) line))
-    (ok (eq (cl-gql::column token) column))
-    (ok (equalp (cl-gql::value token) value))))
+    (ok (eq     (cl-gql::kind   token)  kind))
+    (ok (eq     (cl-gql::start  token)  start))
+    (ok (eq     (cl-gql::end    token)  end))
+    (ok (eq     (cl-gql::line   token)  line))
+    (ok (eq     (cl-gql::column token)  column))
+    (ok (equalp (cl-gql::value  token)  value))))
 
 (deftest lexer
   (testing "Disallows uncommon control characters"
