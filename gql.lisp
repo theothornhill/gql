@@ -154,6 +154,20 @@
     finally (return (make-token 'comment start pos line col prev
                                 (subseq body (1+ start) pos)))))
 
+(defun char-to-hex (x)
+  (cond
+    ((<= 48 x 57)  (- x 48)) ;; 0-9
+    ((<= 65 x 70)  (- x 55)) ;; A-F
+    ((<= 97 x 102) (- x 87)) ;; a-f
+    (t -1)))
+
+(defun unicode-char (q w e r)
+  (logior
+   (ash (char-to-hex q) 12)
+   (ash (char-to-hex w) 8)
+   (ash (char-to-hex e) 4)
+   (char-to-hex r)))
+
 (defun read-string (source start line col prev)
   (loop
     with body = (body source)
@@ -190,8 +204,20 @@
            (110 (setf value (cat value (format nil "~c" #\Newline))))
            (114 (setf value (cat value (format nil "~c" #\Return))))
            (116 (setf value (cat value (format nil "~c" #\Tab))))
-           ;; https://github.com/graphql/graphql-js/blob/main/src/language/lexer.js#L505
-           (117 (error "Can't handle unicode values like 'u0003'"))
+           (117
+            ;; Unicode character
+            (let ((u-char
+                    (unicode-char
+                     (char-code-at body (+ pos 1))
+                     (char-code-at body (+ pos 2))
+                     (char-code-at body (+ pos 3))
+                     (char-code-at body (+ pos 4)))))
+
+              (when (< u-char 0)
+                (error "Invalid character escape sequence: foo"))
+
+              (setf value (cat value (format nil "~c" (code-char u-char))))
+              (incf pos 4)))
            (t (error "Invalid character escape sequence")))
          (incf pos)
          (setf chunk-start pos))))

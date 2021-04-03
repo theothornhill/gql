@@ -121,8 +121,27 @@
                  :value (format nil "escaped ~c~c~c~c~c"
                                 #\Newline #\Return #\Backspace #\Tab #\Page))
 
-    ;; Unicode test https://github.com/graphql/graphql-js/blob/main/src/language/__tests__/lexer-test.js#L259
-    )
+    ;; Unicode test cases
+    (ok (= 0  (gql::char-to-hex (char-code #\0))))
+    (ok (= 9  (gql::char-to-hex (char-code #\9))))
+    (ok (= 10 (gql::char-to-hex (char-code #\A))))
+    (ok (= 10 (gql::char-to-hex (char-code #\a))))
+    (ok (= 15 (gql::char-to-hex (char-code #\F))))
+    (ok (= 15 (gql::char-to-hex (char-code #\f))))
+
+    (ok (= 15 (gql::unicode-char (char-code #\0)
+                                 (char-code #\0)
+                                 (char-code #\0)
+                                 (char-code #\F))))
+
+    (ok (= 255 (gql::unicode-char (char-code #\0)
+                                  (char-code #\0)
+                                  (char-code #\F)
+                                  (char-code #\F))))
+
+    (check-token :str (format nil "\"unicode \\u1234\\u5678\\u90AB\\uCDEF\"")
+                 :kind 'gql::string :end 34
+                 :value "unicode ሴ噸邫췯"))
 
   (testing "Block string lexing"
     ;; TODO: Need to work without ending space
