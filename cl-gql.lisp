@@ -33,24 +33,14 @@
     :documentation "The character offset at which the current line begins.")))
 
 (defun make-token (kind start end line column prev &optional value)
-  (make-instance 'token :kind kind
-                        :start start :end end
-                        :line line :column column
-                        :prev prev :value value))
+  (make-instance
+   'token :kind kind :start start :end end :line line :column column :prev prev :value value))
 
 (defun make-lexer (source)
-  (let ((source (make-instance 'source
-                               :body source
-                               :name "name"
-                               :location-offset 0))
-        (start-of-file
-          (make-token 'sof 0 0 0 0 nil nil)))
-    (make-instance 'lexer
-                   :source source
-                   :token start-of-file
-                   :last-token start-of-file
-                   :line 1
-                   :line-start 0)))
+  (let ((source (make-instance 'source :body source :name "name" :location-offset 0))
+        (start-of-file (make-token 'sof 0 0 0 0 nil nil)))
+    (make-instance
+     'lexer :source source :token start-of-file :last-token start-of-file :line 1 :line-start 0)))
 
 (defclass token ()
   ((kind
@@ -114,7 +104,7 @@
   ((body
     :initarg :body
     :accessor body
-    :documentation "TODO")
+    :documentation "The source file to lex and parse.")
    (name
     :initarg :name
     :accessor name
@@ -321,128 +311,129 @@
               (make-token 'name start pos line col prev (subseq body start pos)))))
 
 (defmethod read-token ((lexer lexer) (prev token))
-  (loop with source = (source lexer)
-        with body = (body source)
-        with body-length = (length body)
-        with pos = (end prev)
-        until (>= pos body-length)
-        do
-           (let ((code (char-code-at body pos))
-                 (line (line lexer))
-                 (col (- (1+ pos) (line-start lexer))))
-             (case code
-               (;; BOM, \t, space, ','
-                (#xfeff 9 32 44) (incf pos))
-               (10 (progn ;; Newline
-                     (incf pos)
-                     (incf (line lexer))
-                     (setf (line-start lexer) pos)))
-               (13 (progn ;; \r - increment by two if \r\n
-                     (incf pos (if (eq (char body (1+ pos)) #\Newline) 2 1))
-                     (incf (line lexer))
-                     (setf (line-start lexer) pos)))
-               (33 (return-from read-token ;; !
-                     (make-token 'bang pos (1+ pos) line col prev)))
-               (35 (return-from read-token
-                     (read-comment source pos line col prev)))
-               (36 (return-from read-token ;; $
-                     (make-token 'dollar pos (1+ pos) line col prev)))
-               (38 (return-from read-token ;; &
-                     (make-token 'amp pos (1+ pos) line col prev)))
-               (40 (return-from read-token ;; (
-                     (make-token 'paren-l pos (1+ pos) line col prev)))
-               (41 (return-from read-token ;; )
-                     (make-token 'paren-r pos (1+ pos) line col prev)))
-               (46 (return-from read-token ;; .
-                     ;; TODO: Does this handle fall-through properly?
-                     (read-spread body pos line col prev)))
-               (58 (return-from read-token ;; :
-                     (make-token 'colon pos (1+ pos) line col prev)))
-               (61 (return-from read-token ;; =
-                     (make-token 'equals pos (1+ pos) line col prev)))
-               (64 (return-from read-token ;; @
-                     (make-token 'at pos (1+ pos) line col prev)))
-               (91 (return-from read-token ;; [
-                     (make-token 'bracket-l pos (1+ pos) line col prev)))
-               (93 (return-from read-token ;; ]
-                     (make-token 'bracket-r pos (1+ pos) line col prev)))
-               (123 (return-from read-token ;; {
-                      (make-token 'brace-l pos (1+ pos) line col prev)))
-               (124 (return-from read-token ;; |
-                      (make-token 'pipe pos (1+ pos) line col prev)))
-               (125 (return-from read-token ;; }
-                      (make-token 'brace-r pos (1+ pos) line col prev)))
-               (34 (if (and (eq (char body (+ pos 1)) #\")
-                            (eq (char body (+ pos 2)) #\"))
-                       (return-from read-token ;; "
-                         (read-block-string source pos line col prev lexer))
-                       (return-from read-token ;; "
-                         (read-string source pos line col prev))))
-               (;; 0 1 2 3 4 5 6 7 8 9
-                (45 48 49 50 51 52 53 54 55 56 57)
-                (return-from read-token
-                  (read-number source pos code line col prev)))
-               (;; A-Z_a-z
-                (65 ;; A
-                 66
-                 67
-                 68
-                 69
-                 70
-                 71
-                 72
-                 73
-                 74
-                 75
-                 76
-                 77
-                 78
-                 79
-                 80
-                 81
-                 82
-                 83
-                 84
-                 85
-                 86
-                 87
-                 88
-                 89
-                 90 ;; Z
-                 95 ;; _
-                 97 ;; a
-                 98
-                 99
-                 100
-                 101
-                 102
-                 103
-                 104
-                 105
-                 106
-                 107
-                 108
-                 109
-                 110
-                 111
-                 112
-                 113
-                 114
-                 115
-                 116
-                 117
-                 118
-                 119
-                 120
-                 121
-                 122)
-                (return-from read-token
-                  (read-name source pos line col prev)))
-               (t (error "Unhandled syntax"))))
-           ;; Account for all parser cases here
-        finally 
-           ;; We have reached end of file - return it as a token
-           (when (>= pos body-length)
-             (let ((line (line lexer))
-                   (col (- (1+ pos) (line-start lexer))))
-               (make-token 'eof body-length body-length line col prev)))))
+  (loop
+    with source = (source lexer)
+    with body = (body source)
+    with body-length = (length body)
+    with pos = (end prev)
+    until (>= pos body-length)
+    do
+       (let ((code (char-code-at body pos))
+             (line (line lexer))
+             (col (- (1+ pos) (line-start lexer))))
+         (case code
+           (;; BOM, \t, space, ','
+            (#xfeff 9 32 44) (incf pos))
+           (10 (progn ;; Newline
+                 (incf pos)
+                 (incf (line lexer))
+                 (setf (line-start lexer) pos)))
+           (13 (progn ;; \r - increment by two if \r\n
+                 (incf pos (if (eq (char body (1+ pos)) #\Newline) 2 1))
+                 (incf (line lexer))
+                 (setf (line-start lexer) pos)))
+           (33 (return-from read-token ;; !
+                 (make-token 'bang pos (1+ pos) line col prev)))
+           (35 (return-from read-token
+                 (read-comment source pos line col prev)))
+           (36 (return-from read-token ;; $
+                 (make-token 'dollar pos (1+ pos) line col prev)))
+           (38 (return-from read-token ;; &
+                 (make-token 'amp pos (1+ pos) line col prev)))
+           (40 (return-from read-token ;; (
+                 (make-token 'paren-l pos (1+ pos) line col prev)))
+           (41 (return-from read-token ;; )
+                 (make-token 'paren-r pos (1+ pos) line col prev)))
+           (46 (return-from read-token ;; .
+                 ;; TODO: Does this handle fall-through properly?
+                 (read-spread body pos line col prev)))
+           (58 (return-from read-token ;; :
+                 (make-token 'colon pos (1+ pos) line col prev)))
+           (61 (return-from read-token ;; =
+                 (make-token 'equals pos (1+ pos) line col prev)))
+           (64 (return-from read-token ;; @
+                 (make-token 'at pos (1+ pos) line col prev)))
+           (91 (return-from read-token ;; [
+                 (make-token 'bracket-l pos (1+ pos) line col prev)))
+           (93 (return-from read-token ;; ]
+                 (make-token 'bracket-r pos (1+ pos) line col prev)))
+           (123 (return-from read-token ;; {
+                  (make-token 'brace-l pos (1+ pos) line col prev)))
+           (124 (return-from read-token ;; |
+                  (make-token 'pipe pos (1+ pos) line col prev)))
+           (125 (return-from read-token ;; }
+                  (make-token 'brace-r pos (1+ pos) line col prev)))
+           (34 (if (and (eq (char body (+ pos 1)) #\")
+                        (eq (char body (+ pos 2)) #\"))
+                   (return-from read-token ;; "
+                     (read-block-string source pos line col prev lexer))
+                   (return-from read-token ;; "
+                     (read-string source pos line col prev))))
+           (;; 0 1 2 3 4 5 6 7 8 9
+            (45 48 49 50 51 52 53 54 55 56 57)
+            (return-from read-token
+              (read-number source pos code line col prev)))
+           (;; A-Z_a-z
+            (65 ;; A
+             66
+             67
+             68
+             69
+             70
+             71
+             72
+             73
+             74
+             75
+             76
+             77
+             78
+             79
+             80
+             81
+             82
+             83
+             84
+             85
+             86
+             87
+             88
+             89
+             90     ;; Z
+             95     ;; _
+             97     ;; a
+             98
+             99
+             100
+             101
+             102
+             103
+             104
+             105
+             106
+             107
+             108
+             109
+             110
+             111
+             112
+             113
+             114
+             115
+             116
+             117
+             118
+             119
+             120
+             121
+             122)
+            (return-from read-token
+              (read-name source pos line col prev)))
+           (t (error "Unhandled syntax"))))
+       ;; Account for all parser cases here
+    finally 
+       ;; We have reached end of file - return it as a token
+       (when (>= pos body-length)
+         (let ((line (line lexer))
+               (col (- (1+ pos) (line-start lexer))))
+           (make-token 'eof body-length body-length line col prev)))))
