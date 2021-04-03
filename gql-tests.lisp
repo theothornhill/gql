@@ -1,7 +1,7 @@
-(defpackage #:cl-gql/tests
-  (:use #:cl #:cl-gql #:rove))
+(defpackage #:gql/tests
+  (:use #:cl #:gql #:rove))
 
-(in-package #:cl-gql/tests)
+(in-package #:gql/tests)
 
 (defun test-lexer-one-step (str)
   (advance (make-lexer str)))
@@ -13,7 +13,7 @@
 
 (defun check-token (&key
                       str
-                      (kind 'cl-gql::name)
+                      (kind 'gql::name)
                       (start 0)
                       (end 1)
                       (line 1)
@@ -21,12 +21,12 @@
                       value
                       (fn #'test-lexer-one-step))
   (let ((token (funcall fn str)))
-    (ok (eq     (cl-gql::kind   token)  kind))
-    (ok (eq     (cl-gql::start  token)  start))
-    (ok (eq     (cl-gql::end    token)  end))
-    (ok (eq     (cl-gql::line   token)  line))
-    (ok (eq     (cl-gql::column token)  column))
-    (ok (equalp (cl-gql::value  token)  value))))
+    (ok (eq     (gql::kind   token)  kind))
+    (ok (eq     (gql::start  token)  start))
+    (ok (eq     (gql::end    token)  end))
+    (ok (eq     (gql::line   token)  line))
+    (ok (eq     (gql::column token)  column))
+    (ok (equalp (gql::value  token)  value))))
 
 (deftest lexer
   (testing "Disallows uncommon control characters"
@@ -101,23 +101,23 @@
   (testing "String lexing"
     ;; TODO: Need to work without ending space
     (check-token :str "\"\" "
-                 :kind 'cl-gql::string
+                 :kind 'gql::string
                  :end 2 :value "")
 
     (check-token :str "\"simple\""
-                 :kind 'cl-gql::string :end 8
+                 :kind 'gql::string :end 8
                  :value "simple")
 
     (check-token :str "\" white space \""
-                 :kind 'cl-gql::string :end 15
+                 :kind 'gql::string :end 15
                  :value " white space ")
 
     (check-token :str (format nil "\"quote ~c~c\"" #\\ #\\)
-                 :kind 'cl-gql::string :end 10
+                 :kind 'gql::string :end 10
                  :value "quote \\")
 
     (check-token :str (format nil "\"escaped \\n\\r\\b\\t\\f\"")
-                 :kind 'cl-gql::string :end 20
+                 :kind 'gql::string :end 20
                  :value (format nil "escaped ~c~c~c~c~c"
                                 #\Newline #\Return #\Backspace #\Tab #\Page))
 
@@ -127,47 +127,47 @@
   (testing "Block string lexing"
     ;; TODO: Need to work without ending space
     (check-token :str (format nil "\"\"\"\"\"\"")
-                 :kind 'cl-gql::block-string
+                 :kind 'gql::block-string
                  :end 6 :value "")
 
     (check-token :str "\"\"\"simple\"\"\""
-                 :kind 'cl-gql::block-string :end 12
+                 :kind 'gql::block-string :end 12
                  :value "simple")
 
     (check-token :str "\"\"\" white space \"\"\""
-                 :kind 'cl-gql::block-string :end 19
+                 :kind 'gql::block-string :end 19
                  :value " white space ")
 
     (check-token :str (format nil "\"\"\"contains \" quote\"\"\"")
-                 :kind 'cl-gql::block-string :end 22
+                 :kind 'gql::block-string :end 22
                  :value "contains \" quote")
 
     (check-token :str (format nil "\"\"\"contains \\\"\"\" triple quote\"\"\"")
-                 :kind 'cl-gql::block-string :end 32
+                 :kind 'gql::block-string :end 32
                  :value "contains \"\"\" triple quote")
 
     (check-token :str (format nil "\"\"\"multi
 line\"\"\"")
-                 :kind 'cl-gql::block-string :end 16
+                 :kind 'gql::block-string :end 16
                  :value "multi
 line")
 
     (check-token :str (format nil "\"\"\"multi~cline\"\"\"" #\Newline)
-                 :kind 'cl-gql::block-string :end 16
+                 :kind 'gql::block-string :end 16
                  :value "multi
 line")
 
     (check-token :str  (format nil "\"\"\"multi
 line\"\"\"")
-                 :kind 'cl-gql::block-string :end 16
+                 :kind 'gql::block-string :end 16
                  :value (format nil "multi~cline" #\Newline))
 
     (check-token :str (format nil "\"\"\"unescaped \\n\\r\\b\\t\\f\\u1234\"\"\"")
-                 :kind 'cl-gql::block-string :end 32
+                 :kind 'gql::block-string :end 32
                  :value (format nil "unescaped \\n\\r\\b\\t\\f\\u1234"))
 
     (check-token :str (format nil "\"\"\"slashes \\\\ \\/\"\"\"")
-                 :kind 'cl-gql::block-string :end 19
+                 :kind 'gql::block-string :end 19
                  :value (format nil "slashes \\\\ \\/"))
 
     (check-token :str "\"\"\"
@@ -177,7 +177,7 @@ line\"\"\"")
             lines
 
         \"\"\""
-                 :kind 'cl-gql::block-string :end 68
+                 :kind 'gql::block-string :end 68
                  :value  "
 
         spans
@@ -194,7 +194,7 @@ line\"\"\"")
 
         ~c \"\"\" second_token" #\Newline)
                  :fn #'test-lexer-two-steps
-                 :kind 'cl-gql::name
+                 :kind 'gql::name
                  :start 71 :end 83
                  :line 8 :column 6
                  :value "second_token")
@@ -207,44 +207,42 @@ line\"\"\"")
                        (format nil "lines ~c~c" #\Newline #\Newline)
                        (format nil "\"\"\"~c second_token" #\Newline))
                  :fn #'test-lexer-two-steps
-                 :kind 'cl-gql::name
+                 :kind 'gql::name
                  :start 37 :end 49
                  :line 8 :column 2
                  :value "second_token"))
 
   (testing "Number lexing"
     ;; TODO: Crashes without trailing space again. Figure this out soon.
-    (check-token :str "4 "           :kind 'cl-gql::int :value "4")
-    (check-token :str "4.123 "       :kind 'cl-gql::float :end 5 :value "4.123")
-    (check-token :str "-4 "          :kind 'cl-gql::int :end 2 :value "-4")
-    (check-token :str "9 "           :kind 'cl-gql::int :value "9")
-    (check-token :str "0 "           :kind 'cl-gql::int :value "0")
-    (check-token :str "-4.123 "      :kind 'cl-gql::float :end 6 :value "-4.123")
-    (check-token :str "0.123 "       :kind 'cl-gql::float :end 5 :value "0.123")
-    (check-token :str "123e4 "       :kind 'cl-gql::float :end 5 :value "123e4")
-    (check-token :str "123E4 "       :kind 'cl-gql::float :end 5 :value "123E4")
-    (check-token :str "123e-4 "      :kind 'cl-gql::float :end 6 :value "123e-4")
-    (check-token :str "123e+4 "      :kind 'cl-gql::float :end 6 :value "123e+4")
-    (check-token :str "-1.123e4 "    :kind 'cl-gql::float :end 8 :value "-1.123e4")
-    (check-token :str "-1.123E4 "    :kind 'cl-gql::float :end 8 :value "-1.123E4")
-    (check-token :str "-1.123e-4 "   :kind 'cl-gql::float :end 9 :value "-1.123e-4")
-    (check-token :str "-1.123e+4 "   :kind 'cl-gql::float :end 9 :value "-1.123e+4")
-    (check-token :str "-1.123e4567 " :kind 'cl-gql::float :end 11 :value "-1.123e4567"))
-
+    (check-token :str "4 "           :kind 'gql::int :value "4")
+    (check-token :str "4.123 "       :kind 'gql::float :end 5 :value "4.123")
+    (check-token :str "-4 "          :kind 'gql::int :end 2 :value "-4")
+    (check-token :str "9 "           :kind 'gql::int :value "9")
+    (check-token :str "0 "           :kind 'gql::int :value "0")
+    (check-token :str "-4.123 "      :kind 'gql::float :end 6 :value "-4.123")
+    (check-token :str "0.123 "       :kind 'gql::float :end 5 :value "0.123")
+    (check-token :str "123e4 "       :kind 'gql::float :end 5 :value "123e4")
+    (check-token :str "123E4 "       :kind 'gql::float :end 5 :value "123E4")
+    (check-token :str "123e-4 "      :kind 'gql::float :end 6 :value "123e-4")
+    (check-token :str "123e+4 "      :kind 'gql::float :end 6 :value "123e+4")
+    (check-token :str "-1.123e4 "    :kind 'gql::float :end 8 :value "-1.123e4")
+    (check-token :str "-1.123E4 "    :kind 'gql::float :end 8 :value "-1.123E4")
+    (check-token :str "-1.123e-4 "   :kind 'gql::float :end 9 :value "-1.123e-4")
+    (check-token :str "-1.123e+4 "   :kind 'gql::float :end 9 :value "-1.123e+4")
+    (check-token :str "-1.123e4567 " :kind 'gql::float :end 11 :value "-1.123e4567"))
 
   (testing "Punctuation lexing"
-    (check-token :str "!"   :kind 'cl-gql::bang)
-    (check-token :str "$"   :kind 'cl-gql::dollar)
-    (check-token :str "("   :kind 'cl-gql::paren-l)
-    (check-token :str ")"   :kind 'cl-gql::paren-r)
-    (check-token :str "..." :kind 'cl-gql::spread :end 3)
-    (check-token :str ":"   :kind 'cl-gql::colon)
-    (check-token :str "="   :kind 'cl-gql::equals)
-    (check-token :str "@"   :kind 'cl-gql::at)
-    (check-token :str "["   :kind 'cl-gql::bracket-l)
-    (check-token :str "]"   :kind 'cl-gql::bracket-r)
-    (check-token :str "{"   :kind 'cl-gql::brace-l)
-    (check-token :str "|"   :kind 'cl-gql::pipe)
-    (check-token :str "}"   :kind 'cl-gql::brace-r))
-
+    (check-token :str "!"   :kind 'gql::bang)
+    (check-token :str "$"   :kind 'gql::dollar)
+    (check-token :str "("   :kind 'gql::paren-l)
+    (check-token :str ")"   :kind 'gql::paren-r)
+    (check-token :str "..." :kind 'gql::spread :end 3)
+    (check-token :str ":"   :kind 'gql::colon)
+    (check-token :str "="   :kind 'gql::equals)
+    (check-token :str "@"   :kind 'gql::at)
+    (check-token :str "["   :kind 'gql::bracket-l)
+    (check-token :str "]"   :kind 'gql::bracket-r)
+    (check-token :str "{"   :kind 'gql::brace-l)
+    (check-token :str "|"   :kind 'gql::pipe)
+    (check-token :str "}"   :kind 'gql::brace-r))
   )

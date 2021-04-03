@@ -1,6 +1,6 @@
 ;;;; package.lisp
 
-(defpackage #:cl-gql
+(defpackage #:gql
   (:use #:cl)
   (:export
    #:advance

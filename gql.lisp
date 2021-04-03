@@ -1,4 +1,4 @@
-(in-package #:cl-gql)
+(in-package #:gql)
 
 ;;; Utils
 

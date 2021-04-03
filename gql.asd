@@ -1,20 +1,20 @@
-;;;; cl-gql.asd
+;;;; gql.asd
 
-(asdf:defsystem #:cl-gql
-  :description "Describe cl-gql here"
+(asdf:defsystem #:gql
+  :description "Describe gql here"
   :author "Theodor Thornhill <theo@thornhill.no>"
   :license  "AGPLv3"
   :version "0.0.1"
   :serial t
   :components ((:file "package")
-               (:file "cl-gql")))
+               (:file "gql")))
 
-(asdf:defsystem :cl-gql/tests
+(asdf:defsystem :gql/tests
   :description "Tests for nnin"
   :author "Theodor Thornhill <theo@thornhill.no>"
   :license "GPLv3"
   :version "0.0.1"
   :depends-on (:rove
-               :cl-gql)
-  :components ((:file "cl-gql-tests"))
-  :perform (test-op (o c) (symbol-call :rove '#:run :cl-gql/tests)))
+               :gql)
+  :components ((:file "gql-tests"))
+  :perform (test-op (o c) (symbol-call :rove '#:run :gql/tests)))
