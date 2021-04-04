@@ -31,7 +31,7 @@
 (deftest lexer
   (testing "Disallows uncommon control characters"
     (ok (signals (test-lexer-one-step (format nil "~c" #\U+0007))
-            'simple-error)))
+            'gql-simple-error)))
 
   (testing "Accepts BOM headers"
     (check-token :str (format nil "~c foo" #\U+FEFF)

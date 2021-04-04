@@ -7,4 +7,8 @@
    #:lookahead
    #:read-token
    #:make-lexer
-   #:gql))
+   #:gql
+   #:gql-simple-error
+   #:gql-error
+   #:gql-warning
+   #:gql-simple-warning))
