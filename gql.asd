@@ -8,11 +8,12 @@
   :serial t
   :components ((:file "package")
                (:file "lexer")
+               (:file "parser")
                (:file "conditions")
                (:file "gql")))
 
 (asdf:defsystem :gql/tests
-  :description "Tests for nnin"
+  :description "Tests for gql"
   :author "Theodor Thornhill <theo@thornhill.no>"
   :license "GPLv3"
   :version "0.0.1"
