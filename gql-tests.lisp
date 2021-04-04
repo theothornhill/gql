@@ -263,5 +263,19 @@ line\"\"\"")
     (check-token :str "]"   :kind 'gql::bracket-r)
     (check-token :str "{"   :kind 'gql::brace-l)
     (check-token :str "|"   :kind 'gql::pipe)
-    (check-token :str "}"   :kind 'gql::brace-r))
-  )
+    (check-token :str "}"   :kind 'gql::brace-r)))
+
+(deftest api
+  (testing "gql returns correct tokens when input is string"
+    (let ((token (gql "{}")))
+      (ok (eq (gql::kind token) 'gql::sof))
+      (ok (eq (gql::kind (gql::next token)) 'gql::brace-l))
+      (ok (eq (gql::kind (gql::next (gql::next token))) 'gql::brace-r))
+      (ok (eq (gql::kind (gql::next (gql::next (gql::next token)))) 'gql::eof))))
+
+  (testing "gql returns correct tokens when input is pathname"
+    (let ((token (gql (asdf:system-relative-pathname 'gql "./test-files/empty-object.txt"))))
+      (ok (eq (gql::kind token) 'gql::sof))
+      (ok (eq (gql::kind (gql::next token)) 'gql::brace-l))
+      (ok (eq (gql::kind (gql::next (gql::next token))) 'gql::brace-r))
+      (ok (eq (gql::kind (gql::next (gql::next (gql::next token)))) 'gql::eof)))))

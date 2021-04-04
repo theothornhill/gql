@@ -6,4 +6,5 @@
    #:advance
    #:lookahead
    #:read-token
-   #:make-lexer))
+   #:make-lexer
+   #:gql))

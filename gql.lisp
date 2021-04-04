@@ -8,6 +8,29 @@
 (defun char-code-at (body pos)
   (char-code (char body pos)))
 
+(defun slurp (file)
+  (uiop:read-file-string file))
+
+;;; api
+
+(defgeneric gql (input)
+  (:documentation "Entry point for lexing and parsing"))
+
+(defmethod gql ((str string))
+  (lex-whole-input str))
+
+(defmethod gql ((f pathname))
+  (lex-whole-input (slurp f)))
+
+(defun lex-whole-input (input)
+  (loop
+    with lexer = (make-lexer input)
+    with first-token = (token lexer)
+    with token = (token lexer)
+    until (eq (kind token) 'eof)
+    do (setq token (advance lexer))
+    finally (return first-token)))
+
 ;;; Lexer
 
 (defclass lexer ()
@@ -462,4 +485,5 @@
        (when (>= pos body-length)
          (let ((line (line lexer))
                (col (- (1+ pos) (line-start lexer))))
-           (make-token 'eof body-length body-length line col prev)))))
+           (return-from read-token
+             (make-token 'eof body-length body-length line col prev))))))
