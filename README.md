@@ -2,7 +2,7 @@
 
 # gql
 
-This is a WIP implementation of the GraphQL spec.
+This is a WIP implementation of the [GraphQL spec](https://spec.graphql.org/June2018/)
 
 
 ## api
