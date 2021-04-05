@@ -1,37 +1,5 @@
 (in-package #:gql)
 
-(defclass parser ()
-  ((lexer
-    :initarg :lexer
-    :accessor lexer
-    :documentation "The lexer that previously lexed an input file.")
-   (options
-    :initarg :options
-    :accessor options
-    :documentation "TODO...")))
-
-(defclass location ()
-  ((start
-    :initarg :start
-    :accessor start
-    :documentation "The character offset at which this Node begins.")
-   (end
-    :initarg :end
-    :accessor end
-    :documentation "The character offset at which this Node ends.")
-   (start-token
-    :initarg :start-token
-    :accessor start
-    :documentation "The Token at which this Node begins.")
-   (end-token
-    :initarg :end-token
-    :accessor end
-    :documentation "The Token at which this Node ends.")
-   (source
-    :initarg :source
-    :accessor source
-    :documentation "The Source document the AST represents.")))
-
 ;;; Utilities
 
 (defgeneric loc (parser token)

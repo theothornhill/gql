@@ -7,6 +7,7 @@
   :version "0.0.1"
   :serial t
   :components ((:file "package")
+               (:file "ast")
                (:file "lexer")
                (:file "parser")
                (:file "conditions")

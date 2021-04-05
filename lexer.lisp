@@ -8,29 +8,7 @@
 (defun char-code-at (body pos)
   (char-code (char body pos)))
 
-;;; Lexer
-
-(defclass lexer ()
-  ((source
-    :initarg :source
-    :accessor source
-    :documentation "Source file to scan.")
-   (last-token
-    :initarg :last-token
-    :accessor last-token
-    :documentation "The previously focused non-ignored token.")
-   (token
-    :initarg :token
-    :accessor token
-    :documentation "The currently focused non-ignored token.")
-   (line
-    :initarg :line
-    :accessor line
-    :documentation "The (1-indexed) line containing the current token.")
-   (line-start
-    :initarg :line-start
-    :accessor line-start
-    :documentation "The character offset at which the current line begins.")))
+;;; Constructors
 
 (defun make-token (kind start end line column prev &optional value)
   (make-instance
@@ -42,59 +20,7 @@
     (make-instance
      'lexer :source source :token start-of-file :last-token start-of-file :line 1 :line-start 0)))
 
-(defclass token ()
-  ((kind
-    :initarg :kind
-    :accessor kind
-    :documentation "The kind of token.")
-   (start
-    :initarg :start
-    :accessor start
-    :documentation "The character offset at which this Node begins.")
-   (end
-    :initarg :end
-    :accessor end
-    :documentation "The character offset at which this Node ends.")
-   (line
-    :initarg :line
-    :accessor line
-    :documentation "The 1-indexed line number on which this Token appears.")
-   (column
-    :initarg :column
-    :accessor column
-    :documentation "The 1-indexed column number at which this Token begins.")
-   (value
-    :initarg :value
-    :accessor value
-    :documentation "For non-punctuation tokens, represents the interpreted value of the token.")
-   (prev
-    :initarg :prev
-    :initform nil
-    :accessor prev
-    :documentation "The previous token.")
-   (next
-    :initarg :next
-    :initform nil
-    :accessor next
-    :documentation "The next token.")))
-
-(defclass source ()
-  ((body
-    :initarg :body
-    :accessor body
-    :documentation "The source file to lex and parse.")
-   (name
-    :initarg :name
-    :accessor name
-    :documentation "TODO")
-   (location-offset
-    :initarg :location-offset
-    :accessor location-offset
-    :documentation "TODO")))
-
-(deftype punctuation ()
-  '(member bang dollar paren-l paren-r spread colon
-    equals at bracket-l bracket-r brace-l pipe brace-r))
+;;; Lexer api
 
 (defgeneric advance (lexer)
   (:documentation "Advance the token stream to the next non-ignored token."))
@@ -115,6 +41,8 @@
          (setf tok (if next next (setf next (read-token lexer tok))))
          (unless (eq (kind next) 'comment)
            (return-from lookahead tok)))))
+
+;;; Tokenizers
 
 (defun read-spread (body pos line col prev)
   (when (and (eq (char body (+ pos 1)) #\.)
@@ -380,59 +308,7 @@
             (return-from read-token
               (read-number source pos code line col prev)))
            (;; A-Z_a-z
-            (65 ;; A
-             66
-             67
-             68
-             69
-             70
-             71
-             72
-             73
-             74
-             75
-             76
-             77
-             78
-             79
-             80
-             81
-             82
-             83
-             84
-             85
-             86
-             87
-             88
-             89
-             90     ;; Z
-             95     ;; _
-             97     ;; a
-             98
-             99
-             100
-             101
-             102
-             103
-             104
-             105
-             106
-             107
-             108
-             109
-             110
-             111
-             112
-             113
-             114
-             115
-             116
-             117
-             118
-             119
-             120
-             121
-             122)
+            (65 66 67 68 69 70 71 72 73 74 75 76 77 78 79 80 81 82 83 84 85 86 87 88 89 90 95 97 98 99 100 101 102 103 104 105 106 107 108 109 110 111 112 113 114 115 116 117 118 119 120 121 122)
             (return-from read-token
               (read-name source pos line col prev)))
            (t (gql-error (format nil "Unhandled syntax: ~a" (code-char code))))))
