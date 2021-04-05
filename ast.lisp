@@ -77,11 +77,7 @@
   ((lexer
     :initarg :lexer
     :accessor lexer
-    :documentation "The lexer that previously lexed an input file.")
-   (options
-    :initarg :options
-    :accessor options
-    :documentation "TODO...")))
+    :documentation "The lexer that previously lexed an input file.")))
 
 (defclass location ()
   ((start
@@ -225,14 +221,13 @@ avoiding over-fetching and under-fetching data.")))
 (defclass value (ast-node)
   ())
 
-(defclass variable (value)
-  ())
-
 (defclass int-value (value)
   ((value)))
 
 (defclass float-value (value)
-  ((value)))
+  ((value
+    :initarg :value
+    :accessor value)))
 
 (defclass string-value (value)
   ((value)
@@ -258,7 +253,7 @@ avoiding over-fetching and under-fetching data.")))
    (value)))
 
 ;; Variables - https://spec.graphql.org/June2018/#sec-Language.Variables
-(defclass variable (ast-node)
+(defclass var (ast-node)
   ((name)))
 
 (defclass variable-definition (ast-node)
@@ -276,7 +271,7 @@ avoiding over-fetching and under-fetching data.")))
   ((name)))
 
 (defclass list-type (ty)
-  ((types)))
+  ((type)))
 
 (defclass non-null-type (ty)
   ((type)))

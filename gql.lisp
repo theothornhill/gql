@@ -16,7 +16,7 @@
 (defmethod gql ((f pathname))
   (lex-whole-input (slurp f)))
 
-(declaim (ftype (function (string) token) lex-whole-input))
+(declaim (ftype (function (string) lexer) lex-whole-input))
 (defun lex-whole-input (input)
   (loop
     with lexer = (make-lexer input)
@@ -24,4 +24,5 @@
     with token = (token lexer)
     until (eq (kind token) 'eof)
     do (setq token (advance lexer))
-    finally (return first-token)))
+    finally (setf (token lexer) first-token)
+            (return lexer)))
