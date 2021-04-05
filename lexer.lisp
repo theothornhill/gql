@@ -78,28 +78,6 @@
     :accessor next
     :documentation "The next token.")))
 
-(defclass location ()
-  ((start
-    :initarg :start
-    :accessor start
-    :documentation "The character offset at which this Node begins.")
-   (end
-    :initarg :end
-    :accessor end
-    :documentation "The character offset at which this Node ends.")
-   (start-token
-    :initarg :start-token
-    :accessor start
-    :documentation "The Token at which this Node begins.")
-   (end-token
-    :initarg :end-token
-    :accessor end
-    :documentation "The Token at which this Node ends.")
-   (source
-    :initarg :source
-    :accessor source
-    :documentation "The Source document the AST represents.")))
-
 (defclass source ()
   ((body
     :initarg :body
@@ -290,6 +268,8 @@
             (when (<= 48 code 57)
               (gql-error (format nil "Invalid number, unexpected digit after 0: ~a" (code-char code)))))
           (progn
+            ;; This position goes out of index if number meets end of file
+            ;; https://todo.sr.ht/~theo/gql/1
             (setf pos (read-digits source pos code))
             (setf code (char-code-at body pos))))
 
