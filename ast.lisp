@@ -280,3 +280,8 @@ avoiding over-fetching and under-fetching data.")))
 (defclass directive (ast-node)
   ((name)
    (arguments)))
+
+;; Print objects
+(defmethod print-object ((token token) stream)
+  (format stream "~%value = ~a~%kind = ~a~%line = ~a~%column = ~a~%"
+          (value token) (kind token) (line token) (column token) ))

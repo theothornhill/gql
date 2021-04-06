@@ -28,14 +28,14 @@ Otherwise, do not change the parser state and return nil."))
 (defgeneric unexpected (parser token)
   (:documentation "Helper function for creating an error when an unexpected lexed token is encountered."))
 
-(defgeneric any (parser open-kind parse-fn close-kind)
-  (:documentation "Returns a possibly empty list of parse nodes, determined by the PARSE-FN.
+(defgeneric any (parser open-kind parse-kind close-kind)
+  (:documentation "Returns a possibly empty list of parse nodes, determined by the PARSE-KIND.
 
 This list begins with a lex token of OPEN-KIND and ends with a lex token of
 CLOSE-KIND.  Advances the parser to the next lex token after the closing token."))
 
-(defgeneric optional-many (parser open-kind parse-fn close-kind)
-  (:documentation "Returns a list of parse nodes, determined by the PARSE-FN.
+(defgeneric optional-many (parser open-kind parse-kind close-kind)
+  (:documentation "Returns a list of parse nodes, determined by the PARSE-KIND.
 
 It can be empty only if open token is missing.  Otherwise it will always return
 a non-empty list that begins with a lex token of OPEN-KIND and ends with a lex
@@ -49,8 +49,8 @@ This list begins with a lex token of OPEN-KIND and ends with a lex token of
 CLOSE-KIND.  Advances the parser to the next lex token after last item in the
 list."))
 
-(defgeneric delimited-many (parser delimiter-kind parse-fn)
-  (:documentation "Returns a possibly empty list of parse nodes, determined by the PARSE-FN
+(defgeneric delimited-many (parser delimiter-kind parse-kind)
+  (:documentation "Returns a possibly empty list of parse nodes, determined by the PARSE-KIND
 
 This list may begin with a lex token of DELIMITER-KIND followed by items
 separated by lex tokens of TOKEN-KIND.  Advances the parser to the next lex
@@ -98,35 +98,36 @@ token after last item in the list."))
   (let ((token (if token token (token (lexer parser)))))
     (gql-error "Unexpected token: ~a" token)))
 
-(defmethod any ((parser parser) open-kind parse-fn close-kind)
+(defmethod any ((parser parser) open-kind parse-kind close-kind)
   (expect-token parser open-kind)
   (loop
     with nodes = nil
     until (expect-optional-token parser close-kind)
-    do (push (funcall parse-fn) nodes)
+    do (push (parse parser parse-kind) nodes)
     finally (return (nreverse nodes))))
 
-(defmethod optional-many ((parser parser) open-kind parse-fn close-kind)
+(defmethod optional-many ((parser parser) open-kind parse-kind close-kind)
   (when (expect-optional-token open-kind)
     (loop
-      with nodes = nil
-      do (push (funcall parse-fn) nodes)
-         (when (expect-optional-token parser close-kind)
-           (return-from optional-many (nreverse nodes))))))
+      with nodes
+        initially (push (parse parser parse-kind) nodes)
+      until (expect-optional-token parser close-kind)
+      finally (return (nreverse nodes)))))
 
 (defmethod many ((parser parser) open-kind parse-kind close-kind)
   (expect-token parser open-kind)
   (loop
     with nodes
-    initially (push (parse parser parse-kind) nodes)
+      initially (push (parse parser parse-kind) nodes)
     until (expect-optional-token parser close-kind)
     do (push (parse parser parse-kind) nodes)
-    finally (return-from many (nreverse nodes))))
+    finally (return (nreverse nodes))))
 
-(defmethod delimited-many ((parser parser) delimiter-kind parse-fn)
+(defmethod delimited-many ((parser parser) delimiter-kind parse-kind)
   (expect-token parser delimiter-kind)
   (loop
-    with nodes = nil
-    do (push (funcall parse-fn) nodes)
-       (unless (expect-optional-token parser delimiter-kind)
-         (return-from delimited-many (nreverse nodes)))))
+    with nodes
+      initially (push (parse parser parse-kind) nodes)
+    while (expect-optional-token parser delimiter-kind)
+    do (push (parse parser parse-kind) nodes)
+    finally (return (nreverse nodes))))
