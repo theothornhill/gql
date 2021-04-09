@@ -7,6 +7,7 @@
     :documentation "Source file to scan.")
    (last-token
     :initarg :last-token
+    :initform nil
     :accessor last-token
     :documentation "The previously focused non-ignored token.")
    (token
@@ -115,10 +116,16 @@
     :accessor location
     :documentation "Source location for this node")))
 
+(defclass name (ast-node)
+  ((name
+    :initarg :name
+    :accessor name
+    :documentation "A GraphQL name node.")))
+
 (defclass document (ast-node)
   ((definitions
     :initarg :definitions
-    :accessor :definitions
+    :accessor definitions
     :documentation "A GraphQL Document describes a complete file or request string operated on by a GraphQL service or client.
 
 A document contains multiple definitions, either executable or representative of a GraphQL type system.")))
@@ -131,9 +138,9 @@ A document contains multiple definitions, either executable or representative of
 
 ;;; Executable definition - https://spec.graphql.org/June2018/#sec-Language.Operations
 (defclass operation-definition (executable-definition)
-  ((operation-type
-    :initarg :operation-type
-    :accessor operation-type
+  ((operation
+    :initarg :operation
+    :accessor operation
     :documentation "There are three types of operations that GraphQL models:
 
 - query – a read-only fetch.
@@ -153,7 +160,12 @@ Each operation is represented by an optional operation name and a selection set.
     :initarg :directives
     :initform nil
     :accessor directives
-    :documentation "An optional list of directives.")))
+    :documentation "An optional list of directives.")
+   (selection-set
+    :initarg :selection-set
+    :initform nil
+    :accessor selection-set
+    :documentation "A selection set node.")))
 
 (deftype operation-type ()
   '(member query mutation subscription))
@@ -171,18 +183,25 @@ An operation selects the set of information it needs,
 and will receive exactly that information and nothing more, 
 avoiding over-fetching and under-fetching data.")))
 
-(defclass selection (ast-node)
-  ((field)
-   (fragment-spread)
-   (inline-fragment)))
+(defclass selection (ast-node) ())
 
 ;; Fields - https://spec.graphql.org/June2018/#sec-Language.Fields
 (defclass field (selection)
-  ((alias)
-   (name)
-   (arguments)
-   (directives)
-   (selection-set)))
+  ((alias
+    :initarg :alias
+    :accessor alias)
+   (name
+    :initarg :name
+    :accessor name)
+   (arguments
+    :initarg :arguments
+    :accessor arguments)
+   (directives
+    :initarg :directives
+    :accessor directives)
+   (selection-set
+    :initarg :selection-set
+    :accessor selection-set)))
 
 ;; Arguments - https://spec.graphql.org/June2018/#sec-Language.Arguments
 (defclass argument (ast-node)
@@ -283,5 +302,5 @@ avoiding over-fetching and under-fetching data.")))
 
 ;; Print objects
 (defmethod print-object ((token token) stream)
-  (format stream "~%value = ~a~%kind = ~a~%line = ~a~%column = ~a~%"
-          (value token) (kind token) (line token) (column token) ))
+  (format stream "<TOKEN: value = ~a kind = ~a line = ~a column = ~a>"
+          (value token) (kind token) (line token) (column token)))

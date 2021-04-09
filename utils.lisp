@@ -1,5 +1,10 @@
 (in-package :gql)
 
+;;; Debugging
+
+(defvar *debug-print* nil
+  "Set to t if you want to debug the call stack for the parse tree.")
+
 ;;; Utilities
 
 (defgeneric loc (parser token)
@@ -58,14 +63,13 @@ token after last item in the list."))
 
 
 (defmethod loc ((parser parser) (start-token token))
-  (with-slots (lexer) parser
-    (with-slots (last-token) lexer
-      (make-instance 'location
-                     :start (start start-token)
-                     :end (end last-token)
-                     :start-token start-token
-                     :end-token last-token
-                     :source (source lexer)))))
+  (with-token parser
+    (make-instance 'location
+                   :start (start start-token)
+                   :end (end token)
+                   :start-token start-token
+                   :end-token token
+                   :source (source (lexer parser)))))
 
 (defmethod peek ((parser parser) kind)
   (with-slots (lexer) parser
@@ -79,12 +83,12 @@ token after last item in the list."))
         (gql-error "Expected ~a, found ~a" kind (kind token)))))
 
 (defmethod expect-optional-token ((parser parser) kind)
-  (let ((token (token (lexer parser))))
+  (with-token parser
     (when (eq (kind token) kind)
       (advance (lexer parser)) token)))
 
 (defmethod expect-keyword ((parser parser) (value string))
-  (let ((token (token (lexer parser))))
+  (with-token parser 
     (if (and (eq (kind token) 'name) (equalp (value token) value))
         (advance (lexer parser))
         (gql-error "Expected ~a, found ~a" value (value token)))))
@@ -131,3 +135,18 @@ token after last item in the list."))
     while (expect-optional-token parser delimiter-kind)
     do (push (parse parser parse-kind) nodes)
     finally (return (nreverse nodes))))
+
+(defmacro with-token (parser &body body)
+  "Bring the current token into scope anaphorically.
+
+Refer to the current token with TOKEN."
+  `(let ((token (token (lexer ,parser))))
+     ,@body))
+
+(defmacro with-expected-token (parser kind &body body)
+  "Bring the expected token into scope anaphorically.
+
+Refer to the token as TOKEN.  This macro also advances lexer one step as a side
+effect."
+  `(let ((token (expect-token ,parser ,kind)))
+     ,@body))

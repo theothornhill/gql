@@ -9,6 +9,7 @@
   :depends-on (:alexandria)
   :components ((:file "package")
                (:file "ast")
+               (:file "utils")
                (:file "lexer")
                (:file "parser")
                (:file "conditions")

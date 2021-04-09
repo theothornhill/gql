@@ -7,22 +7,16 @@
 
 ;;; api
 
-(defgeneric gql (input)
+(defgeneric gql (input &optional debug)
   (:documentation "Entry point for lexing and parsing"))
 
-(defmethod gql ((str string))
-  (lex-whole-input str))
+(defmethod gql :before (input &optional debug)
+  (setf *debug-print* debug))
 
-(defmethod gql ((f pathname))
-  (lex-whole-input (slurp f)))
+(defmethod gql ((str string) &optional debug)
+  (declare (ignorable debug))
+  (parse (make-parser str) :document))
 
-(declaim (ftype (function (string) lexer) lex-whole-input))
-(defun lex-whole-input (input)
-  (loop
-    with lexer = (make-lexer input)
-    with first-token = (token lexer)
-    with token = (token lexer)
-    until (eq (kind token) 'eof)
-    do (setq token (advance lexer))
-    finally (setf (token lexer) first-token)
-            (return lexer)))
+(defmethod gql ((f pathname) &optional debug)
+  (declare (ignorable debug))
+  (parse (make-parser (slurp f)) :document))
