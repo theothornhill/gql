@@ -265,17 +265,11 @@ line\"\"\"")
     (check-token :str "|"   :kind 'gql::pipe)
     (check-token :str "}"   :kind 'gql::brace-r)))
 
-(deftest api
-  (testing "gql returns correct tokens when input is string"
-    (let ((token (gql "{}")))
-      (ok (eq (gql::kind token) 'gql::sof))
-      (ok (eq (gql::kind (gql::next token)) 'gql::brace-l))
-      (ok (eq (gql::kind (gql::next (gql::next token))) 'gql::brace-r))
-      (ok (eq (gql::kind (gql::next (gql::next (gql::next token)))) 'gql::eof))))
+(defmacro signals-with-check (string condition-type expected)
+  "Hack to check condition message."
+  `(handler-case (gql ,string)
+     (,condition-type (c) (ok (string= (format nil "~a" c) ,expected)))))
 
-  (testing "gql returns correct tokens when input is pathname"
-    (let ((token (gql (asdf:system-relative-pathname 'gql "./test-files/empty-object.txt"))))
-      (ok (eq (gql::kind token) 'gql::sof))
-      (ok (eq (gql::kind (gql::next token)) 'gql::brace-l))
-      (ok (eq (gql::kind (gql::next (gql::next token))) 'gql::brace-r))
-      (ok (eq (gql::kind (gql::next (gql::next (gql::next token)))) 'gql::eof)))))
+(deftest parser
+  (testing "Detects EOF"
+    (signals-with-check "{" gql-simple-error "Expected NAME, found EOF")))
