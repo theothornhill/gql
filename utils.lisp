@@ -66,7 +66,7 @@ token after last item in the list."))
   (with-token parser
     (make-instance 'location
                    :start (start start-token)
-                   :end (end token)
+                   :end (end start-token)
                    :start-token start-token
                    :end-token token
                    :source (source (lexer parser)))))
@@ -77,7 +77,7 @@ token after last item in the list."))
       (eq (kind token) kind))))
 
 (defmethod expect-token ((parser parser) kind)
-  (let ((token (token (lexer parser))))
+  (with-token parser
     (if (eq (kind token) kind)
         (progn (advance (lexer parser)) token)
         (gql-error "Expected ~a, found ~a" kind (kind token)))))
@@ -111,11 +111,12 @@ token after last item in the list."))
     finally (return (nreverse nodes))))
 
 (defmethod optional-many ((parser parser) open-kind parse-kind close-kind)
-  (when (expect-optional-token open-kind)
+  (when (expect-optional-token parser open-kind)
     (loop
       with nodes
         initially (push (parse parser parse-kind) nodes)
       until (expect-optional-token parser close-kind)
+      do (push (parse parser parse-kind) nodes)
       finally (return (nreverse nodes)))))
 
 (defmethod many ((parser parser) open-kind parse-kind close-kind)

@@ -3,16 +3,16 @@
 (defun make-parser (source)
   (make-instance 'parser :lexer (make-lexer source)))
 
-(defgeneric parse (parser node-type)
+(defgeneric parse (parser node-type &key &allow-other-keys)
   (:documentation "Parse node of NODE-TYPE with parser PARSER."))
 
-(defmethod parse :before ((parser parser) node-type)
+(defmethod parse :before ((parser parser) node-type &key &allow-other-keys)
   (when *debug-print*
     (with-token parser
       (with-slots (value kind) token
         (format t "value: ~Vakind: ~Vanode-type: ~Va~%" 10 value 10 kind 10 node-type)))))
 
-(defmethod parse ((parser parser) (node-type (eql :document)))
+(defmethod parse ((parser parser) (node-type (eql :document)) &key &allow-other-keys)
   "Document
      - Definition list
 
@@ -23,7 +23,7 @@ As described in: https://spec.graphql.org/June2018/#sec-Language.Document"
                    :location (loc parser token)
                    :definitions (many parser 'sof :definition 'eof))))
 
-(defmethod parse ((parser parser) (node-type (eql :definition)))
+(defmethod parse ((parser parser) (node-type (eql :definition)) &key &allow-other-keys)
   "Definition :
      - ExecutableDefinition
      - TypeSystemDefinition
@@ -63,7 +63,7 @@ As described in: https://spec.graphql.org/June2018/#sec-Language.Document"
         ((peek parser 'string)  (parse parser :type-system-definitiona))
         (t (unexpected parser token))))))
 
-(defmethod parse ((parser parser) (node-type (eql :operation-definition)))
+(defmethod parse ((parser parser) (node-type (eql :operation-definition)) &key &allow-other-keys)
   (with-token parser
     (when (peek parser 'brace-l)
       ;; We allow for the query shorthand by first checking for the opening
@@ -94,7 +94,8 @@ As described in: https://spec.graphql.org/June2018/#sec-Language.Document"
                      :kind 'operation-definition))))
 
 
-(defmethod parse ((parser parser) (node-type (eql :operation-type)))
+(defmethod parse ((parser parser) (node-type (eql :operation-type)) &key &allow-other-keys)
+  ;; Disallow other names than query, mutation and subscription.
   (let* ((operation-token (expect-token parser 'name))
          (value (value operation-token)))
     (cond
@@ -103,14 +104,14 @@ As described in: https://spec.graphql.org/June2018/#sec-Language.Document"
       ((string= value "subscription") "subscription")
       (t (unexpected parser operation-token)))))
 
-(defmethod parse ((parser parser) (node-type (eql :name)))
+(defmethod parse ((parser parser) (node-type (eql :name)) &key &allow-other-keys)
   (with-expected-token parser 'name
     (make-instance 'name
                    :name (value token)
                    :location (loc parser token)
                    :kind 'name)))
 
-(defmethod parse ((parser parser) (node-type (eql :selection-set)))
+(defmethod parse ((parser parser) (node-type (eql :selection-set)) &key &allow-other-keys)
   "Selection-set : { selection+ }"
   (with-token parser
     (make-instance 'selection-set
@@ -118,7 +119,7 @@ As described in: https://spec.graphql.org/June2018/#sec-Language.Document"
                    :location (loc parser token)
                    :kind 'selection-set)))
 
-(defmethod parse ((parser parser) (node-type (eql :selection)))
+(defmethod parse ((parser parser) (node-type (eql :selection)) &key &allow-other-keys)
   "Selection :
      - Field
      - FragmentSpread
@@ -127,7 +128,8 @@ As described in: https://spec.graphql.org/June2018/#sec-Language.Document"
       (parse parser :spread)
       (parse parser :field)))
 
-(defmethod parse ((parser parser) (node-type (eql :field)))
+(defmethod parse ((parser parser) (node-type (eql :field)) &key &allow-other-keys)
+  "Field : Alias? Name Arguments? Directives SelectionSet"
   (with-token parser
     (let ((name-or-alias (parse parser :name)) alias name)
       (if (expect-optional-token parser 'colon)
@@ -136,14 +138,33 @@ As described in: https://spec.graphql.org/June2018/#sec-Language.Document"
       (make-instance 'field
                      :alias alias
                      :name name
-                     :arguments nil
+                     :arguments (parse parser :arguments :constp nil)
                      :directives nil
                      :selection-set (when (peek parser 'brace-l) (parse parser :selection-set))
                      :location (loc parser token)
                      :kind 'field))))
 
-(defmethod parse ((parser parser) (node-type (eql :spread))))
+(defmethod parse ((parser parser) (node-type (eql :spread)) &key &allow-other-keys))
 
-(defmethod parse ((parser parser) (node-type (eql :fragment-spread))))
+(defmethod parse ((parser parser) (node-type (eql :fragment-spread)) &key &allow-other-keys))
 
-(defmethod parse ((parser parser) (node-type (eql :inline-fragment))))
+(defmethod parse ((parser parser) (node-type (eql :inline-fragment)) &key &allow-other-keys))
+
+(defmethod parse ((parser parser) (node-type (eql :arguments)) &key (constp nil) &allow-other-keys)
+  (let ((item (if constp :const-argument :argument)))
+    (optional-many parser 'paren-l item 'paren-r)))
+
+(defmethod parse ((parser parser) (node-type (eql :argument)) &key &allow-other-keys)
+  (with-token parser
+    (let ((name (parse parser :name)))
+      (expect-token parser 'colon)
+      (make-instance 'argument
+                     :name name
+                     :value (parse parser :value)
+                     :location (loc parser token)
+                     :kind 'argument))))
+
+(defmethod parse ((parser parser) (node-type (eql :value)) &key &allow-other-keys)
+  "values"
+  (advance (lexer parser))
+  "value literal")

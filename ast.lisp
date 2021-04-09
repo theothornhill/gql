@@ -205,8 +205,12 @@ avoiding over-fetching and under-fetching data.")))
 
 ;; Arguments - https://spec.graphql.org/June2018/#sec-Language.Arguments
 (defclass argument (ast-node)
-  ((name)
-   (value)))
+  ((name
+    :initarg :name
+    :accessor name)
+   (value
+    :initarg :value
+    :accessor value)))
 
 ;; Field alias - https://spec.graphql.org/June2018/#sec-Field-Alias
 (defclass field-alias (ast-node)
