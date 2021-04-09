@@ -13,5 +13,4 @@ This is a WIP implementation of the [GraphQL spec](https://spec.graphql.org/June
 (gql #p"~/path/to/file")
 ```
 
-Will lex the contents and build a doubly linked list representing the ast. It
-returns the first token, which can be traversed with `next` and `prev`.
+Will lex and parse the contents, signaling conditions when there are any.
