@@ -18,10 +18,7 @@
 
 As described in: https://spec.graphql.org/June2018/#sec-Language.Document"
   (with-token parser
-    (make-instance 'document
-                   :kind 'document
-                   :location (loc parser token)
-                   :definitions (many parser 'sof :definition 'eof))))
+    (make-node 'document :definitions (many parser 'sof :definition 'eof))))
 
 (defmethod parse ((parser parser) (node-type (eql :definition)) &key &allow-other-keys)
   "Definition :
@@ -74,28 +71,24 @@ As described in: https://spec.graphql.org/June2018/#sec-Language.Document"
       ;; VARIABLE-DEFINITIONS or NAME.  However, we do have the SELECTION-SET.
       ;; We early return to avoid parsing more than we need.
       (return-from parse
-        (make-instance 'operation-definition
-                       :directives nil
-                       :variable-definitions nil
-                       :name nil
-                       :operation "query"
-                       :selection-set (parse parser :selection-set)
-                       :location (loc parser token)
-                       :kind 'operation-definition)))
+        (make-node 'operation-definition
+                   :directives nil
+                   :variable-definitions nil
+                   :name nil
+                   :operation "query"
+                   :selection-set (parse parser :selection-set))))
     ;; Parse the OPERATION-TYPE this so that we traverse over the node if we
     ;; don't error.
     (let ((operation (parse parser :operation-type))
           name)
       (when (peek parser 'name)
         (setf name (parse parser :name)))
-      (make-instance 'operation-definition
-                     :name name
-                     :operation operation
-                     :variable-definitions (parse parser :variable-definitions)
-                     :directives (parse parser :directives)
-                     :selection-set (parse parser :selection-set)
-                     :location (loc parser token)
-                     :kind 'operation-definition))))
+      (make-node 'operation-definition
+                 :name name
+                 :operation operation
+                 :variable-definitions (parse parser :variable-definitions)
+                 :directives (parse parser :directives)
+                 :selection-set (parse parser :selection-set)))))
 
 
 (defmethod parse ((parser parser) (node-type (eql :operation-type)) &key &allow-other-keys)
@@ -111,30 +104,24 @@ As described in: https://spec.graphql.org/June2018/#sec-Language.Document"
 (defmethod parse ((parser parser) (node-type (eql :fragment-definition)) &key &allow-other-keys)
   (with-token parser
     (expect-keyword parser "fragment")
-    (make-instance 'fragment-definition
-                   :name (parse parser :fragment-name)
-                   :type-condition (progn
-                                     (expect-keyword parser "on")
-                                     (parse parser :named-type))
-                   :directives (parse parser :directives)
-                   :selection-set (parse parser :selection-set)
-                   :location (loc parser token)
-                   :kind 'fragment-definition)))
+    (make-node 'fragment-definition
+               :name (parse parser :fragment-name)
+               :type-condition (progn
+                                 (expect-keyword parser "on")
+                                 (parse parser :named-type))
+               :directives (parse parser :directives)
+               :selection-set (parse parser :selection-set))))
 
 (defmethod parse ((parser parser) (node-type (eql :name)) &key &allow-other-keys)
   (with-expected-token parser 'name
-    (make-instance 'name
-                   :name (value token)
-                   :location (loc parser token)
-                   :kind 'name)))
+    (make-node 'name :name (value token))))
 
 (defmethod parse ((parser parser) (node-type (eql :selection-set)) &key &allow-other-keys)
   "Selection-set : { selection+ }"
   (with-token parser
-    (make-instance 'selection-set
-                   :selections (many parser 'brace-l :selection 'brace-r)
-                   :location (loc parser token)
-                   :kind 'selection-set)))
+    (make-node 'selection-set
+               :selections (many parser 'brace-l :selection 'brace-r)
+               )))
 
 (defmethod parse ((parser parser) (node-type (eql :selection)) &key &allow-other-keys)
   "Selection :
@@ -152,31 +139,25 @@ As described in: https://spec.graphql.org/June2018/#sec-Language.Document"
       (if (expect-optional-token parser 'colon)
           (setf alias name-or-alias name (parse parser :name))
           (setf name name-or-alias))
-      (make-instance 'field
-                     :alias alias
-                     :name name
-                     :arguments (parse parser :arguments)
-                     :directives (parse parser :directives)
-                     :selection-set (when (peek parser 'brace-l) (parse parser :selection-set))
-                     :location (loc parser token)
-                     :kind 'field))))
+      (make-node 'field
+                 :alias alias
+                 :name name
+                 :arguments (parse parser :arguments)
+                 :directives (parse parser :directives)
+                 :selection-set (when (peek parser 'brace-l) (parse parser :selection-set))))))
 
 (defmethod parse ((parser parser) (node-type (eql :fragment)) &key &allow-other-keys)
   (with-token parser
     (expect-token parser 'spread)
     (let ((type-condition-p (expect-optional-keyword parser "on")))
       (if (and (not type-condition-p) (peek parser 'name))
-          (make-instance 'fragment-spread
-                         :name (parse parser :fragment-name)
-                         :directives (parse parser :directives)
-                         :location (loc parser token)
-                         :kind 'fragment-spread)
-          (make-instance 'inline-fragment
-                         :type-condition (when type-condition-p (parse parser :named-type))
-                         :directives (parse parser :directives :constp nil)
-                         :selection-set (parse parser :selection-set)
-                         :location (loc parser token)
-                         :kind 'inline-fragment)))))
+          (make-node 'fragment-spread
+                     :name (parse parser :fragment-name)
+                     :directives (parse parser :directives))
+          (make-node 'inline-fragment
+                     :type-condition (when type-condition-p (parse parser :named-type))
+                     :directives (parse parser :directives :constp nil)
+                     :selection-set (parse parser :selection-set))))))
 
 (defmethod parse ((parser parser) (node-type (eql :fragment-name)) &key &allow-other-keys)
   "Fragment-name : Name but not `on`"
@@ -193,53 +174,42 @@ As described in: https://spec.graphql.org/June2018/#sec-Language.Document"
   (with-token parser
     (let ((name (parse parser :name)))
       (expect-token parser 'colon)
-      (make-instance 'argument
-                     :name name
-                     :value (parse parser :value)
-                     :location (loc parser token)
-                     :kind 'argument))))
+      (make-node 'argument
+                 :name name
+                 :value (parse parser :value)))))
 
 (defmethod parse ((parser parser) (node-type (eql :const-argument)) &key &allow-other-keys)
   (with-token parser
-    (make-instance 'argument
-                   :name (parse parser :name)
-                   :value (progn
-                            (expect-token parser 'colon)
-                            (parse parser :value))
-                   :location (loc parser token)
-                   :kind 'argument)))
+    (make-node 'argument
+               :name (parse parser :name)
+               :value (progn
+                        (expect-token parser 'colon)
+                        (parse parser :value)))))
 
 (defmethod parse ((parser parser) (node-type (eql :variable-definitions)) &key &allow-other-keys)
   (optional-many parser 'paren-l :variable-definition 'paren-r))
 
 (defmethod parse ((parser parser) (node-type (eql :variable-definition)) &key &allow-other-keys)
   (with-token parser
-    (make-instance 'variable-definition
-                   :var (parse parser :var)
-                   :var-type (progn
-                               (expect-token parser 'colon)
-                               (parse parser :type-reference))
-                   :default-value nil
-                   :directives (parse parser :directives :constp t)
-                   :location (loc parser token)
-                   :kind 'variable-definition)))
+    (make-node 'variable-definition
+               :var (parse parser :var)
+               :var-type (progn
+                           (expect-token parser 'colon)
+                           (parse parser :type-reference))
+               :default-value nil
+               :directives (parse parser :directives :constp t))))
 
 (defmethod parse ((parser parser) (node-type (eql :var)) &key &allow-other-keys)
   (with-token parser
     (expect-token parser 'dollar)
-    (make-instance 'var
-                   :name (parse parser :name)
-                   :location (loc parser token)
-                   :kind 'var)))
+    (make-node 'var :name (parse parser :name))))
 
 (defmethod parse ((parser parser) (node-type (eql :string-value)) &key &allow-other-keys)
   (with-token parser
     (advance (lexer parser))
-    (make-instance 'string-value
-                   :value (value token)
-                   :blockp (when (eq (kind token) 'block-string) t)
-                   :location (loc parser token)
-                   :kind 'var)))
+    (make-node 'string-value
+               :value (value token)
+               :blockp (when (eq (kind token) 'block-string) t))))
 
 (defmethod parse ((parser parser) (node-type (eql :value)) &key (constp nil) &allow-other-keys)
   "values"
@@ -249,66 +219,43 @@ As described in: https://spec.graphql.org/June2018/#sec-Language.Document"
       (brace-l (parse parser :object-value :consp constp))
       (int (progn
              (advance (lexer parser))
-             (make-instance 'int-value
-                            :int-value (value token)
-                            :location (loc parser token)
-                            :kind 'int-value)))
+             (make-node 'int-value :int-value (value token))))
       (float (progn
                (advance (lexer parser))
-               (make-instance 'float-value
-                              :int-value (value token)
-                              :location (loc parser token)
-                              :kind 'float-value)))
+               (make-node 'float-value :int-value (value token))))
       ((or string block-string) (parse parser :string-value))
       (name (progn
               (advance (lexer parser))
               (let ((value (value token)))
                 (cond
                   ((string= value "true")
-                   (make-instance 'boolean-value
-                                  :value t
-                                  :location (loc parser token)
-                                  :kind 'boolean-value))
+                   (make-node 'boolean-value :value t))
                   ((string= value "false")
-                   (make-instance 'boolean-value
-                                  :value nil
-                                  :location (loc parser token)
-                                  :kind 'boolean-value))
+                   (make-node 'boolean-value :value nil))
                   ((string= value "null")
-                   (make-instance 'null-value
-                                  :location (loc parser token)
-                                  :kind 'null-value))
+                   (make-node 'null-value))
                   (t
-                   (make-instance 'enum-value
-                                  :value value
-                                  :location (loc parser token)
-                                  :kind 'enum-value))))))
+                   (make-node 'enum-value :value value))))))
       (dollar (unless constp (parse parser :var)))
       (t (unexpected parser token)))))
 
 (defmethod parse ((parser parser) (node-type (eql :list-value)) &key (constp nil) &allow-other-keys)
   (with-token parser
-    (make-instance 'list-value
-                   :list-values (any parser 'bracket-l :value 'bracket-r constp)
-                   :location (loc parser token)
-                   :kind 'list-value)))
+    (make-node 'list-value
+               :list-values (any parser 'bracket-l :value 'bracket-r constp))))
 
 (defmethod parse ((parser parser) (node-type (eql :object-value)) &key (constp nil) &allow-other-keys)
   (with-token parser
-    (make-instance 'object-value
-                   :fields (any parser 'brace-l :object-field 'brace-r constp)
-                   :location (loc parser token)
-                   :kind 'object-value)))
+    (make-node 'object-value
+               :fields (any parser 'brace-l :object-field 'brace-r constp))))
 
 (defmethod parse ((parser parser) (node-type (eql :object-value)) &key (constp nil) &allow-other-keys)
   (with-token parser
     (let ((name (parse parser :name)))
       (expect-token parser 'colon)
-      (make-instance 'object-field
+      (make-node 'object-field
                      :name name
-                     :value (parse parser :value :constp constp)
-                     :location (loc parser token)
-                     :kind 'object-value))))
+                     :value (parse parser :value :constp constp)))))
 
 (defmethod parse ((parser parser) (node-type (eql :directives)) &key (constp nil) &allow-other-keys)
   "Directives[Const] : Directive[?Const]+"
@@ -322,19 +269,14 @@ As described in: https://spec.graphql.org/June2018/#sec-Language.Document"
   "Directive[Const] : @ Name Arguments[?Const]?"
   (with-token parser
     (expect-token parser 'at)
-    (make-instance 'directive
-                   :name (parse parser :name)
-                   :arguments (parse parser :arguments :constp constp)
-                   :location (loc parser token)
-                   :kind 'directive)))
+    (make-node 'directive
+               :name (parse parser :name)
+               :arguments (parse parser :arguments :constp constp))))
 
 (defmethod parse ((parser parser) (node-type (eql :named-type)) &key &allow-other-keys)
   "Directive[Const] : @ Name Arguments[?Const]?"
   (with-token parser
-    (make-instance 'named-type
-                   :name (parse parser :name)
-                   :location (loc parser token)
-                   :kind 'named-type)))
+    (make-node 'named-type :name (parse parser :name))))
 
 (defmethod parse ((parser parser) (node-type (eql :type-reference)) &key &allow-other-keys)
   "Directive[Const] : @ Name Arguments[?Const]?"
@@ -343,16 +285,10 @@ As described in: https://spec.graphql.org/June2018/#sec-Language.Document"
       (if (expect-optional-token parser 'bracket-l)
           (let ((inner-type (parse parser :type-reference)))
             (expect-token parser 'bracket-r)
-            (setf ty (make-instance 'list-type
-                                    :ty inner-type
-                                    :location (loc parser token)
-                                    :kind 'list-type)))
+            (setf ty (make-node 'list-type :ty inner-type)))
           (setf ty (parse parser :named-type)))
       (when (expect-optional-token parser 'bang)
         (return-from parse
-          (make-instance 'non-null-type
-                         :ty ty
-                         :location (loc parser token)
-                         :kind 'non-null-type)))
+          (make-node 'non-null-type :ty ty)))
       ty)))
 

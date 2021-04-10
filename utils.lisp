@@ -22,6 +22,16 @@ effect."
   `(let ((token (expect-token ,parser ,kind)))
      ,@body))
 
+(defmacro make-node (node-type &rest keys)
+  "Make an instance of NODE-TYPE, with provided initargs in KEYS.
+
+Assumes a PARSER and TOKEN already is in scope using WITH-TOKEN or
+WITH-EXPECTED-TOKEN.  Convenience macro to avoid providing TYPE and LOCATION for
+all nodes."
+  (let ((n-type (gensym)))
+    `(let ((,n-type ,node-type))
+       (make-instance ,n-type ,@keys :kind ,n-type :location (loc parser token)))))
+
 (defgeneric loc (parser token)
   (:documentation "Returns a location object, used to identify the place in the source that
 created a given parsed object."))
@@ -78,12 +88,12 @@ token after last item in the list."))
 
 
 (defmethod loc ((parser parser) (start-token token))
-  (with-token parser
+  (with-slots (last-token) (lexer parser)
     (make-instance 'location
                    :start (start start-token)
-                   :end (end start-token)
+                   :end (end last-token)
                    :start-token start-token
-                   :end-token token
+                   :end-token last-token
                    :source (source (lexer parser)))))
 
 (defmethod peek ((parser parser) kind)
