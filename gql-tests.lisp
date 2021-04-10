@@ -367,4 +367,22 @@ fragment friendFields on User {
     Yours,
       GraphQL.
   \"\"\")
-}"))))
+}")))
+
+  (testing "Locations"
+    (let* ((document (nth-value 1 (gql "query { x }")))
+           (definition (car (gql::definitions document)))
+           (operation-location (gql::location definition))
+           (selection-set (gql::selection-set definition))
+           (selection-set-location (gql::location selection-set))
+           (x-location (gql::location (car (gql::selections selection-set)))))
+      (ok (string= (gql::operation definition) "query"))
+      (ok (= (gql::column (gql::start operation-location)) 1))
+      (ok (= (gql::column (gql::end operation-location)) 11))
+      (ok (= (gql::column (gql::end operation-location)) 11))
+
+      (ok (= (gql::column (gql::start selection-set-location)) 7))
+      (ok (= (gql::column (gql::end selection-set-location)) 11))
+
+      (ok (= (gql::column (gql::start x-location)) 9))
+      (ok (= (gql::column (gql::end x-location)) 9)))))
