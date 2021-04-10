@@ -358,4 +358,13 @@ fragment friendFields on User {
       }
     }
   }
+}"))
+    (ok (gql "mutation {
+  sendEmail(message: \"\"\"
+    Hello,
+      World!
+
+    Yours,
+      GraphQL.
+  \"\"\")
 }"))))

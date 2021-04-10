@@ -237,7 +237,7 @@ As described in: https://spec.graphql.org/June2018/#sec-Language.Document"
     (advance (lexer parser))
     (make-instance 'string-value
                    :value (value token)
-                   :blockp (when (eq (kind token) 'block-string))
+                   :blockp (when (eq (kind token) 'block-string) t)
                    :location (loc parser token)
                    :kind 'var)))
 
