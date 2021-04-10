@@ -12,5 +12,4 @@
    #:gql-error
    #:gql-warning
    #:gql-simple-warning
-   #:make-parser)
-  (:local-nicknames (:a :alexandria)))
+   #:make-parser))

@@ -10,7 +10,7 @@
   (when *debug-print*
     (with-token parser
       (with-slots (value kind) token
-        (format t "value: ~Vakind: ~Vanode-type: ~Va~%" 10 value 10 kind 10 node-type)))))
+        (format t "; value: ~Vakind: ~Vanode-type: ~Va~%" 10 value 10 kind 10 node-type)))))
 
 (defmethod parse ((parser parser) (node-type (eql :document)) &key &allow-other-keys)
   "Document
@@ -40,27 +40,28 @@ As described in: https://spec.graphql.org/June2018/#sec-Language.Document"
       ;; respective handlers.  This way we can still assert with
       ;; (expect-* parser 'thing) when needed.
       ((peek parser 'name)
-       (a:switch ((value token) :test #'string=)
+       (let ((value (value token)))
          ;; ExecutableDefinition
-         ("query"        (parse parser :operation-definition))
-         ("mutation"     (parse parser :operation-definition))
-         ("subscription" (parse parser :operation-definition))
+         (cond
+           ((string= value "query")        (parse parser :operation-definition))
+           ((string= value "mutation")     (parse parser :operation-definition))
+           ((string= value "subscription") (parse parser :operation-definition))
 
-         ("fragment"     (parse parser :fragment-definition))
+           ((string= value "fragment")     (parse parser :fragment-definition))
 
-         ;; TypeSystemDefinition
-         ("schema"       (parse parser :type-system-definition))
-         ("scalar"       (parse parser :type-system-definition))
-         ("type"         (parse parser :type-system-definition))
-         ("interface"    (parse parser :type-system-definition))
-         ("union"        (parse parser :type-system-definition))
-         ("enum"         (parse parser :type-system-definition))
-         ("input"        (parse parser :type-system-definition))
-         ("directive"    (parse parser :type-system-definition))
+           ;; TypeSystemDefinition
+           ((string= value "schema")       (parse parser :type-system-definition))
+           ((string= value "scalar")       (parse parser :type-system-definition))
+           ((string= value "type")         (parse parser :type-system-definition))
+           ((string= value "interface")    (parse parser :type-system-definition))
+           ((string= value "union")        (parse parser :type-system-definition))
+           ((string= value "enum")         (parse parser :type-system-definition))
+           ((string= value "input")        (parse parser :type-system-definition))
+           ((string= value "directive")    (parse parser :type-system-definition))
 
-         ;; TypeSystemExtension
-         ("extend"       (parse parser :type-system-extension))
-         (t (unexpected parser token))))
+           ;; TypeSystemExtension
+           ((string= value "extend")       (parse parser :type-system-extension))
+           (t (unexpected parser token)))))
       ((peek parser 'brace-l) (parse parser :operation-definition))
       ((peek parser 'string)  (parse parser :type-system-definitiona))
       (t (unexpected parser token)))))
@@ -71,15 +72,14 @@ As described in: https://spec.graphql.org/June2018/#sec-Language.Document"
       ;; We allow for the query shorthand by first checking for the opening
       ;; brace.  If we arrive here we know that we don't have any DIRECTIVES,
       ;; VARIABLE-DEFINITIONS or NAME.  However, we do have the SELECTION-SET.
-      (return-from parse
-        (make-instance 'operation-definition
-                       :directives nil
-                       :variable-definitions nil
-                       :name nil
-                       :operation "query"
-                       :selection-set (parse parser :selection-set)
-                       :location (loc parser token)
-                       :kind 'operation-definition)))
+      (make-instance 'operation-definition
+                     :directives nil
+                     :variable-definitions nil
+                     :name nil
+                     :operation "query"
+                     :selection-set (parse parser :selection-set)
+                     :location (loc parser token)
+                     :kind 'operation-definition))
     ;; Parse the OPERATION-TYPE this so that we traverse over the node if we
     ;; don't error.
     (let ((operation (parse parser :operation-type))
