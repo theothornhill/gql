@@ -89,10 +89,10 @@ As described in: https://spec.graphql.org/June2018/#sec-Language.Document"
       (when (peek parser 'name)
         (setf name (parse parser :name)))
       (make-instance 'operation-definition
-                     :directives (parse parser :directives)
-                     :variable-definitions nil
                      :name name
                      :operation operation
+                     :variable-definitions (parse parser :variable-definitions)
+                     :directives (parse parser :directives)
                      :selection-set (parse parser :selection-set)
                      :location (loc parser token)
                      :kind 'operation-definition))))
@@ -209,10 +209,106 @@ As described in: https://spec.graphql.org/June2018/#sec-Language.Document"
                    :location (loc parser token)
                    :kind 'argument)))
 
-(defmethod parse ((parser parser) (node-type (eql :value)) &key &allow-other-keys)
+(defmethod parse ((parser parser) (node-type (eql :variable-definitions)) &key &allow-other-keys)
+  (optional-many parser 'paren-l :variable-definition 'paren-r))
+
+(defmethod parse ((parser parser) (node-type (eql :variable-definition)) &key &allow-other-keys)
+  (with-token parser
+    (make-instance 'variable-definition
+                   :var (parse parser :var)
+                   :var-type (progn
+                               (expect-token parser 'colon)
+                               (parse parser :type-reference))
+                   :default-value nil
+                   :directives (parse parser :directives :constp t)
+                   :location (loc parser token)
+                   :kind 'variable-definition)))
+
+(defmethod parse ((parser parser) (node-type (eql :var)) &key &allow-other-keys)
+  (with-token parser
+    (expect-token parser 'dollar)
+    (make-instance 'var
+                   :name (parse parser :name)
+                   :location (loc parser token)
+                   :kind 'var)))
+
+(defmethod parse ((parser parser) (node-type (eql :string-value)) &key &allow-other-keys)
+  (with-token parser
+    (advance (lexer parser))
+    (make-instance 'string-value
+                   :value (value token)
+                   :blockp (when (eq (kind token) 'block-string))
+                   :location (loc parser token)
+                   :kind 'var)))
+
+(defmethod parse ((parser parser) (node-type (eql :value)) &key (constp nil) &allow-other-keys)
   "values"
-  (advance (lexer parser))
-  "value literal")
+  (with-token parser
+    (case (kind token)
+      (bracket-l (parse parser :list-value :constp constp))
+      (brace-l (parse parser :object-value :consp constp))
+      (int (progn
+             (advance (lexer parser))
+             (make-instance 'int-value
+                            :int-value (value token)
+                            :location (loc parser token)
+                            :kind 'int-value)))
+      (float (progn
+               (advance (lexer parser))
+               (make-instance 'float-value
+                              :int-value (value token)
+                              :location (loc parser token)
+                              :kind 'float-value)))
+      ((or string block-string) (parse parser :string-value))
+      (name (progn
+              (advance (lexer parser))
+              (let ((value (value token)))
+                (cond
+                  ((string= value "true")
+                   (make-instance 'boolean-value
+                                  :value t
+                                  :location (loc parser token)
+                                  :kind 'boolean-value))
+                  ((string= value "false")
+                   (make-instance 'boolean-value
+                                  :value nil
+                                  :location (loc parser token)
+                                  :kind 'boolean-value))
+                  ((string= value "null")
+                   (make-instance 'null-value
+                                  :location (loc parser token)
+                                  :kind 'null-value))
+                  (t
+                   (make-instance 'enum-value
+                                  :value value
+                                  :location (loc parser token)
+                                  :kind 'enum-value))))))
+      (dollar (unless constp (parse parser :var)))
+      (t (unexpected parser token)))))
+
+(defmethod parse ((parser parser) (node-type (eql :list-value)) &key (constp nil) &allow-other-keys)
+  (with-token parser
+    (make-instance 'list-value
+                   :list-values (any parser 'bracket-l :value 'bracket-r constp)
+                   :location (loc parser token)
+                   :kind 'list-value)))
+
+(defmethod parse ((parser parser) (node-type (eql :object-value)) &key (constp nil) &allow-other-keys)
+  (with-token parser
+    (make-instance 'object-value
+                   :fields (any parser 'brace-l :object-field 'brace-r constp)
+                   :location (loc parser token)
+                   :kind 'object-value)))
+
+(defmethod parse ((parser parser) (node-type (eql :object-value)) &key (constp nil) &allow-other-keys)
+  (with-token parser
+    (let ((name (parse parser :name)))
+      (expect-token parser 'colon)
+      (make-instance 'object-field
+                     :name name
+                     :value (parse parser :value :constp constp)
+                     :location (loc parser token)
+                     :kind 'object-value))))
 
 (defmethod parse ((parser parser) (node-type (eql :directives)) &key (constp nil) &allow-other-keys)
   "Directives[Const] : Directive[?Const]+"
@@ -239,4 +335,24 @@ As described in: https://spec.graphql.org/June2018/#sec-Language.Document"
                    :name (parse parser :name)
                    :location (loc parser token)
                    :kind 'named-type)))
+
+(defmethod parse ((parser parser) (node-type (eql :type-reference)) &key &allow-other-keys)
+  "Directive[Const] : @ Name Arguments[?Const]?"
+  (with-token parser
+    (let ((ty))
+      (if (expect-optional-token parser 'bracket-l)
+          (let ((inner-type (parse parser :type-reference)))
+            (expect-token parser 'bracket-r)
+            (setf ty (make-instance 'list-type
+                                    :ty inner-type
+                                    :location (loc parser token)
+                                    :kind 'list-type)))
+          (setf ty (parse parser :named-type)))
+      (when (expect-optional-token parser 'bang)
+        (return-from parse
+          (make-instance 'non-null-type
+                         :ty ty
+                         :location (loc parser token)
+                         :kind 'non-null-type)))
+      ty)))
 

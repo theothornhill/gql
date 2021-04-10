@@ -48,7 +48,7 @@ Otherwise, do not change the parser state and return nil."))
 (defgeneric unexpected (parser token)
   (:documentation "Helper function for creating an error when an unexpected lexed token is encountered."))
 
-(defgeneric any (parser open-kind parse-kind close-kind)
+(defgeneric any (parser open-kind parse-kind close-kind &optional constp)
   (:documentation "Returns a possibly empty list of parse nodes, determined by the PARSE-KIND.
 
 This list begins with a lex token of OPEN-KIND and ends with a lex token of
@@ -117,12 +117,12 @@ token after last item in the list."))
   (let ((token (if token token (token (lexer parser)))))
     (gql-error "Unexpected token: ~a" token)))
 
-(defmethod any ((parser parser) open-kind parse-kind close-kind)
+(defmethod any ((parser parser) open-kind parse-kind close-kind &optional (constp nil))
   (expect-token parser open-kind)
   (loop
     with nodes = nil
     until (expect-optional-token parser close-kind)
-    do (push (parse parser parse-kind) nodes)
+    do (push (parse parser parse-kind :constp constp) nodes)
     finally (return (nreverse nodes))))
 
 (defmethod optional-many ((parser parser) open-kind parse-kind close-kind)

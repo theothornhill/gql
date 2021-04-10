@@ -263,7 +263,9 @@ avoiding over-fetching and under-fetching data.")))
   ())
 
 (defclass int-value (value)
-  ((value)))
+  ((value
+    :initarg :int-value
+    :accessor int-value)))
 
 (defclass float-value (value)
   ((value
@@ -271,36 +273,63 @@ avoiding over-fetching and under-fetching data.")))
     :accessor value)))
 
 (defclass string-value (value)
-  ((value)
-   (block-p)))
+  ((value
+    :initarg :value
+    :accessor value)
+   (blockp
+    :initarg :blockp
+    :accessor blockp)))
 
 (defclass boolean-value (value)
-  ((value)))
+  ((value
+    :initarg :value
+    :accessor value)))
 
 (defclass null-value (value)
   ())
 
 (defclass enum-value (value)
-  ((value)))
+  ((value
+    :initarg :value
+    :accessor value)))
 
 (defclass list-value (value)
-  ((values)))
+  ((list-values
+    :initarg :list-values
+    :accessor list-values)))
 
 (defclass object-value (value)
-  ((fields)))
+  ((fields
+    :initarg :fields
+    :accessor fields)))
 
 (defclass object-field (ast-node)
-  ((name)
-   (value)))
+  ((name
+    :initarg :name
+    :accessor name)
+   (value
+    :initarg :value
+    :accessor value)))
 
 ;; Variables - https://spec.graphql.org/June2018/#sec-Language.Variables
 (defclass var (ast-node)
-  ((name)))
+  ((name
+    :initarg :name
+    :accessor name)))
 
 (defclass variable-definition (ast-node)
-  ((variable)
-   (type)
-   (default-value)))
+  ((var
+    :initarg :var
+    :accessor var)
+   (var-type
+    :initarg :var-type
+    :accessor var-type)
+   (default-value
+    :initarg :default-value
+    :accessor default-value)
+   (directives
+    :initarg :directives
+    :accessor directives)))
 
 (defclass default-value (ast-node)
   ((value)))
@@ -314,10 +343,14 @@ avoiding over-fetching and under-fetching data.")))
     :accessor name)))
 
 (defclass list-type (ty)
-  ((type)))
+  ((ty
+    :initarg :ty
+    :accessor ty)))
 
 (defclass non-null-type (ty)
-  ((type)))
+  ((ty
+    :initarg :ty
+    :accessor ty)))
 
 (defclass directive (ast-node)
   ((name

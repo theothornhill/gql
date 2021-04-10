@@ -291,7 +291,7 @@ line\"\"\"")
     profilePic(width: 100, height: 50)
   }
 }"))
-    (ok (gql "query { name: string @deprecated(lol: string) }"))
+    (ok (gql "query { name: string @deprecated(lol: 4) }"))
     (ok (gql "fragment friendFields on User {
   id
   name
@@ -314,6 +314,38 @@ fragment friendFields on User {
 }"))
     (ok (gql "query inlineFragmentTyping {
   profiles(handles: 5) {
+    handle
+    ... on User {
+      friends {
+        count
+      }
+    }
+    ... on Page {
+      likers {
+        count
+      }
+    }
+  }
+}"))
+    (ok (gql "query inlineFragmentNoType($expandedInfo: Boolean) {
+  user(handle: $expandedInfo) {
+    id
+    name
+    ... @include(if: $expandedInfo) {
+      firstName
+      lastName
+      birthday
+    }
+  }
+}"))
+    (ok (gql "query getZuckProfile($devicePicSize: Int) {
+  user(id: $devicePicSize) {
+    id
+    name
+  }
+}"))
+    (ok (gql "query inlineFragmentTyping {
+  profiles(handles: [\"foo\", \"bar\"]) {
     handle
     ... on User {
       friends {
