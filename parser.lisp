@@ -216,7 +216,7 @@ As described in: https://spec.graphql.org/June2018/#sec-Language.Document"
   (with-token parser
     (case (kind token)
       (bracket-l (parse parser :list-value :constp constp))
-      (brace-l (parse parser :object-value :consp constp))
+      (brace-l (parse parser :object-value :constp constp))
       (int (progn
              (advance (lexer parser))
              (make-node 'int-value :int-value (value token))))

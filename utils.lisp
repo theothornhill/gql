@@ -86,7 +86,6 @@ This list may begin with a lex token of DELIMITER-KIND followed by items
 separated by lex tokens of TOKEN-KIND.  Advances the parser to the next lex
 token after last item in the list."))
 
-
 (defmethod loc ((parser parser) (start-token token))
   (with-slots (last-token) (lexer parser)
     (make-instance 'location
