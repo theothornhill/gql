@@ -7,6 +7,21 @@
 
 ;;; Utilities
 
+(defmacro with-token (parser &body body)
+  "Bring the current token into scope anaphorically.
+
+Refer to the current token with TOKEN."
+  `(let ((token (token (lexer ,parser))))
+     ,@body))
+
+(defmacro with-expected-token (parser kind &body body)
+  "Bring the expected token into scope anaphorically.
+
+Refer to the token as TOKEN.  This macro also advances lexer one step as a side
+effect."
+  `(let ((token (expect-token ,parser ,kind)))
+     ,@body))
+
 (defgeneric loc (parser token)
   (:documentation "Returns a location object, used to identify the place in the source that
 created a given parsed object."))
@@ -136,18 +151,3 @@ token after last item in the list."))
     while (expect-optional-token parser delimiter-kind)
     do (push (parse parser parse-kind) nodes)
     finally (return (nreverse nodes))))
-
-(defmacro with-token (parser &body body)
-  "Bring the current token into scope anaphorically.
-
-Refer to the current token with TOKEN."
-  `(let ((token (token (lexer ,parser))))
-     ,@body))
-
-(defmacro with-expected-token (parser kind &body body)
-  "Bring the expected token into scope anaphorically.
-
-Refer to the token as TOKEN.  This macro also advances lexer one step as a side
-effect."
-  `(let ((token (expect-token ,parser ,kind)))
-     ,@body))
