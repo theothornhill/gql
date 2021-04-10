@@ -2,7 +2,12 @@
 
 # gql
 
-This is a WIP implementation of the [GraphQL spec](https://spec.graphql.org/June2018/)
+This is a WIP implementation of the [GraphQL spec](https://spec.graphql.org/June2018/).
+
+Right now this is mostly useful as a poor mans syntax checker for queries,
+should you try to send requests using `hunchentoot` or whatnot. If the string or
+file parses ok, `gql` returns two values, the original string and the parsed
+object.
 
 
 ## api
@@ -21,3 +26,12 @@ This is a WIP implementation of the [GraphQL spec](https://spec.graphql.org/June
 
 Will lex and parse the contents, signaling conditions when there are any.  Use
 `t` as the second argument to `gql` to print debug information.
+
+### What parts of the spec is worked on yet
+
+ - [x] [Language](https://spec.graphql.org/June2018/#sec-Language)
+ - [ ] [Type System](https://spec.graphql.org/June2018/#sec-Type-System)
+ - [ ] [Introspection](https://spec.graphql.org/June2018/#sec-Introspection)
+ - [ ] [Validation](https://spec.graphql.org/June2018/#sec-Validation)
+ - [ ] [Execution](https://spec.graphql.org/June2018/#sec-Execution)
+ - [ ] [Response](https://spec.graphql.org/June2018/#sec-Response)
