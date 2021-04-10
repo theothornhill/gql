@@ -35,3 +35,8 @@ Will lex and parse the contents, signaling conditions when there are any.  Use
  - [ ] [Validation](https://spec.graphql.org/June2018/#sec-Validation)
  - [ ] [Execution](https://spec.graphql.org/June2018/#sec-Execution)
  - [ ] [Response](https://spec.graphql.org/June2018/#sec-Response)
+
+
+### Contact
+If interested, you can open an issue at the [tracker](https://todo.sr.ht/~theo/gql),
+or send an email to the [public inbox](https://lists.sr.ht/~theo/public-inbox)
