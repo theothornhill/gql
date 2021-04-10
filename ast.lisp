@@ -218,14 +218,26 @@ avoiding over-fetching and under-fetching data.")))
 
 ;; Fragments - https://spec.graphql.org/June2018/#sec-Language.Fragments
 (defclass fragment-spread (ast-node)
-  ((fragment-name)
-   (directives)))
+  ((name
+    :initarg :name
+    :accessor name)
+   (directives
+    :initarg :directives
+    :accessor directives)))
 
 (defclass fragment-definition (ast-node)
-  ((fragment-name)
-   (type-condition)
-   (directives)
-   (selection-set)))
+  ((name
+    :initarg :name
+    :accessor name)
+   (type-condition
+    :initarg :type-condition
+    :accessor type-condition)
+   (directives
+    :initarg :directives
+    :accessor directives)
+   (selection-set
+    :initarg :selection-set
+    :accessor selection-set)))
 
 (defclass fragment-name (ast-node)
   ((name)))
@@ -236,9 +248,15 @@ avoiding over-fetching and under-fetching data.")))
 
 ;;; Inline fragments - https://spec.graphql.org/June2018/#sec-Inline-Fragments
 (defclass inline-fragment (selection)
-  ((type-condition)
-   (directives)
-   (selection-set)))
+  ((type-condition
+    :initarg :type-condition
+    :accessor type-condition)
+   (directives
+    :initarg :directives
+    :accessor directives)
+   (selection-set
+    :initarg :selection-set
+    :accessor selection-set)))
 
 ;; Input values - https://spec.graphql.org/June2018/#sec-Input-Values
 (defclass value (ast-node)
@@ -291,7 +309,9 @@ avoiding over-fetching and under-fetching data.")))
 (defclass ty (ast-node) ())
 
 (defclass named-type (ty)
-  ((name)))
+  ((name
+    :initarg :name
+    :accessor name)))
 
 (defclass list-type (ty)
   ((type)))

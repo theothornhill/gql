@@ -272,4 +272,43 @@ line\"\"\"")
 
 (deftest parser
   (testing "Detects EOF"
-    (signals-with-check "{" gql-simple-error "Expected NAME, found EOF")))
+    (signals-with-check "{" gql-simple-error "Expected NAME, found EOF"))
+  (testing "Returns OK"
+    (ok (gql "query withFragments {
+  user(id: 4) {
+    friends(first: 10) {
+      ...friendFields
+    }
+    mutualFriends(first: 10) {
+      ...friendFields
+    }
+  }
+} "))
+    (ok (gql "{
+  user(id: 4) {
+    id
+    name
+    profilePic(width: 100, height: 50)
+  }
+}"))
+    (ok (gql "query { name: string @deprecated(lol: string) }"))
+    (ok (gql "fragment friendFields on User {
+  id
+  name
+  profilePic(size: 50)
+}"))
+    (ok (gql "query withFragments {
+  user(id: 4) {
+    friends(first: 10) {
+      ...friendFields
+    }
+    mutualFriends(first: 10) {
+      ...friendFields
+    }
+  }
+}
+fragment friendFields on User {
+  id
+  name
+  profilePic(size: 50)
+}"))))
