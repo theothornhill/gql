@@ -72,14 +72,16 @@ As described in: https://spec.graphql.org/June2018/#sec-Language.Document"
       ;; We allow for the query shorthand by first checking for the opening
       ;; brace.  If we arrive here we know that we don't have any DIRECTIVES,
       ;; VARIABLE-DEFINITIONS or NAME.  However, we do have the SELECTION-SET.
-      (make-instance 'operation-definition
-                     :directives nil
-                     :variable-definitions nil
-                     :name nil
-                     :operation "query"
-                     :selection-set (parse parser :selection-set)
-                     :location (loc parser token)
-                     :kind 'operation-definition))
+      ;; We early return to avoid parsing more than we need.
+      (return-from parse
+        (make-instance 'operation-definition
+                       :directives nil
+                       :variable-definitions nil
+                       :name nil
+                       :operation "query"
+                       :selection-set (parse parser :selection-set)
+                       :location (loc parser token)
+                       :kind 'operation-definition)))
     ;; Parse the OPERATION-TYPE this so that we traverse over the node if we
     ;; don't error.
     (let ((operation (parse parser :operation-type))
