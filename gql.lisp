@@ -15,8 +15,9 @@
 
 (defmethod gql ((str string) &optional debug)
   (declare (ignorable debug))
-  (parse (make-parser str) :document))
+  (values str (parse (make-parser str) :document)))
 
 (defmethod gql ((f pathname) &optional debug)
   (declare (ignorable debug))
-  (parse (make-parser (slurp f)) :document))
+  (let ((str (slurp f)))
+    (values str (parse (make-parser str) :document))))
