@@ -172,11 +172,11 @@ As described in: https://spec.graphql.org/June2018/#sec-Language.Document"
                          :location (loc parser token)
                          :kind 'fragment-spread)
           (make-instance 'inline-fragment
-                         :name (parse parser :fragment-name)
+                         :type-condition (when type-condition-p (parse parser :named-type))
                          :directives (parse parser :directives :constp nil)
                          :selection-set (parse parser :selection-set)
                          :location (loc parser token)
-                         :kind 'fragment-spread)))))
+                         :kind 'inline-fragment)))))
 
 (defmethod parse ((parser parser) (node-type (eql :fragment-name)) &key &allow-other-keys)
   "Fragment-name : Name but not `on`"

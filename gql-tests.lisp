@@ -311,4 +311,19 @@ fragment friendFields on User {
   id
   name
   profilePic(size: 50)
+}"))
+    (ok (gql "query inlineFragmentTyping {
+  profiles(handles: 5) {
+    handle
+    ... on User {
+      friends {
+        count
+      }
+    }
+    ... on Page {
+      likers {
+        count
+      }
+    }
+  }
 }"))))
