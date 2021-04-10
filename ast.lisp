@@ -299,10 +299,14 @@ avoiding over-fetching and under-fetching data.")))
 (defclass non-null-type (ty)
   ((type)))
 
-;; Directives - https://spec.graphql.org/June2018/#sec-Language.Directives
 (defclass directive (ast-node)
-  ((name)
-   (arguments)))
+  ((name
+    :initarg :name
+    :accessor name)
+   (arguments
+    :initarg :arguments
+    :accessor arguments))
+  (:documentation "https://spec.graphql.org/June2018/#sec-Language.Directives"))
 
 ;; Print objects
 (defmethod print-object ((token token) stream)

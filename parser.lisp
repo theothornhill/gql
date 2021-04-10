@@ -85,7 +85,7 @@ As described in: https://spec.graphql.org/June2018/#sec-Language.Document"
       (when (peek parser 'name)
         (setf name (parse parser :name)))
       (make-instance 'operation-definition
-                     :directives nil
+                     :directives (parse parser :directives)
                      :variable-definitions nil
                      :name name
                      :operation operation
@@ -138,8 +138,8 @@ As described in: https://spec.graphql.org/June2018/#sec-Language.Document"
       (make-instance 'field
                      :alias alias
                      :name name
-                     :arguments (parse parser :arguments :constp nil)
-                     :directives nil
+                     :arguments (parse parser :arguments)
+                     :directives (parse parser :directives)
                      :selection-set (when (peek parser 'brace-l) (parse parser :selection-set))
                      :location (loc parser token)
                      :kind 'field))))
@@ -164,7 +164,34 @@ As described in: https://spec.graphql.org/June2018/#sec-Language.Document"
                      :location (loc parser token)
                      :kind 'argument))))
 
+(defmethod parse ((parser parser) (node-type (eql :const-argument)) &key &allow-other-keys)
+  (with-token parser
+    (make-instance 'argument
+                   :name (parse parser :name)
+                   :value (progn
+                            (expect-token parser 'colon)
+                            (parse parser :value))
+                   :location (loc parser token)
+                   :kind 'argument)))
+
 (defmethod parse ((parser parser) (node-type (eql :value)) &key &allow-other-keys)
   "values"
   (advance (lexer parser))
   "value literal")
+
+(defmethod parse ((parser parser) (node-type (eql :directives)) &key (constp nil) &allow-other-keys)
+  (loop
+    with directives
+    while (peek parser 'at)
+    do (push (parse parser :directive :constp constp) directives)
+    finally (return (nreverse directives))))
+
+(defmethod parse ((parser parser) (node-type (eql :directive)) &key (constp nil) &allow-other-keys)
+  (with-token parser
+    (expect-token parser 'at)
+    (make-instance 'directive
+                   :name (parse parser :name)
+                   :arguments (parse parser :arguments :constp constp)
+                   :location (loc parser token)
+                   :kind 'directive)))
+
