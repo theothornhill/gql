@@ -131,7 +131,7 @@ token after last item in the list."))
   (loop
     with nodes = nil
     until (expect-optional-token parser close-kind)
-    do (push (parse parser parse-kind :constp constp) nodes)
+    do (push (parse parser parse-kind constp) nodes)
     finally (return (nreverse nodes))))
 
 (defmethod optional-many ((parser parser) open-kind parse-kind close-kind)
