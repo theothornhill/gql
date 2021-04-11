@@ -107,7 +107,7 @@ expand this macro or just use a normal DEFMETHOD."
                :selection-set (parse parser :selection-set))))
 
 (defparser :name
-  (with-expected-token parser 'name
+  (with-expected-token 'name
     (make-node 'name :name (value token))))
 
 (defparser :selection-set

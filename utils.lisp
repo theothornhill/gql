@@ -15,12 +15,13 @@ is called primarily through the PARSE DEFMETHOD, so that we actually have the PA
   `(let ((token (token (lexer parser))))
      ,@body))
 
-(defmacro with-expected-token (parser kind &body body)
+(defmacro with-expected-token (kind &body body)
   "Bring the expected token into scope anaphorically.
 
 Refer to the token as TOKEN.  This macro also advances lexer one step as a side
-effect."
-  `(let ((token (expect-token ,parser ,kind)))
+effect.  Also works under the assumption that it is called primarily through the
+PARSE DEFMETHOD, so that we actually have the PARSER"
+  `(let ((token (expect-token parser ,kind)))
      ,@body))
 
 (defmacro make-node (node-type &rest keys)
