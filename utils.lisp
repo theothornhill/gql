@@ -154,7 +154,7 @@ token after last item in the list."))
     finally (return (nreverse nodes))))
 
 (defmethod delimited-many ((parser parser) delimiter-kind parse-kind)
-  (expect-token parser delimiter-kind)
+  (expect-optional-token parser delimiter-kind)
   (loop
     with nodes
       initially (push (parse parser parse-kind) nodes)

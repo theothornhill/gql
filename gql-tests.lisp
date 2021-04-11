@@ -399,4 +399,26 @@ schema {
     (ok (gql "schema {
   query: MyQueryRootType
   mutation: MyMutationRootType
+}"))
+    (ok (gql "scalar Time "))
+    (ok (gql "
+scalar Time
+scalar Url"))
+    (ok (gql "
+type Person implements NamedEntity {
+  name: String
+  age: Int
+}"))
+    (ok (gql "
+type Business implements NamedEntity & ValuedEntity {
+  name: String
+  value: Int
+  employeeCount: Int
+}"))
+    (ok (gql "
+type Business implements NamedEntity & ValuedEntity {
+  \"\"\"with some docs\"\"\"
+  name: String
+  value: Int
+  employeeCount: Int
 }"))))

@@ -297,7 +297,10 @@ expand this macro or just use a normal DEFMETHOD."
             ;; the next parse call.
             (if (peek-description parser) (lookahead (lexer parser)) token)))
       (cond
-        ((string= (value keyword-token) "schema") (parse parser :schema-definition))))))
+        ((string= (value keyword-token) "schema") (parse parser :schema-definition))
+        ((string= (value keyword-token) "scalar") (parse parser :scalar-type-definition))
+        ((string= (value keyword-token) "type") (parse parser :object-type-definition))
+        (t (unexpected parser token))))))
 
 (defparser :description
   (when (peek-description parser)
@@ -314,7 +317,7 @@ expand this macro or just use a normal DEFMETHOD."
 
 (defparser :schema-definition
   (with-token
-    ;; A schema can start with an optional description.  We want to pick that
+    ;; A SCHEMA can start with an optional description.  We want to pick that
     ;; off if we can, though it isn't strictly necessary.
     (let ((description (parse parser :description)))
       (expect-keyword parser "schema")
@@ -325,3 +328,77 @@ expand this macro or just use a normal DEFMETHOD."
                    :description description
                    :directives directives
                    :operation-types operation-types)))))
+
+(defparser :scalar-type-definition
+  (with-token
+    ;; A SCALAR-TYPE-DEFINITION can start with an optional description.  We want
+    ;; to pick that off if we can, though it isn't strictly necessary.
+    (let ((description (parse parser :description)))
+      (expect-keyword parser "scalar")
+      (let ((name (parse parser :name))
+            (directives (parse parser :directives t)))
+        (make-node 'scalar-type-definition
+                   :description description
+                   :name name
+                   :directives directives)))))
+
+(defparser :object-type-definition
+  (with-token
+    ;; A SCALAR-TYPE-DEFINITION can start with an optional description.  We want
+    ;; to pick that off if we can, though it isn't strictly necessary.
+    (let ((description (parse parser :description)))
+      (expect-keyword parser "type")
+      (let ((name (parse parser :name))
+            (interfaces (parse parser :implements-interfaces))
+            (directives (parse parser :directives t))
+            (fields (parse parser :fields-definition)))
+        (make-node 'object-type-definition
+                   :description description
+                   :name name
+                   :interfaces interfaces
+                   :directives directives
+                   :fields fields)))))
+
+(defparser :implements-interfaces
+  (when (expect-optional-keyword parser "implements")
+    (delimited-many parser 'amp :named-type)))
+
+(defparser :fields-definition
+  (optional-many parser 'brace-l :field-definition 'brace-r))
+
+(defparser :field-definition
+  (with-token
+    ;; A FIELD-DEFINITION can start with an optional description.  We want to
+    ;; pick that off if we can, though it isn't strictly necessary.
+    (let ((description (parse parser :description))
+          (name (parse parser :name))
+          (args (parse parser :argument-definitions)))
+      (expect-token parser 'colon)
+      (let ((ty (parse parser :type-reference))
+            (directives (parse parser :directives t)))
+        (make-node 'field-definition
+                   :description description
+                   :name name
+                   :args args
+                   :ty ty
+                   :directives directives)))))
+
+(defparser :argument-definitions
+  (optional-many parser 'brace-l :input-value-definition 'brace-r))
+
+(defparser :input-value-definition
+  (with-token
+    ;; A SCALAR-TYPE-DEFINITION can start with an optional description.  We want
+    ;; to pick that off if we can, though it isn't strictly necessary.
+    (let ((description (parse parser :description))
+          (name (parse parser :name)))
+      (expect-token parser 'colon)
+      (let ((ty (parse parser :type-reference))
+            (default-value (parse parser :default-value))
+            (directives (parse parser :directives t)))
+        (make-node 'input-value-definition
+                   :description description
+                   :name name
+                   :ty ty
+                   :default-value default-value
+                   :directives directives)))))

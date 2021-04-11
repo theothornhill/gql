@@ -382,3 +382,65 @@ avoiding over-fetching and under-fetching data.")))
    (named-type
     :initarg :named-type
     :accessor named-type)))
+
+(defclass scalar-type-definition (ast-node)
+  ((description
+    :initarg :description
+    :accessor description)
+   (name
+    :initarg :name
+    :accessor name)
+   (directives
+    :initarg :directives
+    :accessor directives)))
+
+(defclass object-type-definition (ast-node)
+  ((description
+    :initarg :description
+    :accessor description)
+   (name
+    :initarg :name
+    :accessor name)
+   (interfaces
+    :initarg :interfaces
+    :accessor interfaces)
+   (directives
+    :initarg :directives
+    :accessor directives)
+   (fields
+    :initarg :fields
+    :accessor fields)))
+
+(defclass field-definition (ast-node)
+  ((description
+    :initarg :description
+    :accessor description)
+   (name
+    :initarg :name
+    :accessor name)
+   (args
+    :initarg :args
+    :accessor args)
+   (ty
+    :initarg :ty
+    :accessor ty)
+   (directives
+    :initarg :directives
+    :accessor directives)))
+
+(defclass input-value-definition (ast-node)
+  ((description
+    :initarg :description
+    :accessor description)
+   (name
+    :initarg :name
+    :accessor name)
+   (ty
+    :initarg :ty
+    :accessor ty)
+   (default-value
+    :initarg :default-value
+    :accessor default-value)
+   (directives
+    :initarg :directives
+    :accessor directives)))
