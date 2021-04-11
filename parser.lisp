@@ -7,7 +7,7 @@
   (:method :before ((parser parser) node-type &optional (constp nil))
     (declare (ignorable constp))
     (when *debug-print*
-      (with-token parser
+      (with-token
         (with-slots (value kind) token
           (format t "; value: ~Vakind: ~Vanode-type: ~Va~%" 10 value 10 kind 10 node-type)))))
   (:documentation "Parse node of NODE-TYPE with parser PARSER."))
@@ -21,11 +21,11 @@ expand this macro or just use a normal DEFMETHOD."
      ,@body))
 
 (defparser :document
-  (with-token parser
+  (with-token
     (make-node 'document :definitions (many parser 'sof :definition 'eof))))
 
 (defparser :definition
-  (with-token parser
+  (with-token
     (cond 
       ;; We only peek here so that we can read the whole thing in their
       ;; respective handlers.  This way we can still assert with
@@ -54,11 +54,11 @@ expand this macro or just use a normal DEFMETHOD."
            ((string= value "extend")       (parse parser :type-system-extension))
            (t (unexpected parser token)))))
       ((peek parser 'brace-l) (parse parser :operation-definition))
-      ((peek parser 'string)  (parse parser :type-system-definitiona))
+      ((peek-description parser)  (parse parser :type-system-definition))
       (t (unexpected parser token)))))
 
 (defparser :operation-definition
-  (with-token parser
+  (with-token
     (when (peek parser 'brace-l)
       ;; We allow for the query shorthand by first checking for the opening
       ;; brace.  If we arrive here we know that we don't have any DIRECTIVES,
@@ -96,7 +96,7 @@ expand this macro or just use a normal DEFMETHOD."
       (t (unexpected parser operation-token)))))
 
 (defparser :fragment-definition
-  (with-token parser
+  (with-token
     (expect-keyword parser "fragment")
     (make-node 'fragment-definition
                :name (parse parser :fragment-name)
@@ -112,7 +112,7 @@ expand this macro or just use a normal DEFMETHOD."
 
 (defparser :selection-set
   ;; Selection-set : { selection+ }
-  (with-token parser
+  (with-token
     (make-node 'selection-set
                :selections (many parser 'brace-l :selection 'brace-r))))
 
@@ -127,7 +127,7 @@ expand this macro or just use a normal DEFMETHOD."
 
 (defparser :field
   ;; Field : Alias? Name Arguments? Directives SelectionSet
-  (with-token parser
+  (with-token
     (let ((name-or-alias (parse parser :name)) alias name)
       (if (expect-optional-token parser 'colon)
           (setf alias name-or-alias name (parse parser :name))
@@ -140,7 +140,7 @@ expand this macro or just use a normal DEFMETHOD."
                  :selection-set (when (peek parser 'brace-l) (parse parser :selection-set))))))
 
 (defparser :fragment
-  (with-token parser
+  (with-token
     (expect-token parser 'spread)
     (let ((type-condition-p (expect-optional-keyword parser "on")))
       (if (and (not type-condition-p) (peek parser 'name))
@@ -154,7 +154,7 @@ expand this macro or just use a normal DEFMETHOD."
 
 (defparser :fragment-name
   ;; Fragment-name : Name but not `on`
-  (with-token parser
+  (with-token
     (if (string= (value token) "on")
         (unexpected parser token)
         (parse parser :name))))
@@ -164,7 +164,7 @@ expand this macro or just use a normal DEFMETHOD."
     (optional-many parser 'paren-l item 'paren-r)))
 
 (defparser :argument
-  (with-token parser
+  (with-token
     (let ((name (parse parser :name)))
       (expect-token parser 'colon)
       (make-node 'argument
@@ -172,7 +172,7 @@ expand this macro or just use a normal DEFMETHOD."
                  :value (parse parser :value)))))
 
 (defparser :const-argument
-  (with-token parser
+  (with-token
     (make-node 'argument
                :name (parse parser :name)
                :value (progn
@@ -183,7 +183,7 @@ expand this macro or just use a normal DEFMETHOD."
   (optional-many parser 'paren-l :variable-definition 'paren-r))
 
 (defparser :variable-definition
-  (with-token parser
+  (with-token
     (make-node 'variable-definition
                :var (parse parser :var)
                :var-type (progn
@@ -193,19 +193,19 @@ expand this macro or just use a normal DEFMETHOD."
                :directives (parse parser :directives t))))
 
 (defparser :var
-  (with-token parser
+  (with-token
     (expect-token parser 'dollar)
     (make-node 'var :name (parse parser :name))))
 
 (defparser :string-value
-  (with-token parser
+  (with-token
     (advance (lexer parser))
     (make-node 'string-value
                :value (value token)
                :blockp (when (eq (kind token) 'block-string) t))))
 
 (defparser :value
-  (with-token parser
+  (with-token
     (case (kind token)
       (bracket-l (parse parser :list-value constp))
       (brace-l (parse parser :object-value constp))
@@ -232,17 +232,17 @@ expand this macro or just use a normal DEFMETHOD."
       (t (unexpected parser token)))))
 
 (defparser :list-value
-  (with-token parser
+  (with-token
     (make-node 'list-value
                :list-values (any parser 'bracket-l :value 'bracket-r constp))))
 
 (defparser :object-value
-  (with-token parser
+  (with-token
     (make-node 'object-value
                :fields (any parser 'brace-l :object-field 'brace-r constp))))
 
 (defparser :object-value
-  (with-token parser
+  (with-token
     (let ((name (parse parser :name)))
       (expect-token parser 'colon)
       (make-node 'object-field
@@ -259,7 +259,7 @@ expand this macro or just use a normal DEFMETHOD."
 
 (defparser :directive
   ;; Directive[Const] : @ Name Arguments[?Const]?
-  (with-token parser
+  (with-token
     (expect-token parser 'at)
     (make-node 'directive
                :name (parse parser :name)
@@ -267,12 +267,12 @@ expand this macro or just use a normal DEFMETHOD."
 
 (defparser :named-type
   ;; Directive[Const] : @ Name Arguments[?Const]?
-  (with-token parser
+  (with-token
     (make-node 'named-type :name (parse parser :name))))
 
 (defparser :type-reference
   ;; Directive[Const] : @ Name Arguments[?Const]?
-  (with-token parser
+  (with-token
     (let ((ty))
       (if (expect-optional-token parser 'bracket-l)
           (let ((inner-type (parse parser :type-reference)))
@@ -284,3 +284,44 @@ expand this macro or just use a normal DEFMETHOD."
           (make-node 'non-null-type :ty ty)))
       ty)))
 
+(defun peek-description (parser)
+  (or (peek parser 'string) (peek parser 'block-string)))
+
+(defparser :type-system-definition
+  (with-token
+    (let ((keyword-token
+            ;; The token could be a STRING or BLOCK-STRING, and if it is, we
+            ;; want to check if the next token is 'schema'.  If it isn't a
+            ;; string, just return the token we currently look at.  We still
+            ;; haven't advanced beyond the possible docstring. That happens in
+            ;; the next parse call.
+            (if (peek-description parser) (lookahead (lexer parser)) token)))
+      (cond
+        ((string= (value keyword-token) "schema") (parse parser :schema-definition))))))
+
+(defparser :description
+  (when (peek-description parser)
+    (parse parser :string-value)))
+
+(defparser :operation-type-definition
+  (with-token
+    (let ((operation (parse parser :operation-type)))
+      (expect-token parser 'colon)
+      (let ((named-type (parse parser :named-type)))
+        (make-node 'operation-type-definition
+                   :operation operation
+                   :named-type named-type)))))
+
+(defparser :schema-definition
+  (with-token
+    ;; A schema can start with an optional description.  We want to pick that
+    ;; off if we can, though it isn't strictly necessary.
+    (let ((description (parse parser :description)))
+      (expect-keyword parser "schema")
+      (let ((directives (parse parser :directives t))
+            (operation-types
+              (many parser 'brace-l :operation-type-definition 'brace-r)))
+        (make-node 'schema-definition
+                   :description description
+                   :directives directives
+                   :operation-types operation-types)))))

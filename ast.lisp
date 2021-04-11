@@ -23,7 +23,6 @@
     :accessor line-start
     :documentation "The character offset at which the current line begins.")))
 
-
 (defclass token ()
   ((kind
     :initarg :kind
@@ -59,6 +58,10 @@
     :initform nil
     :accessor next
     :documentation "The next token.")))
+
+(defmethod print-object ((token token) stream)
+  (format stream "<TOKEN: value = ~a kind = ~a line = ~a column = ~a>"
+          (value token) (kind token) (line token) (column token)))
 
 (defclass source ()
   ((body
@@ -361,7 +364,21 @@ avoiding over-fetching and under-fetching data.")))
     :accessor arguments))
   (:documentation "https://spec.graphql.org/June2018/#sec-Language.Directives"))
 
-;; Print objects
-(defmethod print-object ((token token) stream)
-  (format stream "<TOKEN: value = ~a kind = ~a line = ~a column = ~a>"
-          (value token) (kind token) (line token) (column token)))
+(defclass schema-definition (ast-node)
+  ((description
+    :initarg :description
+    :accessor description)
+   (directives
+    :initarg :directives
+    :accessor directives)
+   (operation-types
+    :initarg :operation-types
+    :accessor operation-types)))
+
+(defclass operation-type-definition (ast-node)
+  ((operation
+    :initarg :operation
+    :accessor operation)
+   (named-type
+    :initarg :named-type
+    :accessor named-type)))

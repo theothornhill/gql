@@ -7,11 +7,12 @@
 
 ;;; Utilities
 
-(defmacro with-token (parser &body body)
+(defmacro with-token (&body body)
   "Bring the current token into scope anaphorically.
 
-Refer to the current token with TOKEN."
-  `(let ((token (token (lexer ,parser))))
+Refer to the current token with TOKEN.  Also works under the assumption that it
+is called primarily through the PARSE DEFMETHOD, so that we actually have the PARSER"
+  `(let ((token (token (lexer parser))))
      ,@body))
 
 (defmacro with-expected-token (parser kind &body body)

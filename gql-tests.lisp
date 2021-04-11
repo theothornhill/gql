@@ -385,4 +385,18 @@ fragment friendFields on User {
       (ok (= (gql::column (gql::end selection-set-location)) 11))
 
       (ok (= (gql::column (gql::start x-location)) 9))
-      (ok (= (gql::column (gql::end x-location)) 9)))))
+      (ok (= (gql::column (gql::end x-location)) 9))))
+
+  (testing "Schema"
+    (ok (gql "
+\"\"\" 
+Some description at the start
+\"\"\"
+schema {
+  query: MyQueryRootType
+  mutation: MyMutationRootType
+}"))
+    (ok (gql "schema {
+  query: MyQueryRootType
+  mutation: MyMutationRootType
+}"))))
