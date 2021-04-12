@@ -388,7 +388,7 @@ expand this macro or just use a normal DEFMETHOD."
 
 (defparser :input-value-definition
   (with-token
-    ;; A SCALAR-TYPE-DEFINITION can start with an optional description.  We want
+    ;; A INPUT-VALUE-DEFINITION can start with an optional description.  We want
     ;; to pick that off if we can, though it isn't strictly necessary.
     (let ((description (parse parser :description))
           (name (parse parser :name)))
