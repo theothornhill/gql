@@ -499,10 +499,12 @@ expand this macro or just use a normal DEFMETHOD."
   (delimited-many parser 'pipe :directive-location))
 
 (defvar *executable-directive-location*
-  '("query" "mutation" "subscription" "field" "fragment_definition" "fragment_spread" "inline_fragment"))
+  '("query" "mutation" "subscription" "field" "fragment_definition"
+    "fragment_spread" "inline_fragment"))
 
 (defvar *type-system-directive-location*
-  '("schema" "scalar" "object" "field_definition" "argument_definition" "interface" "union" "enum" "enum_value" "input_object" "input_field_definition"))
+  '("schema" "scalar" "object" "field_definition" "argument_definition"
+    "interface" "union" "enum" "enum_value" "input_object" "input_field_definition"))
 
 (defparser :directive-location
   (with-token
