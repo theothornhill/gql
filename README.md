@@ -27,7 +27,7 @@ object.
 Will lex and parse the contents, signaling conditions when there are any.  Use
 `t` as the second argument to `gql` to print debug information.
 
-### What parts of the spec is worked on yet
+### What parts of the spec is worked on thus far
 
  - [x] [Language](https://spec.graphql.org/June2018/#sec-Language)
  - [x] [Type System](https://spec.graphql.org/June2018/#sec-Type-System)
