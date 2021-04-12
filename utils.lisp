@@ -20,7 +20,7 @@ is called primarily through the PARSE DEFMETHOD, so that we actually have the PA
 
 Refer to the token as TOKEN.  This macro also advances lexer one step as a side
 effect.  Also works under the assumption that it is called primarily through the
-PARSE DEFMETHOD, so that we actually have the PARSER"
+PARSE DEFMETHOD, so that we actually have the PARSER."
   `(let ((token (expect-token parser ,kind)))
      ,@body))
 
@@ -28,7 +28,7 @@ PARSE DEFMETHOD, so that we actually have the PARSER"
   "Make an instance of NODE-TYPE, with provided initargs in KEYS.
 
 Assumes a PARSER and TOKEN already is in scope using WITH-TOKEN or
-WITH-EXPECTED-TOKEN.  Convenience macro to avoid providing TYPE and LOCATION for
+WITH-EXPECTED-TOKEN.  Convenience macro to avoid providing KIND and LOCATION for
 all nodes."
   (let ((n-type (gensym)))
     `(let ((,n-type ,node-type))
@@ -44,28 +44,28 @@ all nodes."
                    :source (source (lexer parser)))))
 
 (defun peek (parser kind)
-  (with-token (eq (kind token) kind)))
+  (eq (kind (token (lexer parser))) kind))
 
 (defun expect-token (parser kind)
-  (with-token parser
-    (if (eq (kind token) kind)
+  (with-token
+    (if (peek parser kind)
         (progn (advance (lexer parser)) token)
         (gql-error "Expected ~a, found ~a" kind (kind token)))))
 
 (defun expect-optional-token (parser kind)
-  (with-token parser
-    (when (eq (kind token) kind)
+  (with-token
+    (when (peek parser kind)
       (advance (lexer parser)) token)))
 
 (defun expect-keyword (parser value)
-  (with-token parser 
-    (if (and (eq (kind token) 'name) (equalp (value token) value))
+  (with-token
+    (if (and (peek parser 'name) (equalp (value token) value))
         (advance (lexer parser))
         (gql-error "Expected ~a, found ~a" value (value token)))))
 
 (defun expect-optional-keyword (parser value)
   (with-token
-    (when (and (eq (kind token) 'name) (equalp (value token) value))
+    (when (and (peek parser 'name) (equalp (value token) value))
       (advance (lexer parser)) token)))
 
 (defun unexpected (parser token)

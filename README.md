@@ -30,7 +30,7 @@ Will lex and parse the contents, signaling conditions when there are any.  Use
 ### What parts of the spec is worked on yet
 
  - [x] [Language](https://spec.graphql.org/June2018/#sec-Language)
- - [ ] [Type System](https://spec.graphql.org/June2018/#sec-Type-System)
+ - [x] [Type System](https://spec.graphql.org/June2018/#sec-Type-System)
  - [ ] [Introspection](https://spec.graphql.org/June2018/#sec-Introspection)
  - [ ] [Validation](https://spec.graphql.org/June2018/#sec-Validation)
  - [ ] [Execution](https://spec.graphql.org/June2018/#sec-Execution)
@@ -38,5 +38,6 @@ Will lex and parse the contents, signaling conditions when there are any.  Use
 
 
 ### Contact
-If interested, you can open an issue at the [tracker](https://todo.sr.ht/~theo/gql),
-or send an email to the [public inbox](https://lists.sr.ht/~theo/public-inbox)
+If interested, you can open an issue at the
+[tracker](https://todo.sr.ht/~theo/gql), or send an email to the [public
+inbox](https://lists.sr.ht/~theo/public-inbox), or directly to <~theo/public-inbox@lists.sr.ht>

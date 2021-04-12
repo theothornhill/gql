@@ -267,8 +267,8 @@ avoiding over-fetching and under-fetching data.")))
 
 (defclass int-value (value)
   ((value
-    :initarg :int-value
-    :accessor int-value)))
+    :initarg :value
+    :accessor value)))
 
 (defclass float-value (value)
   ((value
@@ -444,3 +444,84 @@ avoiding over-fetching and under-fetching data.")))
    (directives
     :initarg :directives
     :accessor directives)))
+
+(defclass interface-type-definition (ast-node)
+  ((description
+    :initarg :description
+    :accessor description)
+   (name
+    :initarg :name
+    :accessor name)
+   (directives
+    :initarg :directives
+    :accessor directives)
+   (fields
+    :initarg :fields
+    :accessor fields)))
+
+(defclass union-type-definition (ast-node)
+  ((description
+    :initarg :description
+    :accessor description)
+   (name
+    :initarg :name
+    :accessor name)
+   (directives
+    :initarg :directives
+    :accessor directives)
+   (union-members
+    :initarg :union-members
+    :accessor union-members)))
+
+(defclass enum-type-definition (ast-node)
+  ((description
+    :initarg :description
+    :accessor description)
+   (name
+    :initarg :name
+    :accessor name)
+   (directives
+    :initarg :directives
+    :accessor directives)
+   (enum-values
+    :initarg :enum-values
+    :accessor enum-values)))
+
+(defclass enum-value-definition (ast-node)
+  ((description
+    :initarg :description
+    :accessor description)
+   (enum-value
+    :initarg :enum-value
+    :accessor enum-value)
+   (directives
+    :initarg :directives
+    :accessor directives)))
+
+(defclass input-object-type-definition (ast-node)
+  ((description
+    :initarg :description
+    :accessor description)
+   (name
+    :initarg :name
+    :accessor name)
+   (directives
+    :initarg :directives
+    :accessor directives)
+   (fields
+    :initarg :fields
+    :accessor fields)))
+
+(defclass directive-definition (ast-node)
+  ((description
+    :initarg :description
+    :accessor description)
+   (name
+    :initarg :name
+    :accessor name)
+   (args
+    :initarg :args
+    :accessor args)
+   (locations
+    :initarg :locations
+    :accessor locations)))

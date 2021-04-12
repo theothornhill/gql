@@ -159,7 +159,7 @@ expand this macro or just use a normal DEFMETHOD."
         (unexpected parser token)
         (parse parser :name))))
 
-(defmethod parse ((parser parser) (node-type (eql :arguments)) &optional (constp nil))
+(defparser :arguments
   (let ((item (if constp :const-argument :argument)))
     (optional-many parser 'paren-l item 'paren-r)))
 
@@ -211,10 +211,10 @@ expand this macro or just use a normal DEFMETHOD."
       (brace-l (parse parser :object-value constp))
       (int (progn
              (advance (lexer parser))
-             (make-node 'int-value :int-value (value token))))
+             (make-node 'int-value :value (value token))))
       (float (progn
                (advance (lexer parser))
-               (make-node 'float-value :int-value (value token))))
+               (make-node 'float-value :value (value token))))
       ((or string block-string) (parse parser :string-value))
       (name (progn
               (advance (lexer parser))
@@ -248,6 +248,13 @@ expand this macro or just use a normal DEFMETHOD."
       (make-node 'object-field
                  :name name
                  :value (parse parser :value constp)))))
+
+(defparser :enum-value
+  (with-token
+    (let ((val (value token)))
+      (if (or (string= "true" val) (string= "false" val) (string= "null" val))
+          (unexpected parser token)
+          (parse parser :name)))))
 
 (defparser :directives
   ;; Directives[Const] : Directive[?Const]+
@@ -297,9 +304,14 @@ expand this macro or just use a normal DEFMETHOD."
             ;; the next parse call.
             (if (peek-description parser) (lookahead (lexer parser)) token)))
       (cond
-        ((string= (value keyword-token) "schema") (parse parser :schema-definition))
-        ((string= (value keyword-token) "scalar") (parse parser :scalar-type-definition))
-        ((string= (value keyword-token) "type") (parse parser :object-type-definition))
+        ((string= (value keyword-token) "schema")    (parse parser :schema-definition))
+        ((string= (value keyword-token) "scalar")    (parse parser :scalar-type-definition))
+        ((string= (value keyword-token) "type")      (parse parser :object-type-definition))
+        ((string= (value keyword-token) "interface") (parse parser :interface-type-definition))
+        ((string= (value keyword-token) "union")     (parse parser :union-type-definition))
+        ((string= (value keyword-token) "enum" )     (parse parser :enum-type-definition))
+        ((string= (value keyword-token) "input" )    (parse parser :input-object-type-definition))
+        ((string= (value keyword-token) "directive") (parse parser :directive-definition))
         (t (unexpected parser token))))))
 
 (defparser :description
@@ -317,8 +329,6 @@ expand this macro or just use a normal DEFMETHOD."
 
 (defparser :schema-definition
   (with-token
-    ;; A SCHEMA can start with an optional description.  We want to pick that
-    ;; off if we can, though it isn't strictly necessary.
     (let ((description (parse parser :description)))
       (expect-keyword parser "schema")
       (let ((directives (parse parser :directives t))
@@ -331,8 +341,6 @@ expand this macro or just use a normal DEFMETHOD."
 
 (defparser :scalar-type-definition
   (with-token
-    ;; A SCALAR-TYPE-DEFINITION can start with an optional description.  We want
-    ;; to pick that off if we can, though it isn't strictly necessary.
     (let ((description (parse parser :description)))
       (expect-keyword parser "scalar")
       (let ((name (parse parser :name))
@@ -344,8 +352,6 @@ expand this macro or just use a normal DEFMETHOD."
 
 (defparser :object-type-definition
   (with-token
-    ;; A SCALAR-TYPE-DEFINITION can start with an optional description.  We want
-    ;; to pick that off if we can, though it isn't strictly necessary.
     (let ((description (parse parser :description)))
       (expect-keyword parser "type")
       (let ((name (parse parser :name))
@@ -368,8 +374,6 @@ expand this macro or just use a normal DEFMETHOD."
 
 (defparser :field-definition
   (with-token
-    ;; A FIELD-DEFINITION can start with an optional description.  We want to
-    ;; pick that off if we can, though it isn't strictly necessary.
     (let ((description (parse parser :description))
           (name (parse parser :name))
           (args (parse parser :argument-definitions)))
@@ -384,17 +388,15 @@ expand this macro or just use a normal DEFMETHOD."
                    :directives directives)))))
 
 (defparser :argument-definitions
-  (optional-many parser 'brace-l :input-value-definition 'brace-r))
+  (optional-many parser 'paren-l :input-value-definition 'paren-r))
 
 (defparser :input-value-definition
   (with-token
-    ;; A INPUT-VALUE-DEFINITION can start with an optional description.  We want
-    ;; to pick that off if we can, though it isn't strictly necessary.
     (let ((description (parse parser :description))
           (name (parse parser :name)))
       (expect-token parser 'colon)
       (let ((ty (parse parser :type-reference))
-            (default-value (parse parser :default-value))
+            (default-value (parse parser :default-value t))
             (directives (parse parser :directives t)))
         (make-node 'input-value-definition
                    :description description
@@ -402,3 +404,112 @@ expand this macro or just use a normal DEFMETHOD."
                    :ty ty
                    :default-value default-value
                    :directives directives)))))
+
+(defparser :default-value
+  (when (expect-optional-token parser 'equals)
+    (parse parser :value t)))
+
+(defparser :interface-type-definition
+  (with-token
+    (let ((description (parse parser :description)))
+      (expect-keyword parser "interface")
+      (let ((name (parse parser :name))
+            (directives (parse parser :directives t))
+            (fields (parse parser :fields-definition)))
+        (make-node 'interface-type-definition
+                   :description description
+                   :name name
+                   :directives directives
+                   :fields fields)))))
+
+(defparser :union-type-definition
+  (with-token
+    (let ((description (parse parser :description)))
+      (expect-keyword parser "union")
+      (let ((name (parse parser :name))
+            (directives (parse parser :directives t))
+            (union-members (parse parser :union-member-types)))
+        (make-node 'union-type-definition
+                   :description description
+                   :name name
+                   :directives directives
+                   :union-members union-members)))))
+
+(defparser :union-member-types
+  (when (expect-token parser 'equals)
+    (delimited-many parser 'pipe :named-type)))
+
+(defparser :enum-type-definition
+  (with-token
+    (let ((description (parse parser :description)))
+      (expect-keyword parser "enum")
+      (let ((name (parse parser :name))
+            (directives (parse parser :directives t))
+            (enum-values (parse parser :enum-values)))
+        (make-node 'enum-type-definition
+                   :description description
+                   :name name
+                   :directives directives
+                   :enum-values enum-values)))))
+
+(defparser :enum-values
+  (optional-many parser 'brace-l :enum-value-definition 'brace-r))
+
+(defparser :enum-value-definition
+  (with-token
+    (let ((description (parse parser :description))
+          (enum-value (parse parser :enum-value))
+          (directives (parse parser :directives t)))
+      (make-node 'enum-value-definition
+                 :description description
+                 :enum-value enum-value
+                 :directives directives))))
+
+(defparser :input-object-type-definition
+  (with-token
+    (let ((description (parse parser :description)))
+      (expect-keyword parser "input")
+      (let ((name (parse parser :name))
+            (directives (parse parser :directives t))
+            (fields (parse parser :input-fields-definition)))
+        (make-node 'input-object-type-definition
+                   :description description
+                   :name name
+                   :directives directives
+                   :fields fields)))))
+
+(defparser :input-fields-definition
+  (optional-many parser 'brace-l :input-value-definition 'brace-r))
+
+(defparser :directive-definition
+  (with-token
+    (let ((description (parse parser :description)))
+      (expect-keyword parser "directive")
+      (expect-token parser 'at)
+      (let ((name (parse parser :name))
+            (args (parse parser :argument-definitions)))
+        (expect-keyword parser "on")
+        (make-node 'directive-definition
+                   :description description
+                   :name name
+                   :args args
+                   :locations (parse parser :directive-locations))))))
+
+(defparser :directive-locations
+  (delimited-many parser 'pipe :directive-location))
+
+(defvar *executable-directive-location*
+  '("query" "mutation" "subscription" "field" "fragment_definition" "fragment_spread" "inline_fragment"))
+
+(defvar *type-system-directive-location*
+  '("schema" "scalar" "object" "field_definition" "argument_definition" "interface" "union" "enum" "enum_value" "input_object" "input_field_definition"))
+
+(defparser :directive-location
+  (with-token
+    (let ((name (parse parser :name)))
+      (if (some (lambda (x) (string-equal (name name) x))
+                (append
+                 *executable-directive-location*
+                 *type-system-directive-location*))
+          name
+          (unexpected parser token)))))

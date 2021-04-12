@@ -421,4 +421,66 @@ type Business implements NamedEntity & ValuedEntity {
   name: String
   value: Int
   employeeCount: Int
+}"))
+    (ok (gql "
+interface NamedEntity {
+  name: String
+}"))
+    (ok (gql "
+\"\"\"docs\"\"\"
+interface NamedEntity {
+\"\"\"docs\"\"\"
+  name: String
+}"))
+    (ok (gql "union SearchResult = Photo | Person"))
+    (ok (gql "
+enum Direction {
+  NORTH
+  EAST
+  SOUTH
+  WEST
+}"))
+    (ok (gql "
+enum Direction {
+\"\"\"thing\"\"\"
+  NORTH
+\"\"\"thang\"\"\"
+  EAST
+\"\"\"thong\"\"\"
+  SOUTH
+  WEST
+}"))
+    (ok (gql "
+input Point2D {
+  x: Float
+  y: Float
+}"))
+    (ok (gql "
+input Point2D {
+  x: Float = 4.0
+  y: Float
+}"))
+    (ok (gql "
+input Point2D {
+\"\"\"docs\"\"\"
+  x: Float = 4.0
+  y: Float
+}"))
+    (ok (gql "
+input Point2D {
+\"\"\"docs\"\"\"
+  x: String = \"Hello World\"
+  y: Float
+}"))
+    (ok (gql "directive @example on FIELD"))
+    (ok (gql "
+directive @example on
+  | FIELD
+  | FRAGMENT_SPREAD
+  | INLINE_FRAGMENT"))
+    (ok (gql "
+directive @example on FIELD_DEFINITION | ARGUMENT_DEFINITION
+
+type SomeType {
+  field(arg: Int @example): String @example
 }"))))
