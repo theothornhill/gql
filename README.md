@@ -30,7 +30,7 @@ Will lex and parse the contents, signaling conditions when there are any.  Use
 ### What parts of the spec is worked on thus far
 
  - [x] [Language](https://spec.graphql.org/June2018/#sec-Language)
- - [x] [Type System](https://spec.graphql.org/June2018/#sec-Type-System)
+ - [x] [Type System](https://spec.graphql.org/June2018/#sec-Type-System) (extensions still missing)
  - [ ] [Introspection](https://spec.graphql.org/June2018/#sec-Introspection)
  - [ ] [Validation](https://spec.graphql.org/June2018/#sec-Validation)
  - [ ] [Execution](https://spec.graphql.org/June2018/#sec-Execution)
