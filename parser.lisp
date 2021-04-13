@@ -97,9 +97,7 @@ expand this macro or just use a normal DEFMETHOD."
   (expect-keyword "fragment")
   (make-node 'fragment-definition
              :name (parse 'fragment-name)
-             :type-condition (progn
-                               (expect-keyword "on")
-                               (parse 'named-type))
+             :type-condition (expect-then-parse "on" 'named-type)
              :directives (parse 'directives)
              :selection-set (parse 'selection-set)))
 
@@ -153,22 +151,19 @@ expand this macro or just use a normal DEFMETHOD."
       (parse 'name)))
 
 (defparser arguments
-  (let ((item (if constp 'const-argument 'argument)))
-    (optional-many 'paren-l item 'paren-r)))
+  (optional-many 'paren-l
+                 (if constp 'const-argument 'argument)
+                 'paren-r))
 
 (defparser argument
-  (let ((name (parse 'name)))
-    (expect-token 'colon)
-    (make-node 'argument
-               :name name
-               :value (parse 'value))))
+  (make-node 'argument
+             :name (parse 'name)
+             :value (expect-then-parse 'colon 'value)))
 
 (defparser const-argument
   (make-node 'argument
              :name (parse 'name)
-             :value (progn
-                      (expect-token 'colon)
-                      (parse 'value))))
+             :value (expect-then-parse 'colon 'value)))
 
 (defparser variable-definitions
   (optional-many 'paren-l 'variable-definition 'paren-r))
@@ -176,15 +171,12 @@ expand this macro or just use a normal DEFMETHOD."
 (defparser variable-definition
   (make-node 'variable-definition
              :var (parse 'var)
-             :var-type (progn
-                         (expect-token 'colon)
-                         (parse 'type-reference))
+             :var-type (expect-then-parse 'colon 'type-reference)
              :default-value nil
              :directives (parse 'directives t)))
 
 (defparser var
-  (expect-token 'dollar)
-  (make-node 'var :name (parse 'name)))
+  (make-node 'var :name (expect-then-parse 'dollar 'name)))
 
 (defparser string-value
   (advance-one-token)
@@ -227,11 +219,9 @@ expand this macro or just use a normal DEFMETHOD."
              :fields (any 'brace-l 'object-field 'brace-r constp)))
 
 (defparser object-value
-  (let ((name (parse 'name)))
-    (expect-token 'colon)
-    (make-node 'object-field
-               :name name
-               :value (parse 'value constp))))
+  (make-node 'object-field
+             :name (parse 'name)
+             :value (expect-then-parse 'colon 'value constp)))
 
 (defparser enum-value
   (let ((val (value *token*)))
@@ -249,9 +239,8 @@ expand this macro or just use a normal DEFMETHOD."
 
 (defparser directive
   ;; Directive[Const] : @ Name Arguments[?Const]?
-  (expect-token 'at)
   (make-node 'directive
-             :name (parse 'name)
+             :name (expect-then-parse 'at 'name)
              :arguments (parse 'arguments constp)))
 
 (defparser named-type
@@ -262,9 +251,9 @@ expand this macro or just use a normal DEFMETHOD."
   ;; Directive[Const] : @ Name Arguments[?Const]?
   (let ((ty))
     (if (expect-optional-token 'bracket-l)
-        (let ((inner-type (parse 'type-reference)))
-          (expect-token 'bracket-r)
-          (setf ty (make-node 'list-type :ty inner-type)))
+        (setf ty (make-node 'list-type
+                            :ty (prog1 (parse 'type-reference)
+                                  (expect-token 'bracket-r))))
         (setf ty (parse 'named-type)))
     (when (expect-optional-token 'bang)
       (return-from parse
@@ -298,47 +287,29 @@ expand this macro or just use a normal DEFMETHOD."
     (parse 'string-value)))
 
 (defparser operation-type-definition
-  (let ((operation (parse 'operation-type)))
-    (expect-token 'colon)
-    (let ((named-type (parse 'named-type)))
-      (make-node 'operation-type-definition
-                 :operation operation
-                 :named-type named-type))))
+  (make-node 'operation-type-definition
+             :operation (parse 'operation-type)
+             :named-type (expect-then-parse 'colon 'named-type)))
 
 (defparser schema-definition
-  (let ((description (parse 'description)))
-    (expect-keyword "schema")
-    (let ((directives (parse 'directives t))
-          (operation-types
-            (many 'brace-l 'operation-type-definition 'brace-r)))
-      (make-node 'schema-definition
-                 :description description
-                 :directives directives
-                 :operation-types operation-types))))
+  (make-node 'schema-definition
+             :description (parse 'description)
+             :directives (expect-then-parse "schema" 'directives t)
+             :operation-types (many 'brace-l 'operation-type-definition 'brace-r)))
 
 (defparser scalar-type-definition
-  (let ((description (parse 'description)))
-    (expect-keyword "scalar")
-    (let ((name (parse 'name))
-          (directives (parse 'directives t)))
-      (make-node 'scalar-type-definition
-                 :description description
-                 :name name
-                 :directives directives))))
+  (make-node 'scalar-type-definition
+             :description (parse 'description)
+             :name (expect-then-parse "scalar" 'name)
+             :directives (parse 'directives t)))
 
 (defparser object-type-definition
-  (let ((description (parse 'description)))
-    (expect-keyword "type")
-    (let ((name (parse 'name))
-          (interfaces (parse 'implements-interfaces))
-          (directives (parse 'directives t))
-          (fields (parse 'fields-definition)))
-      (make-node 'object-type-definition
-                 :description description
-                 :name name
-                 :interfaces interfaces
-                 :directives directives
-                 :fields fields))))
+  (make-node 'object-type-definition
+             :description (parse 'description)
+             :name (expect-then-parse "type" 'name)
+             :interfaces (parse 'implements-interfaces)
+             :directives (parse 'directives t)
+             :fields (parse 'fields-definition)))
 
 (defparser implements-interfaces
   (when (expect-optional-keyword "implements")
@@ -348,119 +319,78 @@ expand this macro or just use a normal DEFMETHOD."
   (optional-many 'brace-l 'field-definition 'brace-r))
 
 (defparser field-definition
-  (let ((description (parse 'description))
-        (name (parse 'name))
-        (args (parse 'argument-definitions)))
-    (expect-token 'colon)
-    (let ((ty (parse 'type-reference))
-          (directives (parse 'directives t)))
-      (make-node 'field-definition
-                 :description description
-                 :name name
-                 :args args
-                 :ty ty
-                 :directives directives))))
+  (make-node 'field-definition
+             :description (parse 'description)
+             :name (parse 'name)
+             :args (parse 'argument-definitions)
+             :ty (expect-then-parse 'colon 'type-reference)
+             :directives (parse 'directives t)))
 
 (defparser argument-definitions
   (optional-many 'paren-l 'input-value-definition 'paren-r))
 
 (defparser input-value-definition
-  (let ((description (parse 'description))
-        (name (parse 'name)))
-    (expect-token 'colon)
-    (let ((ty (parse 'type-reference))
-          (default-value (parse 'default-value t))
-          (directives (parse 'directives t)))
-      (make-node 'input-value-definition
-                 :description description
-                 :name name
-                 :ty ty
-                 :default-value default-value
-                 :directives directives))))
+  (make-node 'input-value-definition
+             :description (parse 'description)
+             :name (parse 'name)
+             :ty (expect-then-parse 'colon 'type-reference)
+             :default-value (parse 'default-value t)
+             :directives (parse 'directives t)))
 
 (defparser default-value
   (when (expect-optional-token 'equals)
     (parse 'value t)))
 
 (defparser interface-type-definition
-  (let ((description (parse 'description)))
-    (expect-keyword "interface")
-    (let ((name (parse 'name))
-          (directives (parse 'directives t))
-          (fields (parse 'fields-definition)))
-      (make-node 'interface-type-definition
-                 :description description
-                 :name name
-                 :directives directives
-                 :fields fields))))
+  (make-node 'interface-type-definition
+             :description (parse 'description)
+             :name (expect-then-parse "interface" 'name)
+             :directives (parse 'directives t)
+             :fields (parse 'fields-definition)))
 
 (defparser union-type-definition
-  (let ((description (parse 'description)))
-    (expect-keyword "union")
-    (let ((name (parse 'name))
-          (directives (parse 'directives t))
-          (union-members (parse 'union-member-types)))
-      (make-node 'union-type-definition
-                 :description description
-                 :name name
-                 :directives directives
-                 :union-members union-members))))
+  (make-node 'union-type-definition
+             :description (parse 'description)
+             :name (expect-then-parse "union" 'name)
+             :directives (parse 'directives t)
+             :union-members (parse 'union-member-types)))
 
 (defparser union-member-types
   (when (expect-token 'equals)
     (delimited-many 'pipe 'named-type)))
 
 (defparser enum-type-definition
-  (let ((description (parse 'description)))
-    (expect-keyword "enum")
-    (let ((name (parse 'name))
-          (directives (parse 'directives t))
-          (enum-values (parse 'enum-values)))
-      (make-node 'enum-type-definition
-                 :description description
-                 :name name
-                 :directives directives
-                 :enum-values enum-values))))
+  (make-node 'enum-type-definition
+             :description (parse 'description)
+             :name (expect-then-parse "enum" 'name)
+             :directives (parse 'directives t)
+             :enum-values (parse 'enum-values)))
 
 (defparser enum-values
   (optional-many 'brace-l 'enum-value-definition 'brace-r))
 
 (defparser enum-value-definition
-  (let ((description (parse 'description))
-        (enum-value (parse 'enum-value))
-        (directives (parse 'directives t)))
-    (make-node 'enum-value-definition
-               :description description
-               :enum-value enum-value
-               :directives directives)))
+  (make-node 'enum-value-definition
+             :description (parse 'description)
+             :enum-value (parse 'enum-value)
+             :directives (parse 'directives t)))
 
 (defparser input-object-type-definition
-  (let ((description (parse 'description)))
-    (expect-keyword "input")
-    (let ((name (parse 'name))
-          (directives (parse 'directives t))
-          (fields (parse 'input-fields-definition)))
-      (make-node 'input-object-type-definition
-                 :description description
-                 :name name
-                 :directives directives
-                 :fields fields))))
+  (make-node 'input-object-type-definition
+             :description (parse 'description)
+             :name (expect-then-parse "input" 'name)
+             :directives (parse 'directives t)
+             :fields (parse 'input-fields-definition)))
 
 (defparser input-fields-definition
   (optional-many 'brace-l 'input-value-definition 'brace-r))
 
 (defparser directive-definition
-  (let ((description (parse 'description)))
-    (expect-keyword "directive")
-    (expect-token 'at)
-    (let ((name (parse 'name))
-          (args (parse 'argument-definitions)))
-      (expect-keyword "on")
-      (make-node 'directive-definition
-                 :description description
-                 :name name
-                 :args args
-                 :locations (parse 'directive-locations)))))
+  (make-node 'directive-definition
+             :description (parse 'description)
+             :name (expect-then-parse '("directive" at) 'name)
+             :args (parse 'argument-definitions)
+             :locations (expect-then-parse "on" 'directive-locations)))
 
 (defparser directive-locations
   (delimited-many 'pipe 'directive-location))

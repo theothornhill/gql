@@ -21,6 +21,18 @@ PARSE DEFMETHOD, so that we actually have the PARSER."
   (when *parser*
     (advance (lexer *parser*))))
 
+(defun expect-then-parse (things node-type &optional (constp nil))
+  (let ((normalized-things (if (listp things) things (list things))))
+    (dolist (thing normalized-things)
+      (if (symbolp thing)
+          (expect-token thing)
+          (expect-keyword thing))))
+  (parse node-type constp))
+
+(defun expect-then-parse (keyword node-type &optional (constp nil))
+  (expect-keyword keyword)
+  (parse node-type constp))
+
 (defmacro make-node (node-type &rest keys)
   "Make an instance of NODE-TYPE, with provided initargs in KEYS.
 
@@ -57,7 +69,7 @@ all nodes."
 (defun expect-keyword (value)
   (with-token
     (if (and (peek 'name) (equalp (value *token*) value))
-        (advance (lexer *parser*))
+        (advance-one-token)
         (gql-error "Expected ~a, found ~a" value (value *token*)))))
 
 (defun expect-optional-keyword (value)
