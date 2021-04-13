@@ -94,9 +94,8 @@ expand this macro or just use a normal DEFMETHOD."
       (t (unexpected operation-token)))))
 
 (defparser fragment-definition
-  (expect-keyword "fragment")
   (make-node 'fragment-definition
-             :name (parse 'fragment-name)
+             :name (expect-then-parse "fragment" 'fragment-name)
              :type-condition (expect-then-parse "on" 'named-type)
              :directives (parse 'directives)
              :selection-set (parse 'selection-set)))
