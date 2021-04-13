@@ -282,6 +282,8 @@ expand this macro or just use a normal DEFMETHOD."
       (t (unexpected)))))
 
 (defparser type-system-extension
+  ;; At this point our current token is "extend".  We now want to check what
+  ;; type of extension this is, so we have to look ahead one token.
   (let ((keyword-token (lookahead (lexer *parser*))))
     (if (eq (kind keyword-token) 'name)
       (cond
