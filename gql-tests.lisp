@@ -483,4 +483,19 @@ directive @example on FIELD_DEFINITION | ARGUMENT_DEFINITION
 
 type SomeType {
   field(arg: Int @example): String @example
+}"))
+    (ok (gql "
+extend type Story {
+  isHiddenLocally: Boolean
+}"))
+    (ok (gql "extend type User @addedDirective"))
+    (ok (gql "
+extend interface NamedEntity {
+  nickname: String
+}"))
+    (ok (gql "extend interface NamedEntity @addedDirective"))
+    (ok (gql "
+extend type Query {
+  findDog(complex: ComplexInput): Dog
+  booleanList(booleanListArg: [Boolean!]): Boolean
 }"))))

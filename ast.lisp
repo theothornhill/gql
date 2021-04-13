@@ -507,3 +507,80 @@ avoiding over-fetching and under-fetching data.")))
    (locations
     :initarg :locations
     :accessor locations)))
+
+(defclass schema-extension (ast-node)
+  ((directives
+    :initarg :directives
+    :accessor directives)
+   (operation-types
+    :initarg :operation-types
+    :accessor operation-types)))
+
+(defclass scalar-type-extension (ast-node)
+  ((name
+    :initarg :name
+    :accessor name)
+   (directives
+    :initarg :directives
+    :accessor directives)))
+
+(defclass object-type-extension (ast-node)
+  ((name
+    :initarg :name
+    :accessor name)
+   (interfaces
+    :initarg :interfaces
+    :accessor interfaces)
+   (directives
+    :initarg :directives
+    :accessor directives)
+   (fields
+    :initarg :fields
+    :accessor fields)))
+
+(defclass interface-type-extension (ast-node)
+  ((name
+    :initarg :name
+    :accessor name)
+   (interfaces
+    :initarg :interfaces
+    :accessor interfaces)
+   (directives
+    :initarg :directives
+    :accessor directives)
+   (fields
+    :initarg :fields
+    :accessor fields)))
+
+(defclass union-type-extension (ast-node)
+  ((name
+    :initarg :name
+    :accessor name)
+   (directives
+    :initarg :directives
+    :accessor directives)
+   (union-members
+    :initarg :union-members
+    :accessor union-members)))
+
+(defclass enum-type-extension (ast-node)
+  ((name
+    :initarg :name
+    :accessor name)
+   (directives
+    :initarg :directives
+    :accessor directives)
+   (enum-values
+    :initarg :enum-values
+    :accessor enum-values)))
+
+(defclass input-object-type-extension (ast-node)
+  ((name
+    :initarg :name
+    :accessor name)
+   (directives
+    :initarg :directives
+    :accessor directives)
+   (fields
+    :initarg :fields
+    :accessor fields)))

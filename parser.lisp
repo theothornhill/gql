@@ -281,6 +281,62 @@ expand this macro or just use a normal DEFMETHOD."
       ((string= (value keyword-token) "directive") (parse 'directive-definition))
       (t (unexpected)))))
 
+(defparser type-system-extension
+  (let ((keyword-token (lookahead (lexer *parser*))))
+    (if (eq (kind keyword-token) 'name)
+      (cond
+        ((string= (value keyword-token) "schema")    (parse 'schema-extension))
+        ((string= (value keyword-token) "scalar")    (parse 'scalar-type-extension))
+        ((string= (value keyword-token) "type")      (parse 'object-type-extension))
+        ((string= (value keyword-token) "interface") (parse 'interface-type-extension))
+        ((string= (value keyword-token) "union")     (parse 'union-type-extension))
+        ((string= (value keyword-token) "enum" )     (parse 'enum-type-extension))
+        ((string= (value keyword-token) "input" )    (parse 'input-object-type-extension))
+        (t (unexpected)))
+      (unexpected))))
+
+(defparser schema-extension
+  (make-node 'schema-extension
+             :directives (expect-then-parse '("extend" "schema") 'directives t)
+             :operation-types (optional-many 'brace-l 'operation-type-definition 'brace-r)))
+
+(defparser scalar-type-extension
+  (make-node 'scalar-type-extension
+             :name (expect-then-parse '("extend" "scalar") 'name)
+             :directives (parse 'directives t)))
+
+(defparser object-type-extension
+  (make-node 'object-type-extension
+             :name (expect-then-parse '("extend" "type") 'name)
+             :interfaces (parse 'implements-interfaces)
+             :directives (parse 'directives t)
+             :fields (parse 'fields-definition)))
+
+(defparser interface-type-extension
+  (make-node 'interface-type-extension
+             :name (expect-then-parse '("extend" "interface") 'name)
+             :interfaces (parse 'implements-interfaces)
+             :directives (parse 'directives t)
+             :fields (parse 'fields-definition)))
+
+(defparser union-type-extension
+  (make-node 'union-type-extension
+             :name (expect-then-parse '("extend" "union") 'name)
+             :directives (parse 'directives t)
+             :union-members (parse 'union-member-types)))
+
+(defparser enum-type-extension
+  (make-node 'enum-type-extension
+             :name (expect-then-parse '("extend" "enum") 'name)
+             :directives (parse 'directives t)
+             :enum-values (parse 'enum-values)))
+
+(defparser input-object-type-extension
+  (make-node 'input-object-type-extension
+             :name (expect-then-parse '("extend" "input") 'name)
+             :directives (parse 'directives t)
+             :enum-values (parse 'input-fields-definition)))
+
 (defparser description
   (when (peek-description)
     (parse 'string-value)))
