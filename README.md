@@ -36,6 +36,27 @@ Will lex and parse the contents, signaling conditions when there are any.  Use
  - [ ] [Execution](https://spec.graphql.org/June2018/#sec-Execution)
  - [ ] [Response](https://spec.graphql.org/June2018/#sec-Response)
 
+### Parser api
+The api is not done yet, but the main entry point for the parser is the macro
+`defparser`.  It creates a new `defmethod parse`, and also brings the current
+parser and the current token into scope.  An example of how to define a parser
+`defmethod` could be:
+
+```lisp
+(defparser directive-definition
+  (make-node 'directive-definition
+             :description (parse 'description)
+             :name (expect-then-parse '("directive" at) 'name)
+             :args (parse 'argument-definitions)
+             :locations (expect-then-parse "on" 'directive-locations)))
+```
+
+In this case we produce the defmethod for `parse directive-definition`, then
+parses the respective nodes recursively.  When there are some tokens to traverse
+over, the utility function `expect-then-parse` takes either a list of strings or
+symbols, or just one single string or symbol, then advances the lexer.  If
+anything is unexpected, signal an error.
+
 
 ### Contact
 If interested, you can open an issue at the
