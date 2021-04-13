@@ -105,10 +105,6 @@
     :accessor source
     :documentation "The Source document the AST represents.")))
 
-(deftype punctuation ()
-  '(member bang dollar paren-l paren-r spread colon
-    equals at bracket-l bracket-r brace-l pipe brace-r))
-
 (defclass ast-node ()
   ((kind
     :initarg :kind
@@ -215,10 +211,6 @@ avoiding over-fetching and under-fetching data.")))
     :initarg :value
     :accessor value)))
 
-;; Field alias - https://spec.graphql.org/June2018/#sec-Field-Alias
-(defclass field-alias (ast-node)
-  ((name)))
-
 ;; Fragments - https://spec.graphql.org/June2018/#sec-Language.Fragments
 (defclass fragment-spread (ast-node)
   ((name
@@ -241,13 +233,6 @@ avoiding over-fetching and under-fetching data.")))
    (selection-set
     :initarg :selection-set
     :accessor selection-set)))
-
-(defclass fragment-name (ast-node)
-  ((name)))
-
-;;; Type conditions - https://spec.graphql.org/June2018/#sec-Type-Conditions
-(defclass type-condition (ast-node)
-  ((named-type)))
 
 ;;; Inline fragments - https://spec.graphql.org/June2018/#sec-Inline-Fragments
 (defclass inline-fragment (selection)
@@ -333,9 +318,6 @@ avoiding over-fetching and under-fetching data.")))
    (directives
     :initarg :directives
     :accessor directives)))
-
-(defclass default-value (ast-node)
-  ((value)))
 
 ;; Type references - https://spec.graphql.org/June2018/#sec-Type-References
 (defclass ty (ast-node) ())
