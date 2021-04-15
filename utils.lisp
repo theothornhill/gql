@@ -42,7 +42,7 @@ PARSE DEFMETHOD, so that we actually have the PARSER."
   (advance-one-token)
   (value *token*))
 
-(defmacro make-node (node-type &rest keys)
+(defmacro make-node (node-type &body keys)
   "Make an instance of NODE-TYPE, with provided initargs in KEYS.
 
 Assumes a PARSER and TOKEN already is in scope using WITH-TOKEN or
