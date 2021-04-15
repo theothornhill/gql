@@ -40,7 +40,7 @@
     do (with-slots (next) tok
          (setf tok (if next next (setf next (read-token lexer tok))))
          (unless (eq (kind next) 'comment)
-           (return-from lookahead tok)))))
+           (return tok)))))
 
 ;;; Tokenizers
 
@@ -89,7 +89,7 @@
        (when (= code 34)
          ;; When on closing quote
          (setf value (cat value (subseq body chunk-start pos)))
-         (return-from read-string
+         (return
            (make-token 'string start (1+ pos) line col prev value)))
 
        (when (and (< code #x0020) (/= #x0009))
@@ -142,7 +142,7 @@
                   (= 34 (char-code-at body (+ pos 1)))
                   (= 34 (char-code-at body (+ pos 2))))
          (setf raw-value (cat raw-value (subseq body chunk-start pos)))
-         (return-from read-block-string
+         (return-from read-block-string ;; We want to exit this function
            (make-token 'block-string start (+ pos 3) line col prev
                        ;; dedentblockstringvalue - https://github.com/graphql/graphql-js/blob/98feb57b9e0af59b3a0dfa5179565cb3acf4fa9e/src/language/blockString.js#L9
                        raw-value)))
@@ -241,7 +241,7 @@
                 ;; a-z
                 (<= 97 code 122)))
     do (incf pos)
-    finally (return-from read-name
+    finally (return
               (make-token 'name start pos line col prev (subseq body start pos)))))
 
 (defmethod read-token ((lexer lexer) (prev token))
@@ -250,73 +250,73 @@
     with body = (body source)
     with body-length = (length body)
     with pos = (end prev)
-    until (>= pos body-length)
-    do
-       (let ((code (char-code-at body pos))
-             (line (line lexer))
-             (col (- (1+ pos) (line-start lexer))))
-         (case code
-           (;; BOM, \t, space, ','
-            (#xfeff 9 32 44) (incf pos))
-           (10 (progn ;; Newline
-                 (incf pos)
-                 (incf (line lexer))
-                 (setf (line-start lexer) pos)))
-           (13 (progn ;; \r - increment by two if \r\n
-                 (incf pos (if (eq (char body (1+ pos)) #\Newline) 2 1))
-                 (incf (line lexer))
-                 (setf (line-start lexer) pos)))
-           (33 (return-from read-token ;; !
-                 (make-token 'bang pos (1+ pos) line col prev)))
-           (35 (return-from read-token
-                 (read-comment source pos line col prev)))
-           (36 (return-from read-token ;; $
-                 (make-token 'dollar pos (1+ pos) line col prev)))
-           (38 (return-from read-token ;; &
-                 (make-token 'amp pos (1+ pos) line col prev)))
-           (40 (return-from read-token ;; (
-                 (make-token 'paren-l pos (1+ pos) line col prev)))
-           (41 (return-from read-token ;; )
-                 (make-token 'paren-r pos (1+ pos) line col prev)))
-           (46 (return-from read-token ;; .
-                 ;; TODO: Does this handle fall-through properly?
-                 (read-spread body pos line col prev)))
-           (58 (return-from read-token ;; :
-                 (make-token 'colon pos (1+ pos) line col prev)))
-           (61 (return-from read-token ;; =
-                 (make-token 'equals pos (1+ pos) line col prev)))
-           (64 (return-from read-token ;; @
-                 (make-token 'at pos (1+ pos) line col prev)))
-           (91 (return-from read-token ;; [
-                 (make-token 'bracket-l pos (1+ pos) line col prev)))
-           (93 (return-from read-token ;; ]
-                 (make-token 'bracket-r pos (1+ pos) line col prev)))
-           (123 (return-from read-token ;; {
-                  (make-token 'brace-l pos (1+ pos) line col prev)))
-           (124 (return-from read-token ;; |
-                  (make-token 'pipe pos (1+ pos) line col prev)))
-           (125 (return-from read-token ;; }
-                  (make-token 'brace-r pos (1+ pos) line col prev)))
-           (34 (if (and (eq (char body (+ pos 1)) #\")
-                        (eq (char body (+ pos 2)) #\"))
-                   (return-from read-token ;; "
-                     (read-block-string source pos line col prev lexer))
-                   (return-from read-token ;; "
-                     (read-string source pos line col prev))))
-           (;; 0 1 2 3 4 5 6 7 8 9
-            (45 48 49 50 51 52 53 54 55 56 57)
-            (return-from read-token
-              (read-number source pos code line col prev)))
-           (;; A-Z_a-z
-            (65 66 67 68 69 70 71 72 73 74 75 76 77 78 79 80 81 82 83 84 85 86 87 88 89 90 95 97 98 99 100 101 102 103 104 105 106 107 108 109 110 111 112 113 114 115 116 117 118 119 120 121 122)
-            (return-from read-token
-              (read-name source pos line col prev)))
-           (t (gql-error (format nil "Unhandled syntax: ~a" (code-char code))))))
-       ;; Account for all parser cases here
-    finally 
-       ;; We have reached end of file - return it as a token
-       (when (>= pos body-length)
+    if (< pos body-length)
+      do
+         (let ((code (char-code-at body pos))
+               (line (line lexer))
+               (col (- (1+ pos) (line-start lexer))))
+           (case code
+             (;; BOM, \t, space, ','
+              (#xfeff 9 32 44) (incf pos))
+             (10 (progn ;; Newline
+                   (incf pos)
+                   (incf (line lexer))
+                   (setf (line-start lexer) pos)))
+             (13 (progn ;; \r - increment by two if \r\n
+                   (incf pos (if (eq (char body (1+ pos)) #\Newline) 2 1))
+                   (incf (line lexer))
+                   (setf (line-start lexer) pos)))
+             (33 (return ;; !
+                   (make-token 'bang pos (1+ pos) line col prev)))
+             (35 (return
+                   (read-comment source pos line col prev)))
+             (36 (return ;; $
+                   (make-token 'dollar pos (1+ pos) line col prev)))
+             (38 (return ;; &
+                   (make-token 'amp pos (1+ pos) line col prev)))
+             (40 (return ;; (
+                   (make-token 'paren-l pos (1+ pos) line col prev)))
+             (41 (return ;; )
+                   (make-token 'paren-r pos (1+ pos) line col prev)))
+             (46 (return ;; .
+                   ;; TODO: Does this handle fall-through properly?
+                   (read-spread body pos line col prev)))
+             (58 (return ;; :
+                   (make-token 'colon pos (1+ pos) line col prev)))
+             (61 (return ;; =
+                   (make-token 'equals pos (1+ pos) line col prev)))
+             (64 (return ;; @
+                   (make-token 'at pos (1+ pos) line col prev)))
+             (91 (return ;; [
+                   (make-token 'bracket-l pos (1+ pos) line col prev)))
+             (93 (return ;; ]
+                   (make-token 'bracket-r pos (1+ pos) line col prev)))
+             (123 (return ;; {
+                    (make-token 'brace-l pos (1+ pos) line col prev)))
+             (124 (return ;; |
+                    (make-token 'pipe pos (1+ pos) line col prev)))
+             (125 (return ;; }
+                    (make-token 'brace-r pos (1+ pos) line col prev)))
+             (34 (if (and (eq (char body (+ pos 1)) #\")
+                          (eq (char body (+ pos 2)) #\"))
+                     (return ;; "
+                       (read-block-string source pos line col prev lexer))
+                     (return ;; "
+                       (read-string source pos line col prev))))
+             (;; 0 1 2 3 4 5 6 7 8 9
+              (45 48 49 50 51 52 53 54 55 56 57)
+              (return
+                (read-number source pos code line col prev)))
+             (;; A-Z_a-z
+              (65 66 67 68 69 70 71 72 73 74 75 76 77 78 79 80 81 82 83 84 85 86 87 88 89 90 95 97 98 99 100 101 102 103 104 105 106 107 108 109 110 111 112 113 114 115 116 117 118 119 120 121 122)
+              (return
+                (read-name source pos line col prev)))
+             (t (gql-error (format nil "Unhandled syntax: ~a" (code-char code))))))
+    else
+      ;; Account for all parser cases here
+      do
+         ;; We have reached end of file - return it as a token
          (let ((line (line lexer))
                (col (- (1+ pos) (line-start lexer))))
-           (return-from read-token
-             (make-token 'eof body-length body-length line col prev))))))
+           (return
+             (make-token 'eof body-length body-length line col prev)))))
