@@ -28,6 +28,11 @@
     (ok (eq     (gql::column token)  column))
     (ok (equalp (gql::value  token)  value))))
 
+(defmacro signals-with-check (string condition-type expected)
+  "Hack to check condition message."
+  `(handler-case (gql ,string)
+     (,condition-type (c) (ok (string= (format nil "~a" c) ,expected)))))
+
 (deftest lexer
   (testing "Disallows uncommon control characters"
     (ok (signals (test-lexer-one-step (format nil "~c" #\U+0007))
@@ -265,11 +270,6 @@ line\"\"\"")
     (check-token :str "|"   :kind 'gql::pipe)
     (check-token :str "}"   :kind 'gql::brace-r)))
 
-(defmacro signals-with-check (string condition-type expected)
-  "Hack to check condition message."
-  `(handler-case (gql ,string)
-     (,condition-type (c) (ok (string= (format nil "~a" c) ,expected)))))
-
 (deftest parser
   (testing "Detects EOF"
     (signals-with-check "{" gql-simple-error "Expected NAME, found EOF"))
@@ -388,6 +388,9 @@ fragment friendFields on User {
       (ok (= (gql::column (gql::end x-location)) 9))))
 
   (testing "Schema"
+    (ok (gql (asdf:system-relative-pathname 'gql #p"test-files/example-schema.txt")))
+    (signals-with-check (gql (asdf:system-relative-pathname 'gql #p"test-files/empty-object.txt"))
+                        gql-simple-error "Expected NAME, found BRACE-R")
     (ok (gql "
 \"\"\" 
 Some description at the start
