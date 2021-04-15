@@ -1,5 +1,14 @@
 (in-package :gql)
 
+(defmacro string-case (value &rest things)
+  (let ((v (gensym)))
+    `(let ((,v ,value))
+       (cond
+         ,@(mapcar (lambda (thing)
+                     `((string= ,v ,(first thing)) ,(second thing)))
+                   (butlast things))
+         ,(first (reverse things))))))
+
 (defmacro with-token (&body body)
   "Bring the current token into scope anaphorically.
 
@@ -28,6 +37,10 @@ PARSE DEFMETHOD, so that we actually have the PARSER."
           (expect-token thing)
           (expect-keyword thing))))
   (parse node-type constp))
+
+(defun advance-then-value ()
+  (advance-one-token)
+  (value *token*))
 
 (defmacro make-node (node-type &rest keys)
   "Make an instance of NODE-TYPE, with provided initargs in KEYS.

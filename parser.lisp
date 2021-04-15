@@ -31,31 +31,30 @@ expand this macro or just use a normal DEFMETHOD."
     ;; respective handlers.  This way we can still assert with
     ;; (expect-* parser 'thing) when needed.
     ((peek 'name)
-     (let ((value (value *token*)))
+     (string-case (value *token*)
        ;; ExecutableDefinition
-       (cond
-         ((string= value "query")        (parse 'operation-definition))
-         ((string= value "mutation")     (parse 'operation-definition))
-         ((string= value "subscription") (parse 'operation-definition))
+       ("query"        (parse 'operation-definition))
+       ("mutation"     (parse 'operation-definition))
+       ("subscription" (parse 'operation-definition))
 
-         ((string= value "fragment")     (parse 'fragment-definition))
+       ("fragment"     (parse 'fragment-definition))
 
-         ;; TypeSystemDefinition
-         ((string= value "schema")       (parse 'type-system-definition))
-         ((string= value "scalar")       (parse 'type-system-definition))
-         ((string= value "type")         (parse 'type-system-definition))
-         ((string= value "interface")    (parse 'type-system-definition))
-         ((string= value "union")        (parse 'type-system-definition))
-         ((string= value "enum")         (parse 'type-system-definition))
-         ((string= value "input")        (parse 'type-system-definition))
-         ((string= value "directive")    (parse 'type-system-definition))
+       ;; TypeSystemDefinition
+       ("schema"       (parse 'type-system-definition))
+       ("scalar"       (parse 'type-system-definition))
+       ("type"         (parse 'type-system-definition))
+       ("interface"    (parse 'type-system-definition))
+       ("union"        (parse 'type-system-definition))
+       ("enum"         (parse 'type-system-definition))
+       ("input"        (parse 'type-system-definition))
+       ("directive"    (parse 'type-system-definition))
 
-         ;; TypeSystemExtension
-         ((string= value "extend")       (parse 'type-system-extension))
-         (t (unexpected)))))
-    ((peek 'brace-l) (parse 'operation-definition))
-    ((peek-description)  (parse 'type-system-definition))
-    (t (unexpected))))
+       ;; TypeSystemExtension
+       ("extend"       (parse 'type-system-extension))
+       (t              (unexpected))))
+    ((peek 'brace-l)    (parse 'operation-definition))
+    ((peek-description) (parse 'type-system-definition))
+    (t                  (unexpected))))
 
 (defparser operation-definition
   (when (peek 'brace-l)
@@ -85,13 +84,12 @@ expand this macro or just use a normal DEFMETHOD."
 
 (defparser operation-type
   ;; Disallow other names than query, mutation and subscription.
-  (let* ((operation-token (expect-token 'name))
-         (value (value operation-token)))
-    (cond
-      ((string= value "query") "query")
-      ((string= value "mutation") "mutation")
-      ((string= value "subscription") "subscription")
-      (t (unexpected operation-token)))))
+  (with-expected-token 'name
+    (string-case (value token)
+      ("query"        "query")
+      ("mutation"     "mutation")
+      ("subscription" "subscription")
+      (t              (unexpected token)))))
 
 (defparser fragment-definition
   (make-node 'fragment-definition
@@ -105,8 +103,7 @@ expand this macro or just use a normal DEFMETHOD."
     (make-node 'name :name (value token))))
 
 (defparser selection-set
-  (make-node 'selection-set
-             :selections (many 'brace-l 'selection 'brace-r)))
+  (make-node 'selection-set :selections (many 'brace-l 'selection 'brace-r)))
 
 (defparser selection
   (if (peek 'spread)
@@ -178,37 +175,31 @@ expand this macro or just use a normal DEFMETHOD."
 
 (defparser value
   (case (kind *token*)
-    (bracket-l (parse 'list-value constp))
-    (brace-l (parse 'object-value constp))
-    (int (progn
-           (advance-one-token)
-           (make-node 'int-value :value (value *token*))))
-    (float (progn
-             (advance-one-token)
-             (make-node 'float-value :value (value *token*))))
-    ((or string block-string) (parse 'string-value))
-    (name (progn
-            (advance-one-token)
-            (let ((value (value *token*)))
-              (cond
-                ((string= value "true")
-                 (make-node 'boolean-value :value t))
-                ((string= value "false")
-                 (make-node 'boolean-value :value nil))
-                ((string= value "null")
-                 (make-node 'null-value))
-                (t
-                 (make-node 'enum-value :value value))))))
-    (dollar (unless constp (parse 'var)))
+    (bracket-l
+     (parse 'list-value constp))
+    (brace-l
+     (parse 'object-value constp))
+    (int
+     (make-node 'int-value :value (advance-then-value)))
+    (float
+     (make-node 'float-value :value (advance-then-value)))
+    ((string block-string)
+     (parse 'string-value))
+    (name
+     (string-case (advance-then-value)
+       ("true"  (make-node 'boolean-value :value t))
+       ("false" (make-node 'boolean-value :value nil))
+       ("null"  (make-node 'null-value))
+       (t       (make-node 'enum-value :value (value *token*)))))
+    (dollar
+     (unless constp (parse 'var)))
     (t (unexpected))))
 
 (defparser list-value
-  (make-node 'list-value
-             :list-values (any 'bracket-l 'value 'bracket-r constp)))
+  (make-node 'list-value :list-values (any 'bracket-l 'value 'bracket-r constp)))
 
 (defparser object-value
-  (make-node 'object-value
-             :fields (any 'brace-l 'object-field 'brace-r constp)))
+  (make-node 'object-value :fields (any 'brace-l 'object-field 'brace-r constp)))
 
 (defparser object-value
   (make-node 'object-field
@@ -216,10 +207,11 @@ expand this macro or just use a normal DEFMETHOD."
              :value (expect-then-parse 'colon 'value constp)))
 
 (defparser enum-value
-  (let ((val (value *token*)))
-    (if (or (string= "true" val) (string= "false" val) (string= "null" val))
-        (unexpected)
-        (parse 'name))))
+  (string-case (value *token*)
+    ("true"  (unexpected))
+    ("false" (unexpected))
+    ("null"  (unexpected))
+    (t       (parse 'name))))
 
 (defparser directives
   (loop
@@ -243,7 +235,7 @@ expand this macro or just use a normal DEFMETHOD."
                                  (expect-token 'bracket-r)))
                 (parse 'named-type))))
     (if (expect-optional-token 'bang)
-        (return-from parse (make-node 'non-null-type :ty ty))
+        (make-node 'non-null-type :ty ty)
         ty)))
 
 (defun peek-description ()
@@ -257,31 +249,31 @@ expand this macro or just use a normal DEFMETHOD."
           ;; haven't advanced beyond the possible docstring. That happens in
           ;; the next parse call.
           (if (peek-description) (lookahead (lexer *parser*)) *token*)))
-    (cond
-      ((string= (value keyword-token) "schema")    (parse 'schema-definition))
-      ((string= (value keyword-token) "scalar")    (parse 'scalar-type-definition))
-      ((string= (value keyword-token) "type")      (parse 'object-type-definition))
-      ((string= (value keyword-token) "interface") (parse 'interface-type-definition))
-      ((string= (value keyword-token) "union")     (parse 'union-type-definition))
-      ((string= (value keyword-token) "enum" )     (parse 'enum-type-definition))
-      ((string= (value keyword-token) "input" )    (parse 'input-object-type-definition))
-      ((string= (value keyword-token) "directive") (parse 'directive-definition))
-      (t (unexpected)))))
+    (string-case (value keyword-token)
+      ("schema"    (parse 'schema-definition))
+      ("scalar"    (parse 'scalar-type-definition))
+      ("type"      (parse 'object-type-definition))
+      ("interface" (parse 'interface-type-definition))
+      ("union"     (parse 'union-type-definition))
+      ("enum"      (parse 'enum-type-definition))
+      ("input"     (parse 'input-object-type-definition))
+      ("directive" (parse 'directive-definition))
+      (t           (unexpected)))))
 
 (defparser type-system-extension
   ;; At this point our current token is "extend".  We now want to check what
   ;; type of extension this is, so we have to look ahead one token.
   (let ((keyword-token (lookahead (lexer *parser*))))
     (if (eq (kind keyword-token) 'name)
-      (cond
-        ((string= (value keyword-token) "schema")    (parse 'schema-extension))
-        ((string= (value keyword-token) "scalar")    (parse 'scalar-type-extension))
-        ((string= (value keyword-token) "type")      (parse 'object-type-extension))
-        ((string= (value keyword-token) "interface") (parse 'interface-type-extension))
-        ((string= (value keyword-token) "union")     (parse 'union-type-extension))
-        ((string= (value keyword-token) "enum" )     (parse 'enum-type-extension))
-        ((string= (value keyword-token) "input" )    (parse 'input-object-type-extension))
-        (t (unexpected)))
+      (string-case (value keyword-token)
+        ("schema"    (parse 'schema-extension))
+        ("scalar"    (parse 'scalar-type-extension))
+        ("type"      (parse 'object-type-extension))
+        ("interface" (parse 'interface-type-extension))
+        ("union"     (parse 'union-type-extension))
+        ("enum"      (parse 'enum-type-extension))
+        ("input"     (parse 'input-object-type-extension))
+        (t           (unexpected)))
       (unexpected))))
 
 (defparser schema-extension
