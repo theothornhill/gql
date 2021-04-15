@@ -316,7 +316,6 @@
       ;; Account for all parser cases here
       do
          ;; We have reached end of file - return it as a token
-         (let ((line (line lexer))
-               (col (- (1+ pos) (line-start lexer))))
-           (return
-             (make-token 'eof body-length body-length line col prev)))))
+         (return
+           (make-token 'eof body-length body-length (line lexer)
+                       (- (1+ pos) (line-start lexer)) prev))))
