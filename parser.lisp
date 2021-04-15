@@ -105,21 +105,15 @@ expand this macro or just use a normal DEFMETHOD."
     (make-node 'name :name (value token))))
 
 (defparser selection-set
-  ;; Selection-set : { selection+ }
   (make-node 'selection-set
              :selections (many 'brace-l 'selection 'brace-r)))
 
 (defparser selection
-  ;; Selection :
-  ;;    - Field
-  ;;    - FragmentSpread
-  ;;    - InlineFragment
   (if (peek 'spread)
       (parse 'fragment)
       (parse 'field)))
 
 (defparser field
-  ;; Field : Alias? Name Arguments? Directives SelectionSet
   (let ((name-or-alias (parse 'name)) alias name)
     (if (expect-optional-token 'colon)
         (setf alias name-or-alias name (parse 'name))
@@ -144,7 +138,6 @@ expand this macro or just use a normal DEFMETHOD."
                    :selection-set (parse 'selection-set)))))
 
 (defparser fragment-name
-  ;; Fragment-name : Name but not `on`
   (if (string= (value *token*) "on")
       (unexpected)
       (parse 'name)))
@@ -229,7 +222,6 @@ expand this macro or just use a normal DEFMETHOD."
         (parse 'name))))
 
 (defparser directives
-  ;; Directives[Const] : Directive[?Const]+
   (loop
     with directives
     while (peek 'at)
@@ -237,17 +229,14 @@ expand this macro or just use a normal DEFMETHOD."
     finally (return (nreverse directives))))
 
 (defparser directive
-  ;; Directive[Const] : @ Name Arguments[?Const]?
   (make-node 'directive
              :name (expect-then-parse 'at 'name)
              :arguments (parse 'arguments constp)))
 
 (defparser named-type
-  ;; Directive[Const] : @ Name Arguments[?Const]?
   (make-node 'named-type :name (parse 'name)))
 
 (defparser type-reference
-  ;; Directive[Const] : @ Name Arguments[?Const]?
   (let ((ty (if (expect-optional-token 'bracket-l)
                 (make-node 'list-type
                            :ty (prog1 (parse 'type-reference)
