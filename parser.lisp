@@ -248,16 +248,14 @@ expand this macro or just use a normal DEFMETHOD."
 
 (defparser type-reference
   ;; Directive[Const] : @ Name Arguments[?Const]?
-  (let ((ty))
-    (if (expect-optional-token 'bracket-l)
-        (setf ty (make-node 'list-type
-                            :ty (prog1 (parse 'type-reference)
-                                  (expect-token 'bracket-r))))
-        (setf ty (parse 'named-type)))
-    (when (expect-optional-token 'bang)
-      (return-from parse
-        (make-node 'non-null-type :ty ty)))
-    ty))
+  (let ((ty (if (expect-optional-token 'bracket-l)
+                (make-node 'list-type
+                           :ty (prog1 (parse 'type-reference)
+                                 (expect-token 'bracket-r)))
+                (parse 'named-type))))
+    (if (expect-optional-token 'bang)
+        (return-from parse (make-node 'non-null-type :ty ty))
+        ty)))
 
 (defun peek-description ()
   (or (peek 'string) (peek 'block-string)))
