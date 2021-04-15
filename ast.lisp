@@ -139,6 +139,7 @@ A document contains multiple definitions, either executable or representative of
 (defclass operation-definition (executable-definition)
   ((operation
     :initarg :operation
+    :initform nil
     :accessor operation
     :documentation "There are three types of operations that GraphQL models:
 
@@ -148,6 +149,7 @@ A document contains multiple definitions, either executable or representative of
 Each operation is represented by an optional operation name and a selection set.")
    (name
     :initarg :name
+    :initform nil
     :accessor name
     :documentation "An optional name.")
    (variable-definitions

@@ -57,30 +57,19 @@ expand this macro or just use a normal DEFMETHOD."
     (t                  (unexpected))))
 
 (defparser operation-definition
-  (when (peek 'brace-l)
-    ;; We allow for the query shorthand by first checking for the opening
-    ;; brace.  If we arrive here we know that we don't have any DIRECTIVES,
-    ;; VARIABLE-DEFINITIONS or NAME.  However, we do have the SELECTION-SET.
-    ;; We early return to avoid parsing more than we need.
-    (return-from parse
+  (if (peek 'brace-l)
+      ;; We allow for the query shorthand by first checking for the opening
+      ;; brace.  If we arrive here we know that we don't have any DIRECTIVES,
+      ;; VARIABLE-DEFINITIONS or NAME.  However, we do have the SELECTION-SET.
       (make-node 'operation-definition
-                 :directives nil
-                 :variable-definitions nil
-                 :name nil
                  :operation "query"
+                 :selection-set (parse 'selection-set))
+      (make-node 'operation-definition
+                 :operation (parse 'operation-type)
+                 :name (when (peek 'name) (parse 'name))
+                 :variable-definitions (parse 'variable-definitions)
+                 :directives (parse 'directives)
                  :selection-set (parse 'selection-set))))
-  ;; Parse the OPERATION-TYPE this so that we traverse over the node if we
-  ;; don't error.
-  (let ((operation (parse 'operation-type))
-        name)
-    (when (peek 'name)
-      (setf name (parse 'name)))
-    (make-node 'operation-definition
-               :name name
-               :operation operation
-               :variable-definitions (parse 'variable-definitions)
-               :directives (parse 'directives)
-               :selection-set (parse 'selection-set))))
 
 (defparser operation-type
   ;; Disallow other names than query, mutation and subscription.
