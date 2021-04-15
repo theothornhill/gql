@@ -3,7 +3,7 @@ packages:
   - sbcl
 sources:
   - https://git.sr.ht/~theo/lisp-ci
-  - https://git.sr.ht/~theo/gql
+  - https://hg.sr.ht/~theo/gql
 tasks:
   - setup: |
       ./lisp-ci/lisp-ci.sh
