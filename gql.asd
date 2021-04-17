@@ -4,7 +4,7 @@
   :description "Describe gql here"
   :author "Theodor Thornhill <theo@thornhill.no>"
   :license  "AGPLv3"
-  :version "0.0.1"
+  :version "0.1.0"
   :serial t
   :components ((:file "package")
                (:file "specials")
