@@ -8,8 +8,8 @@
   :serial t
   :components ((:file "package")
                (:file "specials")
-               (:file "ast")
                (:file "utils")
+               (:file "ast")
                (:file "lexer")
                (:file "parser")
                (:file "conditions")
