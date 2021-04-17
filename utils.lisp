@@ -9,12 +9,6 @@
                    (butlast things))
          ,(first (reverse things))))))
 
-(defmacro defnode (name &body slots)
-  `(defclass ,name (ast-node)
-     ,(loop :for slot :in slots
-            :for initarg = (intern (symbol-name slot) :keyword)
-            :collect `(,slot :initarg ,initarg :initform nil :accessor ,slot))))
-
 (defmacro with-token (&body body)
   "Bring the current token into scope anaphorically.
 

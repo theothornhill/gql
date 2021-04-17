@@ -115,6 +115,12 @@
     :accessor location
     :documentation "Source location for this node")))
 
+(defmacro defnode (name &body slots)
+  `(defclass ,name (ast-node)
+     ,(loop :for slot :in slots
+            :for initarg = (intern (symbol-name slot) :keyword)
+            :collect `(,slot :initarg ,initarg :initform nil :accessor ,slot))))
+
 (defnode name
   name)
 
