@@ -115,20 +115,20 @@
     :accessor location
     :documentation "Source location for this node")))
 
-(define-ast-node name
+(defnode name
   name)
 
-(define-ast-node document
+(defnode document
   definitions)
 
-(define-ast-node executable-definition
+(defnode executable-definition
   definitions)
-(define-ast-node type-system-definition
+(defnode type-system-definition
   definitions)
-(define-ast-node type-system-extension
+(defnode type-system-extension
   definitions)
 
-(define-ast-node operation-definition
+(defnode operation-definition
   operation
   name
   variable-definitions
@@ -139,189 +139,189 @@
 (deftype operation-type ()
   '(member query mutation subscription))
 
-(define-ast-node fragment-definition
+(defnode fragment-definition
   definitions)
 
-(define-ast-node selection-set
+(defnode selection-set
   selections)
 
-(define-ast-node field
+(defnode field
   alias
   name
   arguments
   directives
   selection-set)
 
-(define-ast-node argument
+(defnode argument
   name
   value)
 
-(define-ast-node fragment-spread
+(defnode fragment-spread
   name
   directives)
 
-(define-ast-node fragment-definition
+(defnode fragment-definition
   name
   type-condition
   directives
   selection-set)
 
-(define-ast-node inline-fragment
+(defnode inline-fragment
   type-condition
   directives
   selection-set)
 
-(define-ast-node int-value
+(defnode int-value
   value)
 
-(define-ast-node float-value
+(defnode float-value
   value)
 
-(define-ast-node string-value
+(defnode string-value
   value
   blockp)
 
-(define-ast-node boolean-value
+(defnode boolean-value
   value)
 
-(define-ast-node null-value)
+(defnode null-value)
 
-(define-ast-node enum-value
+(defnode enum-value
   value)
 
-(define-ast-node list-value
+(defnode list-value
   list-values)
 
-(define-ast-node object-value
+(defnode object-value
   fields)
 
-(define-ast-node object-field
+(defnode object-field
   name
   value)
 
-(define-ast-node var
+(defnode var
   name)
 
-(define-ast-node variable-definition
+(defnode variable-definition
   var
   var-type
   default-value
   directives)
 
-(define-ast-node named-type
+(defnode named-type
   name)
 
-(define-ast-node list-type
+(defnode list-type
   ty)
 
-(define-ast-node non-null-type
+(defnode non-null-type
   ty)
 
-(define-ast-node directive
+(defnode directive
   name
   arguments)
 
-(define-ast-node schema-definition
+(defnode schema-definition
   description
   directives
   operation-types)
 
-(define-ast-node operation-type-definition
+(defnode operation-type-definition
   operation
   named-type)
 
-(define-ast-node scalar-type-definition
+(defnode scalar-type-definition
   description
   name
   directives)
 
-(define-ast-node object-type-definition
+(defnode object-type-definition
   description
   name
   interfaces
   directives
   fields)
 
-(define-ast-node field-definition
+(defnode field-definition
   description
   name
   args
   ty
   directives)
 
-(define-ast-node input-value-definition
+(defnode input-value-definition
   description
   name
   ty
   default-value
   directives)
 
-(define-ast-node interface-type-definition
+(defnode interface-type-definition
   description
   name
   directives
   fields)
 
-(define-ast-node union-type-definition
+(defnode union-type-definition
   description
   name
   directives
   union-members)
 
-(define-ast-node enum-type-definition
+(defnode enum-type-definition
   description
   name
   directives
   enum-values)
 
-(define-ast-node enum-value-definition
+(defnode enum-value-definition
   description
   enum-value
   directives)
 
-(define-ast-node input-object-type-definition
+(defnode input-object-type-definition
   description
   name
   directives
   fields)
 
-(define-ast-node directive-definition
+(defnode directive-definition
   description
   name
   args
   locations)
 
-(define-ast-node schema-extension
+(defnode schema-extension
   directives
   operation-types)
 
-(define-ast-node scalar-type-extension
+(defnode scalar-type-extension
   name
   directives)
 
-(define-ast-node object-type-extension
+(defnode object-type-extension
   name
   interfaces
   directives
   fields)
 
-(define-ast-node interface-type-extension
+(defnode interface-type-extension
   name
   interfaces
   directives
   fields)
 
-(define-ast-node union-type-extension
+(defnode union-type-extension
   name
   directives
   union-members)
 
-(define-ast-node enum-type-extension
+(defnode enum-type-extension
   name
   directives
   enum-values)
 
-(define-ast-node input-object-type-extension
+(defnode input-object-type-extension
   name
   directives
   fields)

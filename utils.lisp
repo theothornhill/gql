@@ -9,7 +9,7 @@
                    (butlast things))
          ,(first (reverse things))))))
 
-(defmacro define-ast-node (name &body slots)
+(defmacro defnode (name &body slots)
   `(defclass ,name (ast-node)
      ,(loop :for slot :in slots
             :for initarg = (intern (symbol-name slot) :keyword)
