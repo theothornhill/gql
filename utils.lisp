@@ -29,7 +29,7 @@ is called primarily through the PARSE DEFMETHOD, so that we actually have the PA
 Refer to the token as TOKEN.  This macro also advances lexer one step as a side
 effect.  Also works under the assumption that it is called primarily through the
 PARSE DEFMETHOD, so that we actually have the PARSER."
-  `(let ((token (expect-token ,kind)))
+  `(let ((*token* (expect-token ,kind)))
      ,@body))
 
 (defun advance-one-token ()

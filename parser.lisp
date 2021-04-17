@@ -74,11 +74,11 @@ expand this macro or just use a normal DEFMETHOD."
 (defparser operation-type
   ;; Disallow other names than query, mutation and subscription.
   (with-expected-token 'name
-    (string-case (value token)
+    (string-case (value *token*)
       ("query"        "query")
       ("mutation"     "mutation")
       ("subscription" "subscription")
-      (t              (unexpected token)))))
+      (t              (unexpected *token*)))))
 
 (defparser fragment-definition
   (make-node 'fragment-definition
@@ -89,7 +89,7 @@ expand this macro or just use a normal DEFMETHOD."
 
 (defparser name
   (with-expected-token 'name
-    (make-node 'name :name (value token))))
+    (make-node 'name :name (value *token*))))
 
 (defparser selection-set
   (make-node 'selection-set :selections (many 'brace-l 'selection 'brace-r)))
