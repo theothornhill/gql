@@ -115,474 +115,213 @@
     :accessor location
     :documentation "Source location for this node")))
 
-(defclass name (ast-node)
-  ((name
-    :initarg :name
-    :accessor name
-    :documentation "A GraphQL name node.")))
+(define-ast-node name
+  name)
 
-(defclass document (ast-node)
-  ((definitions
-    :initarg :definitions
-    :accessor definitions
-    :documentation "A GraphQL Document describes a complete file or request string operated on by a GraphQL service or client.
+(define-ast-node document
+  definitions)
 
-A document contains multiple definitions, either executable or representative of a GraphQL type system.")))
+(define-ast-node executable-definition
+  definitions)
+(define-ast-node type-system-definition
+  definitions)
+(define-ast-node type-system-extension
+  definitions)
 
-;; Definition - https://spec.graphql.org/June2018/#sec-Language.Document
-(defclass definition (document) ())
-(defclass executable-definition (definition) ())
-(defclass type-system-definition (definition) ())
-(defclass type-system-extension (definition) ())
-
-;;; Executable definition - https://spec.graphql.org/June2018/#sec-Language.Operations
-(defclass operation-definition (executable-definition)
-  ((operation
-    :initarg :operation
-    :initform nil
-    :accessor operation
-    :documentation "There are three types of operations that GraphQL models:
-
-- query – a read-only fetch.
-- mutation – a write followed by a fetch.
-- subscription – a long-lived request that fetches data in response to source events.
-Each operation is represented by an optional operation name and a selection set.")
-   (name
-    :initarg :name
-    :initform nil
-    :accessor name
-    :documentation "An optional name.")
-   (variable-definitions
-    :initarg :variable-definitions
-    :initform nil
-    :accessor variable-definitions
-    :documentation "An optional list of variable definitions.")
-   (directives
-    :initarg :directives
-    :initform nil
-    :accessor directives
-    :documentation "An optional list of directives.")
-   (selection-set
-    :initarg :selection-set
-    :initform nil
-    :accessor selection-set
-    :documentation "A selection set node.")))
+(define-ast-node operation-definition
+  operation
+  name
+  variable-definitions
+  directives
+  selection-set
+  definitions)
 
 (deftype operation-type ()
   '(member query mutation subscription))
 
-(defclass fragment-definition (executable-definition) ())
+(define-ast-node fragment-definition
+  definitions)
 
-;; Selection sets - https://spec.graphql.org/June2018/#sec-Selection-Sets
-(defclass selection-set (ast-node)
-  ((selections
-    :initarg :selections
-    :accessor selections
-    :documentation "A list of selections.
+(define-ast-node selection-set
+  selections)
 
-An operation selects the set of information it needs, 
-and will receive exactly that information and nothing more, 
-avoiding over-fetching and under-fetching data.")))
+(define-ast-node field
+  alias
+  name
+  arguments
+  directives
+  selection-set)
 
-(defclass selection (ast-node) ())
+(define-ast-node argument
+  name
+  value)
 
-;; Fields - https://spec.graphql.org/June2018/#sec-Language.Fields
-(defclass field (selection)
-  ((alias
-    :initarg :alias
-    :accessor alias)
-   (name
-    :initarg :name
-    :accessor name)
-   (arguments
-    :initarg :arguments
-    :accessor arguments)
-   (directives
-    :initarg :directives
-    :accessor directives)
-   (selection-set
-    :initarg :selection-set
-    :accessor selection-set)))
+(define-ast-node fragment-spread
+  name
+  directives)
 
-;; Arguments - https://spec.graphql.org/June2018/#sec-Language.Arguments
-(defclass argument (ast-node)
-  ((name
-    :initarg :name
-    :accessor name)
-   (value
-    :initarg :value
-    :accessor value)))
+(define-ast-node fragment-definition
+  name
+  type-condition
+  directives
+  selection-set)
 
-;; Fragments - https://spec.graphql.org/June2018/#sec-Language.Fragments
-(defclass fragment-spread (ast-node)
-  ((name
-    :initarg :name
-    :accessor name)
-   (directives
-    :initarg :directives
-    :accessor directives)))
+(define-ast-node inline-fragment
+  type-condition
+  directives
+  selection-set)
 
-(defclass fragment-definition (ast-node)
-  ((name
-    :initarg :name
-    :accessor name)
-   (type-condition
-    :initarg :type-condition
-    :accessor type-condition)
-   (directives
-    :initarg :directives
-    :accessor directives)
-   (selection-set
-    :initarg :selection-set
-    :accessor selection-set)))
+(define-ast-node int-value
+  value)
 
-;;; Inline fragments - https://spec.graphql.org/June2018/#sec-Inline-Fragments
-(defclass inline-fragment (selection)
-  ((type-condition
-    :initarg :type-condition
-    :accessor type-condition)
-   (directives
-    :initarg :directives
-    :accessor directives)
-   (selection-set
-    :initarg :selection-set
-    :accessor selection-set)))
+(define-ast-node float-value
+  value)
 
-;; Input values - https://spec.graphql.org/June2018/#sec-Input-Values
-(defclass value (ast-node)
-  ())
+(define-ast-node string-value
+  value
+  blockp)
 
-(defclass int-value (value)
-  ((value
-    :initarg :value
-    :accessor value)))
+(define-ast-node boolean-value
+  value)
 
-(defclass float-value (value)
-  ((value
-    :initarg :value
-    :accessor value)))
+(define-ast-node null-value)
 
-(defclass string-value (value)
-  ((value
-    :initarg :value
-    :accessor value)
-   (blockp
-    :initarg :blockp
-    :accessor blockp)))
+(define-ast-node enum-value
+  value)
 
-(defclass boolean-value (value)
-  ((value
-    :initarg :value
-    :accessor value)))
+(define-ast-node list-value
+  list-values)
 
-(defclass null-value (value)
-  ())
+(define-ast-node object-value
+  fields)
 
-(defclass enum-value (value)
-  ((value
-    :initarg :value
-    :accessor value)))
+(define-ast-node object-field
+  name
+  value)
 
-(defclass list-value (value)
-  ((list-values
-    :initarg :list-values
-    :accessor list-values)))
+(define-ast-node var
+  name)
 
-(defclass object-value (value)
-  ((fields
-    :initarg :fields
-    :accessor fields)))
+(define-ast-node variable-definition
+  var
+  var-type
+  default-value
+  directives)
 
-(defclass object-field (ast-node)
-  ((name
-    :initarg :name
-    :accessor name)
-   (value
-    :initarg :value
-    :accessor value)))
+(define-ast-node named-type
+  name)
 
-;; Variables - https://spec.graphql.org/June2018/#sec-Language.Variables
-(defclass var (ast-node)
-  ((name
-    :initarg :name
-    :accessor name)))
+(define-ast-node list-type
+  ty)
 
-(defclass variable-definition (ast-node)
-  ((var
-    :initarg :var
-    :accessor var)
-   (var-type
-    :initarg :var-type
-    :accessor var-type)
-   (default-value
-    :initarg :default-value
-    :accessor default-value)
-   (directives
-    :initarg :directives
-    :accessor directives)))
+(define-ast-node non-null-type
+  ty)
 
-;; Type references - https://spec.graphql.org/June2018/#sec-Type-References
-(defclass ty (ast-node) ())
+(define-ast-node directive
+  name
+  arguments)
 
-(defclass named-type (ty)
-  ((name
-    :initarg :name
-    :accessor name)))
+(define-ast-node schema-definition
+  description
+  directives
+  operation-types)
 
-(defclass list-type (ty)
-  ((ty
-    :initarg :ty
-    :accessor ty)))
+(define-ast-node operation-type-definition
+  operation
+  named-type)
 
-(defclass non-null-type (ty)
-  ((ty
-    :initarg :ty
-    :accessor ty)))
+(define-ast-node scalar-type-definition
+  description
+  name
+  directives)
 
-(defclass directive (ast-node)
-  ((name
-    :initarg :name
-    :accessor name)
-   (arguments
-    :initarg :arguments
-    :accessor arguments))
-  (:documentation "https://spec.graphql.org/June2018/#sec-Language.Directives"))
+(define-ast-node object-type-definition
+  description
+  name
+  interfaces
+  directives
+  fields)
 
-(defclass schema-definition (ast-node)
-  ((description
-    :initarg :description
-    :accessor description)
-   (directives
-    :initarg :directives
-    :accessor directives)
-   (operation-types
-    :initarg :operation-types
-    :accessor operation-types)))
+(define-ast-node field-definition
+  description
+  name
+  args
+  ty
+  directives)
 
-(defclass operation-type-definition (ast-node)
-  ((operation
-    :initarg :operation
-    :accessor operation)
-   (named-type
-    :initarg :named-type
-    :accessor named-type)))
+(define-ast-node input-value-definition
+  description
+  name
+  ty
+  default-value
+  directives)
 
-(defclass scalar-type-definition (ast-node)
-  ((description
-    :initarg :description
-    :accessor description)
-   (name
-    :initarg :name
-    :accessor name)
-   (directives
-    :initarg :directives
-    :accessor directives)))
+(define-ast-node interface-type-definition
+  description
+  name
+  directives
+  fields)
 
-(defclass object-type-definition (ast-node)
-  ((description
-    :initarg :description
-    :accessor description)
-   (name
-    :initarg :name
-    :accessor name)
-   (interfaces
-    :initarg :interfaces
-    :accessor interfaces)
-   (directives
-    :initarg :directives
-    :accessor directives)
-   (fields
-    :initarg :fields
-    :accessor fields)))
+(define-ast-node union-type-definition
+  description
+  name
+  directives
+  union-members)
 
-(defclass field-definition (ast-node)
-  ((description
-    :initarg :description
-    :accessor description)
-   (name
-    :initarg :name
-    :accessor name)
-   (args
-    :initarg :args
-    :accessor args)
-   (ty
-    :initarg :ty
-    :accessor ty)
-   (directives
-    :initarg :directives
-    :accessor directives)))
+(define-ast-node enum-type-definition
+  description
+  name
+  directives
+  enum-values)
 
-(defclass input-value-definition (ast-node)
-  ((description
-    :initarg :description
-    :accessor description)
-   (name
-    :initarg :name
-    :accessor name)
-   (ty
-    :initarg :ty
-    :accessor ty)
-   (default-value
-    :initarg :default-value
-    :accessor default-value)
-   (directives
-    :initarg :directives
-    :accessor directives)))
+(define-ast-node enum-value-definition
+  description
+  enum-value
+  directives)
 
-(defclass interface-type-definition (ast-node)
-  ((description
-    :initarg :description
-    :accessor description)
-   (name
-    :initarg :name
-    :accessor name)
-   (directives
-    :initarg :directives
-    :accessor directives)
-   (fields
-    :initarg :fields
-    :accessor fields)))
+(define-ast-node input-object-type-definition
+  description
+  name
+  directives
+  fields)
 
-(defclass union-type-definition (ast-node)
-  ((description
-    :initarg :description
-    :accessor description)
-   (name
-    :initarg :name
-    :accessor name)
-   (directives
-    :initarg :directives
-    :accessor directives)
-   (union-members
-    :initarg :union-members
-    :accessor union-members)))
+(define-ast-node directive-definition
+  description
+  name
+  args
+  locations)
 
-(defclass enum-type-definition (ast-node)
-  ((description
-    :initarg :description
-    :accessor description)
-   (name
-    :initarg :name
-    :accessor name)
-   (directives
-    :initarg :directives
-    :accessor directives)
-   (enum-values
-    :initarg :enum-values
-    :accessor enum-values)))
+(define-ast-node schema-extension
+  directives
+  operation-types)
 
-(defclass enum-value-definition (ast-node)
-  ((description
-    :initarg :description
-    :accessor description)
-   (enum-value
-    :initarg :enum-value
-    :accessor enum-value)
-   (directives
-    :initarg :directives
-    :accessor directives)))
+(define-ast-node scalar-type-extension
+  name
+  directives)
 
-(defclass input-object-type-definition (ast-node)
-  ((description
-    :initarg :description
-    :accessor description)
-   (name
-    :initarg :name
-    :accessor name)
-   (directives
-    :initarg :directives
-    :accessor directives)
-   (fields
-    :initarg :fields
-    :accessor fields)))
+(define-ast-node object-type-extension
+  name
+  interfaces
+  directives
+  fields)
 
-(defclass directive-definition (ast-node)
-  ((description
-    :initarg :description
-    :accessor description)
-   (name
-    :initarg :name
-    :accessor name)
-   (args
-    :initarg :args
-    :accessor args)
-   (locations
-    :initarg :locations
-    :accessor locations)))
+(define-ast-node interface-type-extension
+  name
+  interfaces
+  directives
+  fields)
 
-(defclass schema-extension (ast-node)
-  ((directives
-    :initarg :directives
-    :accessor directives)
-   (operation-types
-    :initarg :operation-types
-    :accessor operation-types)))
+(define-ast-node union-type-extension
+  name
+  directives
+  union-members)
 
-(defclass scalar-type-extension (ast-node)
-  ((name
-    :initarg :name
-    :accessor name)
-   (directives
-    :initarg :directives
-    :accessor directives)))
+(define-ast-node enum-type-extension
+  name
+  directives
+  enum-values)
 
-(defclass object-type-extension (ast-node)
-  ((name
-    :initarg :name
-    :accessor name)
-   (interfaces
-    :initarg :interfaces
-    :accessor interfaces)
-   (directives
-    :initarg :directives
-    :accessor directives)
-   (fields
-    :initarg :fields
-    :accessor fields)))
-
-(defclass interface-type-extension (ast-node)
-  ((name
-    :initarg :name
-    :accessor name)
-   (interfaces
-    :initarg :interfaces
-    :accessor interfaces)
-   (directives
-    :initarg :directives
-    :accessor directives)
-   (fields
-    :initarg :fields
-    :accessor fields)))
-
-(defclass union-type-extension (ast-node)
-  ((name
-    :initarg :name
-    :accessor name)
-   (directives
-    :initarg :directives
-    :accessor directives)
-   (union-members
-    :initarg :union-members
-    :accessor union-members)))
-
-(defclass enum-type-extension (ast-node)
-  ((name
-    :initarg :name
-    :accessor name)
-   (directives
-    :initarg :directives
-    :accessor directives)
-   (enum-values
-    :initarg :enum-values
-    :accessor enum-values)))
-
-(defclass input-object-type-extension (ast-node)
-  ((name
-    :initarg :name
-    :accessor name)
-   (directives
-    :initarg :directives
-    :accessor directives)
-   (fields
-    :initarg :fields
-    :accessor fields)))
+(define-ast-node input-object-type-extension
+  name
+  directives
+  fields)
