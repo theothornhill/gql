@@ -9,6 +9,12 @@
                    (butlast things))
          ,(first (reverse things))))))
 
+(defmacro defclass* (name &rest slots)
+  `(defclass ,name ()
+     ,(loop :for slot :in slots
+            :for initarg = (intern (symbol-name slot) :keyword)
+            :collect `(,slot :initarg ,initarg :accessor ,slot))))
+
 (defmacro with-token (&body body)
   "Bring the current token into scope anaphorically.
 
