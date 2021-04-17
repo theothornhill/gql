@@ -12,6 +12,7 @@
                (:file "ast")
                (:file "lexer")
                (:file "parser")
+               (:file "introspection")
                (:file "conditions")
                (:file "gql")))
 
