@@ -6,43 +6,47 @@
             :for initarg = (intern (symbol-name slot) :keyword)
             :collect `(,slot :initarg ,initarg :initform nil :accessor ,slot))))
 
+;;; meta fields
+;;; __schema: __schema!
+;;; __type(name: string!): __type
+
 (defintrospection __schema
-  types
-  query-type
-  mutation-type
-  subscription-type
-  directives)
+  types             ;; [__type!]!
+  query-type        ;; __type!
+  mutation-type     ;; __type
+  subscription-type ;; __type
+  directives)       ;; [__directive!]!
 
 (defintrospection __type
-  kind
-  name
-  description
-  fields
-  interfaces
-  possible-types
-  enum-values
-  input-fields
-  of-type)
+  kind           ;; __type-kind!
+  name           ;; string
+  description    ;; string
+  fields         ;; (include-deprecated: boolean = false): [__field!]
+  interfaces     ;; [__type!]
+  possible-types ;; [__type!]
+  enum-values    ;; (include-deprecated: boolean = false): [__enum-value!]
+  input-fields   ;; [__input-value!]
+  of-type)       ;; __type
 
 (defintrospection __field
-  name               ;; String!
-  description        ;; String
-  args               ;; [__InputValue!]!
-  ty                 ;; __Type!
-  isDeprecated       ;; Boolean!
-  deprecationReason) ;; String
+  name               ;; string!
+  description        ;; string
+  args               ;; [__input-value!]!
+  ty                 ;; __type!
+  isdeprecated       ;; boolean!
+  deprecationreason) ;; string
 
 (defintrospection __input-value
-  name          ;; String!
-  description   ;; String
-  ty            ;; __Type!
-  defaultValue) ;; String
+  name          ;; string!
+  description   ;; string
+  ty            ;; __type!
+  defaultvalue) ;; string
 
 (defintrospection __enum-value
-  name               ;; String!
-  description        ;; String
-  isDeprecated       ;; Boolean!
-  deprecationReason) ;; String
+  name               ;; string!
+  description        ;; string
+  isdeprecated       ;; boolean!
+  deprecationreason) ;; string
 
 (deftype __type-kind ()
   '(member
@@ -56,10 +60,10 @@
     non_null))
 
 (defintrospection __directive
-  name        ;; String!
-  description ;; String
-  locations   ;; [__DirectiveLocation!]!
-  args)       ;; [__InputValue!]!
+  name        ;; string!
+  description ;; string
+  locations   ;; [__directive-location!]!
+  args)       ;; [__input-value!]!
 
 (deftype __directive-location ()
   '(member
