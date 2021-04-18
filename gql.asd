@@ -6,6 +6,7 @@
   :license  "AGPLv3"
   :version "0.1.1"
   :serial t
+  :depends-on (:cl-ppcre)
   :components ((:file "package")
                (:file "specials")
                (:file "utils")
@@ -13,6 +14,7 @@
                (:file "lexer")
                (:file "parser")
                (:file "introspection")
+               (:file "printers")
                (:file "conditions")
                (:file "gql")))
 

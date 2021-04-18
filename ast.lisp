@@ -142,9 +142,6 @@
   selection-set
   definitions)
 
-(deftype operation-type ()
-  '(member query mutation subscription))
-
 (defnode fragment-definition
   definitions)
 
