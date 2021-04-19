@@ -45,10 +45,10 @@ list of strings."
 (defmethod print-node ((node selection-set) &optional (indent-level 0) (stream nil))
   ;; Start by adding {
   ;; Newline
-  ;; Loop the selection-set, add comma on every butlast item, then newline
+  ;; Loop the selection-set
   ;; Dedent
   ;; Newline
-  (format stream "{~%~{~a~^,~%~}~%~a}"
+  (format stream "{~%~{~a~%~}~%~a}"
           (gather-nodes (selections node) indent-level)
           (add-indent (1- indent-level))))
 
