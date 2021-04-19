@@ -12,4 +12,5 @@
    #:gql-error
    #:gql-warning
    #:gql-simple-warning
-   #:make-parser))
+   #:make-parser
+   #:print-node))

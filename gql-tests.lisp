@@ -502,3 +502,25 @@ extend type Query {
   findDog(complex: ComplexInput): Dog
   booleanList(booleanListArg: [Boolean!]): Boolean
 }"))))
+
+(deftest printer
+  (testing "Pretty printer"
+    (let* ((doc (nth-value 1 (gql "query lol { x { y } }")))
+           (result (print-node doc 0 nil)))
+      (ok (string-equal result "query lol {
+  x {
+    y
+  }
+}")))
+    (let* ((doc (nth-value 1 (gql "
+query lol { 
+  x { 
+    y 
+  } 
+}")))
+           (result (print-node doc 0 nil)))
+      (ok (string-equal result "query lol {
+  x {
+    y
+  }
+}")))))
