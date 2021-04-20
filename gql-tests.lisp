@@ -540,6 +540,12 @@ extend type Query {
     x
   }
 }"))
+  (testing "Advanced field without selection-set"
+    (generator-test
+     "query { smallPic: profilePic(size: 64, size2: 128) }"
+     "query {
+  smallPic: profilePic(size: 64, size2: 128)
+}"))
   (testing "Advanced field with multiple directives"
     (generator-test
      "query { smallPic: profilePic(size: $foo) @skip(if: $foo) @include(if: $bar) { x } }"
