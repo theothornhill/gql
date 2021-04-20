@@ -1,5 +1,11 @@
 (in-package :gql)
 
+(defun cat (&rest args)
+  (apply #'concatenate 'string args))
+
+(defun char-code-at (body pos)
+  (char-code (char body pos)))
+
 (defmacro string-case (value &rest things)
   (let ((v (gensym)))
     `(let ((,v ,value))

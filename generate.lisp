@@ -23,7 +23,7 @@
   "Collect a list of formatted subnodes.
 It indents where necessary (with help from calls to GENERATE, then returns a
 list of strings."
-  (mapcar (lambda (x) (format nil "~a" (generate x indent-level)))
+  (mapcar (lambda (node) (format nil "~a" (generate node indent-level)))
           node-list))
 
 (defgeneric generate (node &optional indent-level stream)
@@ -58,36 +58,60 @@ list of strings."
 (defmethod generate ((node selection-set) &optional (indent-level 0) (stream nil))
   ;; Start by adding {
   ;; Newline
-  ;; Loop the selection-set
+  ;; Unfold the selection-set
   ;; Dedent
   ;; Newline
-  (format stream "{~%~{~a~}~%~a}"
+  (format stream (cat "{~%" *unfold-string* "~%~a}")
           (gather-nodes (selections node) indent-level)
           (add-indent (1- indent-level))))
 
+(defmethod generate ((node argument) &optional (indent-level 0) (stream nil))
+  (format stream "~a: ~a"
+          (generate (name node) indent-level)
+          (generate (value node) indent-level)))
+
 (defmethod generate ((node field) &optional (indent-level 0) (stream nil))
-  ;; Fields:
-  ;; 
-  ;; alias
-  ;; name
-  ;; arguments
-  ;; directives
-  ;; selection-set
-  ;;
-  ;; First add indentation
-  ;; optionally show alias, name and selection-set
-  ;; TODO: Add more fields
-  (format stream "~a~@[~a: ~]~@[~a~]~@[ ~a~]"
+  ;; Advanced example:
+  ;; smallPic: profilePic(size: 64, size2: 128) @skip(if: true) { x }
+  (format stream (cat "~a"                         ;; indent
+                      "~@[~a: ~]"                  ;; alias
+                      "~@[~a~]"                    ;; name
+                      "~@[(~{~a~^, ~})~]"          ;; arguments, comma separated
+                      "~@[ ~{~a~^ ~}~]"            ;; directives
+                      "~@[ ~a~]")                  ;; selection-set
           (add-indent indent-level)
-          (alias node)
+          (when (alias node) (generate (alias node) indent-level))
           (generate (name node))
+          (when (arguments node)
+            (gather-nodes (arguments node) indent-level))
+          (gather-nodes (directives node) indent-level)
           (when (selection-set node)
             (generate (selection-set node) (1+ indent-level)))))
-
-(defmethod generate ((node argument) &optional (indent-level 0) (stream nil))
-  (declare (ignorable indent-level))
-  (format stream "~a: ~a" (name node) (value node)))
 
 (defmethod generate ((node name) &optional (indent-level 0) (stream nil))
   (declare (ignorable indent-level))
   (format stream "~@[~a~]" (name node)))
+
+(defmethod generate ((node directive) &optional (indent-level 0) (stream nil))
+  (declare (ignorable indent-level))
+  (format stream (cat "@"
+                      "~@[~a~]"
+                      "~@[(~{~a~^, ~})~]"          ;; arguments, comma separated
+                      )
+          (generate (name node))
+          (when (arguments node)
+            (gather-nodes (arguments node) indent-level))))
+
+;;; Values
+(defmethod generate ((node int-value) &optional (indent-level 0) (stream nil))
+  (declare (ignorable indent-level))
+  (format stream "~@[~a~]" (value node)))
+
+(defmethod generate ((node boolean-value) &optional (indent-level 0) (stream nil))
+  (declare (ignorable indent-level))
+  (let ((bool (if (value node) "true" "false")))
+    (format stream "~@[~a~]" bool)))
+
+(defmethod generate ((node var) &optional (indent-level 0) (stream nil))
+  (declare (ignorable indent-level))
+  (format stream "~@[$~a~]" (generate (name node))))

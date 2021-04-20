@@ -1,15 +1,5 @@
 (in-package #:gql)
 
-;;; Utils
-
-(defun cat (&rest args)
-  (apply #'concatenate 'string args))
-
-(defun char-code-at (body pos)
-  (char-code (char body pos)))
-
-;;; Constructors
-
 (defun make-token (kind start end line column prev &optional value)
   (make-instance
    'token :kind kind :start start :end end :line line :column column :prev prev :value value))

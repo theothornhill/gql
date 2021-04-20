@@ -503,24 +503,49 @@ extend type Query {
   booleanList(booleanListArg: [Boolean!]): Boolean
 }"))))
 
+(defun generator-test (input output)
+  (let ((doc (nth-value 1 (gql input))))
+    (ok (string-equal (generate doc 0 nil) output))))
+
 (deftest printer
-  (testing "Pretty printer"
-    (let* ((doc (nth-value 1 (gql "query lol { x { y } }")))
-           (result (generate doc 0 nil)))
-      (ok (string-equal result "query lol {
+  (testing "Simple nested query"
+    (generator-test
+     "query lol { x { y } }"
+     "query lol {
   x {
     y
   }
-}")))
-    (let* ((doc (nth-value 1 (gql "
-query lol { 
-  x { 
-    y 
-  } 
-}")))
-           (result (generate doc 0 nil)))
-      (ok (string-equal result "query lol {
-  x {
-    y
+}"))
+  (testing "Advanced field"
+    (generator-test
+     "query { smallPic: profilePic(size: 64) { x } }"
+     "query {
+  smallPic: profilePic(size: 64) {
+    x
   }
-}")))))
+}"))
+  (testing "Advanced field with multiple args"
+    (generator-test
+     "query { smallPic: profilePic(size: 64, size2: 128) { x } }"
+     "query {
+  smallPic: profilePic(size: 64, size2: 128) {
+    x
+  }
+}"))
+  (testing "Advanced field with directive"
+    (generator-test
+     "query { smallPic: profilePic(size: 64, size2: 128) @skip(if: true) { x } }"
+     "query {
+  smallPic: profilePic(size: 64, size2: 128) @skip(if: true) {
+    x
+  }
+}"))
+  (testing "Advanced field with multiple directives"
+    (generator-test
+     "query { smallPic: profilePic(size: $foo) @skip(if: $foo) @include(if: $bar) { x } }"
+     "query {
+  smallPic: profilePic(size: $foo) @skip(if: $foo) @include(if: $bar) {
+    x
+  }
+}")))
+
