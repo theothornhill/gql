@@ -56,7 +56,7 @@ list of strings."
   ;; Loop the selection-set
   ;; Dedent
   ;; Newline
-  (format stream "{~%~{~a~}~%~a }"
+  (format stream "{~%~{~a~}~%~a}"
           (gather-nodes (selections node) indent-level)
           (add-indent (1- indent-level))))
 
