@@ -12,4 +12,3 @@ tasks:
   - test: |
       cd ~/quicklisp/local-projects/gql
       ./test.sh
-      hg diff
