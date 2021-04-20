@@ -506,7 +506,7 @@ extend type Query {
 (deftest printer
   (testing "Pretty printer"
     (let* ((doc (nth-value 1 (gql "query lol { x { y } }")))
-           (result (print-node doc 0 nil)))
+           (result (generate doc 0 nil)))
       (ok (string-equal result "query lol {
   x {
     y
@@ -518,7 +518,7 @@ query lol {
     y 
   } 
 }")))
-           (result (print-node doc 0 nil)))
+           (result (generate doc 0 nil)))
       (ok (string-equal result "query lol {
   x {
     y

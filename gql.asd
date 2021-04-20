@@ -14,7 +14,7 @@
                (:file "lexer")
                (:file "parser")
                (:file "introspection")
-               (:file "printers")
+               (:file "generate")
                (:file "conditions")
                (:file "gql")))
 
