@@ -507,7 +507,7 @@ extend type Query {
   (let ((doc (nth-value 1 (gql input))))
     (ok (string-equal (generate doc 0 nil) output))))
 
-(deftest printer
+(deftest generator
   (testing "Simple nested query"
     (generator-test
      "query lol { x { y } }"
@@ -580,5 +580,37 @@ extend type Query {
      "query myQuery($someTest: Boolean) @skip(if: $someTest) {
   field
 }"
-     )))
+     ))
+
+  (testing "Fragment spread"
+    (generator-test
+     "query withFragments {
+  user(id: 4) {
+    friends(first: 10) {
+      ...friendFields
+    }
+    mutualFriends(first: 10) {
+      ...friendFields
+    }
+  }
+}"
+     "query withFragments {
+  user(id: 4) {
+    friends(first: 10) {
+      ...friendFields
+    }
+    mutualFriends(first: 10) {
+      ...friendFields
+    }
+  }
+}"))
+  (testing "Fragment definition with selection-set"
+    (generator-test
+     "fragment friendFields on User {
+  x
+}"
+     "fragment friendFields on User {
+  x
+}")))
+
 

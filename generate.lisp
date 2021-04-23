@@ -12,10 +12,6 @@
       (setf indentation (cat indentation "  ")))
     indentation))
 
-(defun unfold-nodes (stream nodes)
-  "Splices open a list of nodes, displaying them without the enclosing ( )."
-  (format stream "~{~a~}" nodes))
-
 (defun gather-nodes (node-list indent-level)
   "Collect a list of formatted subnodes.
 It indents where necessary (with help from calls to GENERATE, then returns a
@@ -27,16 +23,16 @@ list of strings."
   (:documentation "print a node as a valid GrqphQL statement."))
 
 (defmethod generate ((node document) &optional (indent-level 0) (stream t))
-  (unfold-nodes stream (gather-nodes (definitions node) indent-level)))
+  (format stream "~{~a~}" (gather-nodes (definitions node) indent-level)))
 
 (defmethod generate ((node executable-definition) &optional (indent-level 0) (stream t))
-  (unfold-nodes stream (gather-nodes (definitions node) indent-level)))
+  (format stream "~{~a~}" (gather-nodes (definitions node) indent-level)))
 
 (defmethod generate ((node type-system-definition) &optional (indent-level 0) (stream t))
-  (unfold-nodes stream (gather-nodes (definitions node) indent-level)))
+  (format stream "~{~a~}" (gather-nodes (definitions node) indent-level)))
 
 (defmethod generate ((node type-system-extension) &optional (indent-level 0) (stream t))
-  (unfold-nodes stream (gather-nodes (definitions node) indent-level)))
+  (format stream "~{~a~}" (gather-nodes (definitions node) indent-level)))
 
 (defmethod generate ((node operation-definition) &optional (indent-level 0) (stream nil))
   ;; TODO: Missing definitions
@@ -44,23 +40,30 @@ list of strings."
                       "~@[ ~a~]"          ;; name
                       "~@[(~{~a~^, ~})~]" ;; variable definitions
                       "~@[ ~{~a~}~]"      ;; directives
-                      " ~a")              ;; Selection set
+                      " ~a")            ;; selection set
           (operation node)
           (when (name node) (generate (name node)))
           (gather-nodes (variable-definitions node) indent-level)
           (gather-nodes (directives node) indent-level)
           (generate (selection-set node) (1+ indent-level))))
 
-(defmethod generate ((node fragment-definition) &optional (indent-level 0) (stream t))
-  (unfold-nodes stream (gather-nodes (definitions node) indent-level)))
+(defmethod generate ((node fragment-definition) &optional (indent-level 0) (stream nil))
+  (format stream (cat "fragment ~a"
+                      " on ~a"
+                      "~@[ ~{~a~}~]"      ;; directives
+                      " ~a")              ;; selection set
+          (generate (name node))
+          (generate (type-condition node))
+          (gather-nodes (directives node) indent-level)
+          (generate (selection-set node) (1+ indent-level))))
 
 (defmethod generate ((node selection-set) &optional (indent-level 0) (stream nil))
-  ;; Start by adding {
-  ;; Newline
-  ;; Unfold the selection-set
-  ;; Dedent
-  ;; Newline
-  (format stream (cat "{~%~{~a~}~%~a}")
+  ;; HMM: We assume that the nodes inside the braces know how to indent
+  ;; themselves.  Not sure if it is best that this method handles indentation
+  ;; per node, or if it's best handled in the child nodes.
+  (format stream (cat "{~%"      ;; Brace then newline
+                      "~{~a~%~}" ;; Loop over children, newline after every child
+                      "~a}")     ;; Newline, then dedented brace
           (gather-nodes (selections node) indent-level)
           (add-indent (1- indent-level))))
 
@@ -103,10 +106,17 @@ list of strings."
 
 (defmethod generate ((node variable-definition) &optional (indent-level 0) (stream nil))
   ;; TODO: Not done yet - will probably crash things for now.
-  (format stream "~@[~a~]~@[~a~]~@[~a~]~@[~a~]"
+  (format stream "~@[~a~]~@[: ~a~]~@[~a~]~@[~a~]"
           (generate (var node))
           (generate (var-type node))
           (default-value node)
+          (gather-nodes (directives node) indent-level)))
+
+(defmethod generate ((node fragment-spread) &optional (indent-level 0) (stream nil))
+  (declare (ignorable indent-level))
+  (format stream "~a...~@[~a~]~@[ ~a~]"
+          (add-indent indent-level)
+          (generate (name node))
           (gather-nodes (directives node) indent-level)))
 
 ;;; Values
@@ -125,4 +135,4 @@ list of strings."
 
 (defmethod generate ((node named-type) &optional (indent-level 0) (stream nil))
   (declare (ignorable indent-level))
-  (format stream "~@[: ~a~]" (generate (name node))))
+  (format stream "~@[~a~]" (generate (name node))))
