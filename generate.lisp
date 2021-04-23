@@ -39,10 +39,16 @@ list of strings."
   (unfold-nodes stream (gather-nodes (definitions node) indent-level)))
 
 (defmethod generate ((node operation-definition) &optional (indent-level 0) (stream nil))
-  (format stream "~a~@[ ~a~]~@[ ~{~a~}~] ~a"
+  ;; TODO: Missing definitions
+  (format stream (cat "~a"                ;; operation
+                      "~@[ ~a~]"          ;; name
+                      "~@[(~{~a~^, ~})~]" ;; variable definitions
+                      "~@[ ~{~a~}~]"      ;; directives
+                      " ~a"               ;; Selection set
+                      )
           (operation node)
           (when (name node) (generate (name node)))
-          ;; (variable-definitions node)
+          (gather-nodes (variable-definitions node) indent-level)
           (gather-nodes (directives node) indent-level)
           (generate (selection-set node) (1+ indent-level))
           ;; (when (definitions node) (gather-nodes (definitions node) indent-level))
@@ -90,13 +96,21 @@ list of strings."
 
 (defmethod generate ((node directive) &optional (indent-level 0) (stream nil))
   (declare (ignorable indent-level))
-  (format stream (cat "@"
-                      "~@[~a~]"
+  (format stream (cat "@"                          ;; Literal @
+                      "~@[~a~]"                    ;; Name
                       "~@[(~{~a~^, ~})~]"          ;; arguments, comma separated
                       )
           (generate (name node))
           (when (arguments node)
             (gather-nodes (arguments node) indent-level))))
+
+(defmethod generate ((node variable-definition) &optional (indent-level 0) (stream nil))
+  ;; TODO: Not done yet - will probably crash things for now.
+  (format stream "~@[~a~]~@[~a~]~@[~a~]~@[~a~]"
+          (generate (var node))
+          (generate (var-type node))
+          (default-value node)
+          (gather-nodes (directives node) indent-level)))
 
 ;;; Values
 (defmethod generate ((node int-value) &optional (indent-level 0) (stream nil))
@@ -111,3 +125,7 @@ list of strings."
 (defmethod generate ((node var) &optional (indent-level 0) (stream nil))
   (declare (ignorable indent-level))
   (format stream "~@[$~a~]" (generate (name node))))
+
+(defmethod generate ((node named-type) &optional (indent-level 0) (stream nil))
+  (declare (ignorable indent-level))
+  (format stream "~@[: ~a~]" (generate (name node))))

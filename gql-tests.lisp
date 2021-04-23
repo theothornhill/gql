@@ -559,5 +559,26 @@ extend type Query {
      "query myQuery @skip(if: $someTest) { field }"
      "query myQuery @skip(if: $someTest) {
   field
-}")))
+}"))
+  (testing "Operation definition with variable-definitions"
+    (generator-test
+     "query myQuery($someTest: Boolean) { field }"
+     "query myQuery($someTest: Boolean) {
+  field
+}"
+     ))
+  (testing "Operation definition with multiple variable-definitions"
+    (generator-test
+     "query myQuery($someTest: Boolean, $anotherTest: String) { field }"
+     "query myQuery($someTest: Boolean, $anotherTest: String) {
+  field
+}"
+     ))
+  (testing "Operation definition with variable-definitions and directives"
+    (generator-test
+     "query myQuery($someTest: Boolean) @skip(if: $someTest) { field }"
+     "query myQuery($someTest: Boolean) @skip(if: $someTest) {
+  field
+}"
+     )))
 
