@@ -127,8 +127,6 @@
 (defnode document
   definitions)
 
-(defnode executable-definition
-  definitions)
 (defnode type-system-definition
   definitions)
 (defnode type-system-extension

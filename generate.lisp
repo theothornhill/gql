@@ -25,9 +25,6 @@ list of strings."
 (defmethod generate ((node document) &optional (indent-level 0) (stream t))
   (format stream "~{~a~%~}" (gather-nodes (definitions node) indent-level)))
 
-(defmethod generate ((node executable-definition) &optional (indent-level 0) (stream t))
-  (format stream "~{~a~%~}" (gather-nodes (definitions node) indent-level)))
-
 (defmethod generate ((node type-system-definition) &optional (indent-level 0) (stream t))
   (format stream "~{~a~%~}" (gather-nodes (definitions node) indent-level)))
 
