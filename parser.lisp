@@ -142,7 +142,7 @@ expand this macro or just use a normal DEFMETHOD."
 (defparser const-argument
   (make-node 'argument
     :name (parse 'name)
-    :value (expect-then-parse 'colon 'value)))
+    :value (expect-then-parse 'colon 'value t)))
 
 (defparser variable-definitions
   (optional-many 'paren-l 'variable-definition 'paren-r))
@@ -193,7 +193,7 @@ expand this macro or just use a normal DEFMETHOD."
   (make-node 'object-value
     :fields (any 'brace-l 'object-field 'brace-r constp)))
 
-(defparser object-value
+(defparser object-field
   (make-node 'object-field
     :name (parse 'name)
     :value (expect-then-parse 'colon 'value constp)))
