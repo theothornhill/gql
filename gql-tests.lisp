@@ -620,6 +620,95 @@ extend type Query {
      "fragment friendFields on User {
   x
 }
+"))
+  (testing "Values"
+    (generator-test
+     "{ user(id: 4) { x } }"
+     "query {
+  user(id: 4) {
+    x
+  }
+}
+")
+    (generator-test
+     "{ user(id: 4.1) { x } }"
+     "query {
+  user(id: 4.1) {
+    x
+  }
+}
+")
+    (generator-test
+     "{ user(id: \"hello\") { x } }"
+     "query {
+  user(id: \"hello\") {
+    x
+  }
+}
+")
+    (generator-test
+     "{ user(id: true) { x } }"
+     "query {
+  user(id: true) {
+    x
+  }
+}
+")
+    (generator-test
+     "{ user(id: null) { x } }"
+     "query {
+  user(id: null) {
+    x
+  }
+}
+")
+    (generator-test
+     "{ user(id: thing) { x } }"
+     "query {
+  user(id: thing) {
+    x
+  }
+}
+")
+    (generator-test
+     "{ user(id: [1, 2, 3]) { x } }"
+     "query {
+  user(id: [1, 2, 3]) {
+    x
+  }
+}
+")
+    (generator-test
+     "{ user(id: [1]) { x } }"
+     "query {
+  user(id: [1]) {
+    x
+  }
+}
+")
+    (generator-test
+     "{ user(id: []) { x } }"
+     "query {
+  user(id: []) {
+    x
+  }
+}
+")
+    (generator-test
+     "{ nearestThing(location: { lon: 12.43, lat: -53.211 }) }"
+     "query {
+  nearestThing(location: { lon: 12.43, lat: -53.211 })
+}
+")
+    (generator-test
+     "{ nearestThing(location: { lon: 12.43 }) }"
+     "query {
+  nearestThing(location: { lon: 12.43 })
+}
+")
+    (generator-test
+     "{ nearestThing(location: {}) }"
+     "query {
+  nearestThing(location: {})
+}
 ")))
-
-

@@ -123,18 +123,50 @@ i.e. for file streams etc."))
 
 ;;; Values
 (defmethod generate ((node int-value) &optional (indent-level 0) (stream nil))
-  (declare (ignorable indent-level))
+  (declare (ignore indent-level))
   (format stream "~@[~a~]" (value node)))
 
+(defmethod generate ((node float-value) &optional (indent-level 0) (stream nil))
+  (declare (ignore indent-level))
+  (format stream "~@[~a~]" (value node)))
+
+(defmethod generate ((node string-value) &optional (indent-level 0) (stream nil))
+  (declare (ignore indent-level))
+  (format stream "~@[\"~a\"~]" (value node)))
+
 (defmethod generate ((node boolean-value) &optional (indent-level 0) (stream nil))
-  (declare (ignorable indent-level))
+  (declare (ignore indent-level))
   (let ((bool (if (value node) "true" "false")))
     (format stream "~@[~a~]" bool)))
 
+(defmethod generate ((node null-value) &optional (indent-level 0) (stream nil))
+  (declare (ignore indent-level))
+  (format stream "null"))
+
+(defmethod generate ((node enum-value) &optional (indent-level 0) (stream nil))
+  (declare (ignore indent-level))
+  (format stream "~@[~a~]" (value node)))
+
+(defmethod generate ((node list-value) &optional (indent-level 0) (stream nil))
+  (if (list-values node)
+      (format stream "~@[[~{~a~^, ~}]~]" (gather-nodes (list-values node) indent-level))
+      (format stream "[]")))
+
+(defmethod generate ((node object-value) &optional (indent-level 0) (stream nil))
+  (if (fields node)
+      (format stream "~@[{ ~{~a~^, ~} }~]" (gather-nodes (fields node) indent-level))
+      (format stream "{}")))
+
+(defmethod generate ((node object-field) &optional (indent-level 0) (stream nil))
+  (declare (ignore indent-level))
+  (format stream "~a: ~a"
+          (generate (name node))
+          (generate (value node))))
+
 (defmethod generate ((node var) &optional (indent-level 0) (stream nil))
-  (declare (ignorable indent-level))
+  (declare (ignore indent-level))
   (format stream "~@[$~a~]" (generate (name node))))
 
 (defmethod generate ((node named-type) &optional (indent-level 0) (stream nil))
-  (declare (ignorable indent-level))
+  (declare (ignore indent-level))
   (format stream "~@[~a~]" (generate (name node))))
