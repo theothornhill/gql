@@ -20,7 +20,12 @@ list of strings."
           node-list))
 
 (defgeneric generate (node &optional indent-level stream)
-  (:documentation "print a node as a valid GrqphQL statement."))
+  (:documentation "Print a node NODE as a valid GrqphQL statement.
+The top level definitions should default to INDENT-LEVEL 0 and STREAM T.  The
+other nodes should start with whatever indentation they are passed as well as
+nil as STREAM, to keep them as a string when generating.  The toplevel
+nodes (that default to STREAM T) could also of course be passed other streams,
+i.e. for file streams etc."))
 
 (defmethod generate ((node document) &optional (indent-level 0) (stream t))
   (format stream "~{~a~%~}" (gather-nodes (definitions node) indent-level)))
