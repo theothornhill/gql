@@ -139,8 +139,7 @@
   name
   variable-definitions
   directives
-  selection-set
-  definitions)
+  selection-set)
 
 (defnode fragment-definition
   definitions)

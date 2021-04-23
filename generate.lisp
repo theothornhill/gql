@@ -44,15 +44,12 @@ list of strings."
                       "~@[ ~a~]"          ;; name
                       "~@[(~{~a~^, ~})~]" ;; variable definitions
                       "~@[ ~{~a~}~]"      ;; directives
-                      " ~a"               ;; Selection set
-                      )
+                      " ~a")              ;; Selection set
           (operation node)
           (when (name node) (generate (name node)))
           (gather-nodes (variable-definitions node) indent-level)
           (gather-nodes (directives node) indent-level)
-          (generate (selection-set node) (1+ indent-level))
-          ;; (when (definitions node) (gather-nodes (definitions node) indent-level))
-          ))
+          (generate (selection-set node) (1+ indent-level))))
 
 (defmethod generate ((node fragment-definition) &optional (indent-level 0) (stream t))
   (unfold-nodes stream (gather-nodes (definitions node) indent-level)))
