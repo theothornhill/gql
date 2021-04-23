@@ -23,16 +23,16 @@ list of strings."
   (:documentation "print a node as a valid GrqphQL statement."))
 
 (defmethod generate ((node document) &optional (indent-level 0) (stream t))
-  (format stream "~{~a~}" (gather-nodes (definitions node) indent-level)))
+  (format stream "~{~a~%~}" (gather-nodes (definitions node) indent-level)))
 
 (defmethod generate ((node executable-definition) &optional (indent-level 0) (stream t))
-  (format stream "~{~a~}" (gather-nodes (definitions node) indent-level)))
+  (format stream "~{~a~%~}" (gather-nodes (definitions node) indent-level)))
 
 (defmethod generate ((node type-system-definition) &optional (indent-level 0) (stream t))
-  (format stream "~{~a~}" (gather-nodes (definitions node) indent-level)))
+  (format stream "~{~a~%~}" (gather-nodes (definitions node) indent-level)))
 
 (defmethod generate ((node type-system-extension) &optional (indent-level 0) (stream t))
-  (format stream "~{~a~}" (gather-nodes (definitions node) indent-level)))
+  (format stream "~{~a~%~}" (gather-nodes (definitions node) indent-level)))
 
 (defmethod generate ((node operation-definition) &optional (indent-level 0) (stream nil))
   ;; TODO: Missing definitions

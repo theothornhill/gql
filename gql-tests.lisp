@@ -515,7 +515,8 @@ extend type Query {
   x {
     y
   }
-}"))
+}
+"))
   (testing "Advanced field"
     (generator-test
      "query { smallPic: profilePic(size: 64) { x } }"
@@ -523,7 +524,8 @@ extend type Query {
   smallPic: profilePic(size: 64) {
     x
   }
-}"))
+}
+"))
   (testing "Advanced field with multiple args"
     (generator-test
      "query { smallPic: profilePic(size: 64, size2: 128) { x } }"
@@ -531,7 +533,8 @@ extend type Query {
   smallPic: profilePic(size: 64, size2: 128) {
     x
   }
-}"))
+}
+"))
   (testing "Advanced field with directive"
     (generator-test
      "query { smallPic: profilePic(size: 64, size2: 128) @skip(if: true) { x } }"
@@ -539,13 +542,15 @@ extend type Query {
   smallPic: profilePic(size: 64, size2: 128) @skip(if: true) {
     x
   }
-}"))
+}
+"))
   (testing "Advanced field without selection-set"
     (generator-test
      "query { smallPic: profilePic(size: 64, size2: 128) }"
      "query {
   smallPic: profilePic(size: 64, size2: 128)
-}"))
+}
+"))
   (testing "Advanced field with multiple directives"
     (generator-test
      "query { smallPic: profilePic(size: $foo) @skip(if: $foo) @include(if: $bar) { x } }"
@@ -553,34 +558,36 @@ extend type Query {
   smallPic: profilePic(size: $foo) @skip(if: $foo) @include(if: $bar) {
     x
   }
-}"))
+}
+"))
   (testing "Operation definition with directive"
     (generator-test
      "query myQuery @skip(if: $someTest) { field }"
      "query myQuery @skip(if: $someTest) {
   field
-}"))
+}
+"))
   (testing "Operation definition with variable-definitions"
     (generator-test
      "query myQuery($someTest: Boolean) { field }"
      "query myQuery($someTest: Boolean) {
   field
-}"
-     ))
+}
+"))
   (testing "Operation definition with multiple variable-definitions"
     (generator-test
      "query myQuery($someTest: Boolean, $anotherTest: String) { field }"
      "query myQuery($someTest: Boolean, $anotherTest: String) {
   field
-}"
-     ))
+}
+"))
   (testing "Operation definition with variable-definitions and directives"
     (generator-test
      "query myQuery($someTest: Boolean) @skip(if: $someTest) { field }"
      "query myQuery($someTest: Boolean) @skip(if: $someTest) {
   field
-}"
-     ))
+}
+"))
 
   (testing "Fragment spread"
     (generator-test
@@ -603,7 +610,8 @@ extend type Query {
       ...friendFields
     }
   }
-}"))
+}
+"))
   (testing "Fragment definition with selection-set"
     (generator-test
      "fragment friendFields on User {
@@ -611,6 +619,7 @@ extend type Query {
 }"
      "fragment friendFields on User {
   x
-}")))
+}
+")))
 
 
