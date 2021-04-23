@@ -553,5 +553,11 @@ extend type Query {
   smallPic: profilePic(size: $foo) @skip(if: $foo) @include(if: $bar) {
     x
   }
+}"))
+  (testing "Operation definition with directive"
+    (generator-test
+     "query myQuery @skip(if: $someTest) { field }"
+     "query myQuery @skip(if: $someTest) {
+  field
 }")))
 

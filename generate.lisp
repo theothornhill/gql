@@ -39,12 +39,11 @@ list of strings."
   (unfold-nodes stream (gather-nodes (definitions node) indent-level)))
 
 (defmethod generate ((node operation-definition) &optional (indent-level 0) (stream nil))
-  (format stream "~a~@[ ~a~] ~a"
+  (format stream "~a~@[ ~a~]~@[ ~{~a~}~] ~a"
           (operation node)
-          (when (name node)
-            (generate (name node)))
+          (when (name node) (generate (name node)))
           ;; (variable-definitions node)
-          ;; (directives node)
+          (gather-nodes (directives node) indent-level)
           (generate (selection-set node) (1+ indent-level))
           ;; (when (definitions node) (gather-nodes (definitions node) indent-level))
           ))
