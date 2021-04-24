@@ -728,7 +728,7 @@ extend type Query {
     }
   }
 }"
-  "query inlineFragmentTyping {
+     "query inlineFragmentTyping {
   profiles(handles: [\"one\", \"thing\"]) {
     handle
     ... on User {
@@ -742,5 +742,45 @@ extend type Query {
       }
     }
   }
+}
+")
+    (generator-test
+     "query thing($devicePicSize: [Int!]) {
+  x
+}"
+     "query thing($devicePicSize: [Int!]) {
+  x
+}
+")
+    (generator-test
+     "query thing($devicePicSize: [Int]!) {
+  x
+}"
+     "query thing($devicePicSize: [Int]!) {
+  x
+}
+")
+    (generator-test
+     "query thing($devicePicSize: [Int!]!) {
+  x
+}"
+     "query thing($devicePicSize: [Int!]!) {
+  x
+}
+")
+    (generator-test
+     "query thing($devicePicSize: [Int]) {
+  x
+}"
+     "query thing($devicePicSize: [Int]) {
+  x
+}
+")
+    (generator-test
+     "query thing($devicePicSize: [[Int]]) {
+  x
+}"
+     "query thing($devicePicSize: [[Int]]) {
+  x
 }
 ")))

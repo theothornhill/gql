@@ -179,3 +179,11 @@ i.e. for file streams etc."))
 (defmethod generate ((node named-type) &optional (indent-level 0) (stream nil))
   (declare (ignore indent-level))
   (format stream "~@[~a~]" (generate (name node))))
+
+(defmethod generate ((node list-type) &optional (indent-level 0) (stream nil))
+  (declare (ignore indent-level))
+  (format stream "~@[[~a]~]" (generate (ty node))))
+
+(defmethod generate ((node non-null-type) &optional (indent-level 0) (stream nil))
+  (declare (ignore indent-level))
+  (format stream "~@[~a~]!" (generate (ty node))))
