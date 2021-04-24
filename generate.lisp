@@ -27,6 +27,10 @@ nil as STREAM, to keep them as a string when generating.  The toplevel
 nodes (that default to STREAM T) could also of course be passed other streams,
 i.e. for file streams etc."))
 
+(defmethod generate ((node name) &optional (indent-level 0) (stream nil))
+  (declare (ignorable indent-level))
+  (format stream "~@[~a~]" (name node)))
+
 (defmethod generate ((node document) &optional (indent-level 0) (stream t))
   (format stream "~{~a~%~}" (gather-nodes (definitions node) indent-level)))
 
@@ -49,16 +53,6 @@ i.e. for file streams etc."))
           (gather-nodes (directives node) indent-level)
           (generate (selection-set node) (1+ indent-level))))
 
-(defmethod generate ((node fragment-definition) &optional (indent-level 0) (stream nil))
-  (format stream (cat "fragment ~a"
-                      " on ~a"
-                      "~@[ ~{~a~}~]"      ;; directives
-                      " ~a")              ;; selection set
-          (generate (name node))
-          (generate (type-condition node))
-          (gather-nodes (directives node) indent-level)
-          (generate (selection-set node) (1+ indent-level))))
-
 (defmethod generate ((node selection-set) &optional (indent-level 0) (stream nil))
   ;; HMM: We assume that the nodes inside the braces know how to indent
   ;; themselves.  Not sure if it is best that this method handles indentation
@@ -68,11 +62,6 @@ i.e. for file streams etc."))
                       "~a}")     ;; Newline, then dedented brace
           (gather-nodes (selections node) indent-level)
           (add-indent (1- indent-level))))
-
-(defmethod generate ((node argument) &optional (indent-level 0) (stream nil))
-  (format stream "~a: ~a"
-          (generate (name node) indent-level)
-          (generate (value node) indent-level)))
 
 (defmethod generate ((node field) &optional (indent-level 0) (stream nil))
   ;; Advanced example:
@@ -92,9 +81,27 @@ i.e. for file streams etc."))
           (when (selection-set node)
             (generate (selection-set node) (1+ indent-level)))))
 
-(defmethod generate ((node name) &optional (indent-level 0) (stream nil))
+(defmethod generate ((node argument) &optional (indent-level 0) (stream nil))
+  (format stream "~a: ~a"
+          (generate (name node) indent-level)
+          (generate (value node) indent-level)))
+
+(defmethod generate ((node fragment-spread) &optional (indent-level 0) (stream nil))
   (declare (ignorable indent-level))
-  (format stream "~@[~a~]" (name node)))
+  (format stream "~a...~@[~a~]~@[ ~a~]"
+          (add-indent indent-level)
+          (generate (name node))
+          (gather-nodes (directives node) indent-level)))
+
+(defmethod generate ((node fragment-definition) &optional (indent-level 0) (stream nil))
+  (format stream (cat "fragment ~a"
+                      " on ~a"
+                      "~@[ ~{~a~}~]"      ;; directives
+                      " ~a")              ;; selection set
+          (generate (name node))
+          (generate (type-condition node))
+          (gather-nodes (directives node) indent-level)
+          (generate (selection-set node) (1+ indent-level))))
 
 (defmethod generate ((node directive) &optional (indent-level 0) (stream nil))
   (declare (ignorable indent-level))
@@ -106,22 +113,6 @@ i.e. for file streams etc."))
           (when (arguments node)
             (gather-nodes (arguments node) indent-level))))
 
-(defmethod generate ((node variable-definition) &optional (indent-level 0) (stream nil))
-  ;; TODO: Not done yet - will probably crash things for now.
-  (format stream "~@[~a~]~@[: ~a~]~@[~a~]~@[~a~]"
-          (generate (var node))
-          (generate (var-type node))
-          (default-value node)
-          (gather-nodes (directives node) indent-level)))
-
-(defmethod generate ((node fragment-spread) &optional (indent-level 0) (stream nil))
-  (declare (ignorable indent-level))
-  (format stream "~a...~@[~a~]~@[ ~a~]"
-          (add-indent indent-level)
-          (generate (name node))
-          (gather-nodes (directives node) indent-level)))
-
-;;; Values
 (defmethod generate ((node int-value) &optional (indent-level 0) (stream nil))
   (declare (ignore indent-level))
   (format stream "~@[~a~]" (value node)))
@@ -166,6 +157,14 @@ i.e. for file streams etc."))
 (defmethod generate ((node var) &optional (indent-level 0) (stream nil))
   (declare (ignore indent-level))
   (format stream "~@[$~a~]" (generate (name node))))
+
+(defmethod generate ((node variable-definition) &optional (indent-level 0) (stream nil))
+  ;; TODO: Not done yet - will probably crash things for now.
+  (format stream "~@[~a~]~@[: ~a~]~@[~a~]~@[~a~]"
+          (generate (var node))
+          (generate (var-type node))
+          (default-value node)
+          (gather-nodes (directives node) indent-level)))
 
 (defmethod generate ((node named-type) &optional (indent-level 0) (stream nil))
   (declare (ignore indent-level))

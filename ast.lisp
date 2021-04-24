@@ -139,9 +139,6 @@
   directives
   selection-set)
 
-(defnode fragment-definition
-  definitions)
-
 (defnode selection-set
   selections)
 
