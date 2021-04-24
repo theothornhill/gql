@@ -58,7 +58,35 @@ symbols, or just one single string or symbol, then advances the lexer.  If
 anything is unexpected, signal an error.
 
 
+## Code generation
+Work has started on generating valid GraphQL statements from an initialized
+object.  It pretty prints by default, so it can be used to produce actual, human
+readable content.  Some time down the line I'll add a lisp dsl to aid with code
+generation, like done in `sxql`.
+
+### Example
+```lisp
+(multiple-value-bind (_ doc-obj) (gql "query { x }")
+  (generate doc-obj 0 t))
+
+;; Will output this to the repl:
+;;
+;; query {
+;;   x {
+;;     y
+;;   }
+;; }
+```
+This means that we now can actually detect syntax errors and generate valid GraphQL statements.
+
+## TODO:
+  - [ ] Complete the spec
+  - [ ] Complete the code generation
+  - [ ] Create lisp-like dsl
+
 ### Contact
-If interested, you can open an issue at the
+If interested in helping out, you can open an issue at the
 [tracker](https://todo.sr.ht/~theo/gql), or send an email to the [public
-inbox](https://lists.sr.ht/~theo/public-inbox), or directly to <~theo/public-inbox@lists.sr.ht>
+inbox](https://lists.sr.ht/~theo/public-inbox), or directly to
+<~theo/public-inbox@lists.sr.ht>. In addition, you can find my private email
+sitting around in the commits.
