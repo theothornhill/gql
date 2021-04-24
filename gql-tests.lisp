@@ -711,4 +711,36 @@ extend type Query {
      "query {
   nearestThing(location: {})
 }
+")
+    (generator-test
+     "query inlineFragmentTyping {
+  profiles(handles: [\"one\", \"thing\"]) {
+    handle
+    ... on User {
+      friends {
+        count
+      }
+    }
+    ... on Page {
+      likers {
+        count
+      }
+    }
+  }
+}"
+  "query inlineFragmentTyping {
+  profiles(handles: [\"one\", \"thing\"]) {
+    handle
+    ... on User {
+      friends {
+        count
+      }
+    }
+    ... on Page {
+      likers {
+        count
+      }
+    }
+  }
+}
 ")))

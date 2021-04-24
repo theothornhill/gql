@@ -103,6 +103,16 @@ i.e. for file streams etc."))
           (gather-nodes (directives node) indent-level)
           (generate (selection-set node) (1+ indent-level))))
 
+(defmethod generate ((node inline-fragment) &optional (indent-level 0) (stream nil))
+  (format stream (cat "~a..."
+                      " on ~a"
+                      "~@[ ~{~a~}~]"      ;; directives
+                      " ~a")              ;; selection set
+          (add-indent indent-level)
+          (generate (type-condition node))
+          (gather-nodes (directives node) indent-level)
+          (generate (selection-set node) (1+ indent-level))))
+
 (defmethod generate ((node directive) &optional (indent-level 0) (stream nil))
   (declare (ignorable indent-level))
   (format stream (cat "@"                          ;; Literal @
