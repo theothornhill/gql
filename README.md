@@ -66,7 +66,7 @@ generation, like done in `sxql`.
 
 ### Example
 ```lisp
-(multiple-value-bind (_ doc-obj) (gql "query { x }")
+(multiple-value-bind (_ doc-obj) (gql "query { x { y } }")
   (generate doc-obj 0 t))
 
 ;; Will output this to the repl:
