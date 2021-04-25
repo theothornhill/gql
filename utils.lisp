@@ -67,8 +67,8 @@ all nodes."
                    :end-token last-token
                    :source (source (lexer parser)))))
 
-(defun peek (kind)
-  (eq (kind (token (lexer *parser*))) kind))
+(defun peek (kind &optional token)
+  (eq (kind (or token (token (lexer *parser*)))) kind))
 
 (defun expect-token (kind)
   (with-token

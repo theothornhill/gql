@@ -783,4 +783,26 @@ extend type Query {
      "query thing($devicePicSize: [[Int]]) {
   x
 }
+")
+    (generator-test
+     "schema {
+  query: MyQueryRootType
+  mutation: MyMutationRootType
+}"
+     "schema {
+  query: MyQueryRootType
+  mutation: MyMutationRootType
+}
+")
+    (generator-test
+     "\"\"\"Docs\"\"\"
+schema {
+  query: MyQueryRootType
+  mutation: MyMutationRootType
+}"
+     "\"\"\"Docs\"\"\"
+schema {
+  query: MyQueryRootType
+  mutation: MyMutationRootType
+}
 ")))

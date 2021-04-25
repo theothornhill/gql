@@ -46,7 +46,7 @@ i.e. for file streams etc."))
                       "~@[ ~a~]"          ;; name
                       "~@[(~{~a~^, ~})~]" ;; variable definitions
                       "~@[ ~{~a~}~]"      ;; directives
-                      " ~a")            ;; selection set
+                      " ~a")              ;; selection set
           (operation node)
           (when (name node) (generate (name node)))
           (gather-nodes (variable-definitions node) indent-level)
@@ -133,7 +133,9 @@ i.e. for file streams etc."))
 
 (defmethod generate ((node string-value) &optional (indent-level 0) (stream nil))
   (declare (ignore indent-level))
-  (format stream "~@[\"~a\"~]" (value node)))
+  (if (blockp node)
+      (format stream "~@[\"\"\"~a\"\"\"~]" (value node))
+      (format stream "~@[\"~a\"~]" (value node))))
 
 (defmethod generate ((node boolean-value) &optional (indent-level 0) (stream nil))
   (declare (ignore indent-level))
@@ -187,3 +189,21 @@ i.e. for file streams etc."))
 (defmethod generate ((node non-null-type) &optional (indent-level 0) (stream nil))
   (declare (ignore indent-level))
   (format stream "~@[~a~]!" (generate (ty node))))
+
+;; Type system
+(defmethod generate ((node schema-definition) &optional (indent-level 0) (stream nil))
+  (format stream (cat "~@[~a~%~]"
+                      "schema {~%"
+                      "~@[~a~]"
+                      "~@[~{~a~%~}~]"
+                      "~a}")
+          (when (description node) (generate (description node)))
+          (gather-nodes (directives node) (1+ indent-level))
+          (gather-nodes (operation-types node) (1+ indent-level))
+          (add-indent (1- indent-level))))
+
+(defmethod generate ((node operation-type-definition) &optional (indent-level 0) (stream nil))
+  (format stream "~a~a: ~a"
+          (add-indent indent-level)
+          (operation node)
+          (generate (named-type node))))

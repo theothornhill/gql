@@ -161,7 +161,7 @@ expand this macro or just use a normal DEFMETHOD."
   (advance-one-token)
   (make-node 'string-value
     :value (value *token*)
-    :blockp (when (peek 'block-string) t)))
+    :blockp (when (peek 'block-string *token*) t)))
 
 (defparser value
   (case (kind *token*)
