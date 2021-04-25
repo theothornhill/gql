@@ -805,4 +805,12 @@ schema {
   query: MyQueryRootType
   mutation: MyMutationRootType
 }
+")
+    (generator-test
+     "\"\"\"Docs\"\"\"
+scalar Time
+scalar Url"
+     "\"\"\"Docs\"\"\"
+scalar Time
+scalar Url
 ")))

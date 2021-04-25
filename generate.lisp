@@ -207,3 +207,11 @@ i.e. for file streams etc."))
           (add-indent indent-level)
           (operation node)
           (generate (named-type node))))
+
+(defmethod generate ((node scalar-type-definition) &optional (indent-level 0) (stream nil))
+  (format stream (cat "~@[~a~%~]"
+                      "scalar ~a"
+                      "~@[~{~a~%~}~]")
+          (when (description node) (generate (description node)))
+          (generate (name node))
+          (gather-nodes (directives node) (1+ indent-level))))
