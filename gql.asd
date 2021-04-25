@@ -4,7 +4,7 @@
   :description "Describe gql here"
   :author "Theodor Thornhill <theo@thornhill.no>"
   :license  "AGPLv3"
-  :version "0.1.2"
+  :version "0.2.0"
   :serial t
   :depends-on (:cl-ppcre)
   :components ((:file "package")
@@ -22,7 +22,7 @@
   :description "Tests for gql"
   :author "Theodor Thornhill <theo@thornhill.no>"
   :license "GPLv3"
-  :version "0.1.2"
+  :version "0.2.0"
   :depends-on (:rove
                :gql)
   :components ((:file "gql-tests"))
