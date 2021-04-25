@@ -272,3 +272,38 @@ i.e. for file streams etc."))
           (gather-nodes (directives node) indent-level)
           (gather-nodes (fields node) (1+ indent-level))
           (add-indent (1- indent-level))))
+
+(defmethod generate ((node union-type-definition) &optional (indent-level 0) (stream nil))
+  ;; KLUDGE: This one is particularly ugly.  How to handle the indentation here?
+  ;; It doesn't look like we have the union member class - maybe create it?
+  (format stream (cat "~@[~a~%~]"
+                      "union"
+                      " ~a"
+                      "~@[~{~a~%~}~]"
+                      "~@[ =~%~{  | ~a~^~%~}~]")
+          (when (description node) (generate (description node)))
+          (generate (name node))
+          (gather-nodes (directives node) indent-level)
+          (gather-nodes (union-members node) (1+ indent-level))))
+
+(defmethod generate ((node enum-type-definition) &optional (indent-level 0) (stream nil))
+  (format stream (cat "~@[~a~%~]"
+                      "enum"
+                      " ~a"
+                      "~@[~{~a~%~}~]"
+                      "~@[ {~%~{~a~%~}~]"
+                      "~a}")
+          (when (description node) (generate (description node)))
+          (generate (name node))
+          (gather-nodes (directives node) indent-level)
+          (gather-nodes (enum-values node) (1+ indent-level))
+          (add-indent (1- indent-level))))
+
+(defmethod generate ((node enum-value-definition) &optional (indent-level 0) (stream nil))
+  (format stream (cat "~@[~a~%~]"
+                      "~a~a"
+                      "~@[ ~{~a~}~]")
+          (when (description node) (generate (description node)))
+          (add-indent indent-level)
+          (generate (enum-value node))
+          (gather-nodes (directives node) indent-level)))

@@ -861,4 +861,26 @@ scalar Url
      "interface ValuedEntity {
   value: Int
 }
+"))
+  (testing "union"
+    (generator-test
+     "union SearchResult = Photo | Person"
+     "union SearchResult =
+  | Photo
+  | Person
+"))
+  (testing "enum"
+    (generator-test
+     "enum Direction {
+  NORTH
+  EAST
+  SOUTH
+  WEST
+}"
+     "enum Direction {
+  NORTH
+  EAST
+  SOUTH
+  WEST
+}
 ")))
