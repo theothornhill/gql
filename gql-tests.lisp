@@ -783,7 +783,10 @@ extend type Query {
      "query thing($devicePicSize: [[Int]]) {
   x
 }
-")
+")))
+
+(deftest type-system
+  (testing "type system"
     (generator-test
      "schema {
   query: MyQueryRootType
@@ -822,5 +825,17 @@ scalar Url
      "type SomeType {
   \"\"\"Docs\"\"\"
   field(arg: Int @example): String @example
+}
+")
+    (generator-test
+     "type Person {
+  name: String
+  age: Int
+  picture: Url
+}"
+     "type Person {
+  name: String
+  age: Int
+  picture: Url
 }
 ")))
