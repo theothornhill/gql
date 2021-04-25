@@ -891,4 +891,21 @@ scalar Url
   x: Float
   y: Float
 }
+"))
+  (testing "directive-definition"
+    (generator-test
+     "directive @example on FIELD"
+     "directive @example on
+  | FIELD
+")
+    (generator-test
+     "directive @example on
+  | FIELD
+  | FRAGMENT_SPREAD
+  | INLINE_FRAGMENT"
+     "directive @example on
+  | FIELD
+  | FRAGMENT_SPREAD
+  | INLINE_FRAGMENT
 ")))
+

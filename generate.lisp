@@ -321,3 +321,13 @@ i.e. for file streams etc."))
           (gather-nodes (directives node) indent-level)
           (gather-nodes (fields node) (1+ indent-level))
           (add-indent (1- indent-level))))
+
+(defmethod generate ((node directive-definition) &optional (indent-level 0) (stream nil))
+  (format stream (cat "~@[~a~%~]"
+                      "directive @~a"
+                      "~@[~a~]"
+                      "~@[ on~%~{  | ~a~^~%~}~]")
+          (when (description node) (generate (description node)))
+          (generate (name node))
+          (gather-nodes (args node) indent-level)
+          (gather-nodes (locations node) indent-level)))
