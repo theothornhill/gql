@@ -307,3 +307,17 @@ i.e. for file streams etc."))
           (add-indent indent-level)
           (generate (enum-value node))
           (gather-nodes (directives node) indent-level)))
+
+(defmethod generate ((node input-object-type-definition) &optional (indent-level 0) (stream nil))
+  ;; KLUDGE: This one is particularly ugly.  How to handle the indentation here?
+  (format stream (cat "~@[~a~%~]"
+                      "input"
+                      " ~a"
+                      "~@[~{~a~%~}~]"
+                      "~@[ {~%~{  ~a~%~}~]"
+                      "~a}")
+          (when (description node) (generate (description node)))
+          (generate (name node))
+          (gather-nodes (directives node) indent-level)
+          (gather-nodes (fields node) (1+ indent-level))
+          (add-indent (1- indent-level))))

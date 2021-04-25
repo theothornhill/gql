@@ -883,4 +883,12 @@ scalar Url
   SOUTH
   WEST
 }
+"))
+  (testing "input object"
+    (generator-test
+     "input Point2D { x: Float y: Float }"
+     "input Point2D {
+  x: Float
+  y: Float
+}
 ")))
