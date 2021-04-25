@@ -220,7 +220,7 @@ i.e. for file streams etc."))
   (format stream (cat "~@[~a~%~]"
                       "type"
                       " ~a"
-                      "~@[~a~]"
+                      "~@[ implements~{ ~a~^ ~^&~}~]"
                       "~@[~{~a~%~}~]"
                       "~@[ {~%~{~a~%~}~]"
                       "~a}")
@@ -259,3 +259,16 @@ i.e. for file streams etc."))
           (generate (ty node))
           (when (default-value node) (generate (default-value node)))
           (gather-nodes (directives node) indent-level)))
+
+(defmethod generate ((node interface-type-definition) &optional (indent-level 0) (stream nil))
+  (format stream (cat "~@[~a~%~]"
+                      "interface"
+                      " ~a"
+                      "~@[~{~a~%~}~]"
+                      "~@[ {~%~{~a~%~}~]"
+                      "~a}")
+          (when (description node) (generate (description node)))
+          (generate (name node))
+          (gather-nodes (directives node) indent-level)
+          (gather-nodes (fields node) (1+ indent-level))
+          (add-indent (1- indent-level))))

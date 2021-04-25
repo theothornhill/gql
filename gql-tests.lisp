@@ -786,7 +786,7 @@ extend type Query {
 ")))
 
 (deftest type-system
-  (testing "type system"
+  (testing "schema"
     (generator-test
      "schema {
   query: MyQueryRootType
@@ -808,7 +808,8 @@ schema {
   query: MyQueryRootType
   mutation: MyMutationRootType
 }
-")
+"))
+  (testing "scalar"
     (generator-test
      "\"\"\"Docs\"\"\"
 scalar Time
@@ -816,7 +817,8 @@ scalar Url"
      "\"\"\"Docs\"\"\"
 scalar Time
 scalar Url
-")
+"))
+  (testing "object-type"
     (generator-test
      "type SomeType {
   \"\"\"Docs\"\"\"
@@ -837,5 +839,26 @@ scalar Url
   name: String
   age: Int
   picture: Url
+}
+")
+    (generator-test
+     "type Business implements NamedEntity & ValuedEntity {
+  name: String
+  value: Int
+  employeeCount: Int
+}"
+     "type Business implements NamedEntity & ValuedEntity {
+  name: String
+  value: Int
+  employeeCount: Int
+}
+"))
+  (testing "interface"
+    (generator-test
+     "interface ValuedEntity {
+  value: Int
+}"
+     "interface ValuedEntity {
+  value: Int
 }
 ")))
