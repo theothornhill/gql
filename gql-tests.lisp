@@ -813,4 +813,14 @@ scalar Url"
      "\"\"\"Docs\"\"\"
 scalar Time
 scalar Url
+")
+    (generator-test
+     "type SomeType {
+  \"\"\"Docs\"\"\"
+  field(arg: Int @example): String @example
+}"
+     "type SomeType {
+  \"\"\"Docs\"\"\"
+  field(arg: Int @example): String @example
+}
 ")))

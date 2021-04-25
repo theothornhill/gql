@@ -215,3 +215,47 @@ i.e. for file streams etc."))
           (when (description node) (generate (description node)))
           (generate (name node))
           (gather-nodes (directives node) (1+ indent-level))))
+
+(defmethod generate ((node object-type-definition) &optional (indent-level 0) (stream nil))
+  (format stream (cat "~@[~a~%~]"
+                      "type"
+                      " ~a"
+                      "~@[~a~]"
+                      "~@[~{~a~%~}~]"
+                      "~@[ {~%~{~a~%~}~]"
+                      "~a}")
+          (when (description node) (generate (description node)))
+          (generate (name node))
+          (gather-nodes (interfaces node) indent-level)
+          (gather-nodes (directives node) indent-level)
+          (gather-nodes (fields node) (1+ indent-level))
+          (add-indent (1- indent-level))))
+
+(defmethod generate ((node field-definition) &optional (indent-level 0) (stream nil))
+  (format stream (cat "~@[~a~]"           ;; We add indent before the optional docs as well
+                      "~@[~a~%~]"
+                      "~a~a"
+                      "~@[(~{~a~^, ~})~]" ;; arguments, comma separated
+                      "~@[: ~a~]"
+                      "~@[ ~{~a~}~]")
+          (when (description node)  ;; HMM: Ugly - how to fix?
+            (add-indent indent-level))
+          (when (description node)
+            (generate (description node)))
+          (add-indent indent-level)
+          (generate (name node))
+          (when (args node) (gather-nodes (args node) indent-level))
+          (generate (ty node))
+          (gather-nodes (directives node) indent-level)))
+
+(defmethod generate ((node input-value-definition) &optional (indent-level 0) (stream nil))
+  (format stream (cat "~@[~a~%~]"
+                      "~a: "
+                      "~@[~a~]"
+                      "~@[~a~]"
+                      "~@[ ~{~a~}~]")
+          (when (description node) (generate (description node)))
+          (generate (name node))
+          (generate (ty node))
+          (when (default-value node) (generate (default-value node)))
+          (gather-nodes (directives node) indent-level)))
