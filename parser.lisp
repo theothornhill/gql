@@ -289,7 +289,6 @@ expand this macro or just use a normal DEFMETHOD."
 (defparser interface-type-extension
   (make-node 'interface-type-extension
     :name (expect-then-parse '("extend" "interface") 'name)
-    :interfaces (parse 'implements-interfaces)
     :directives (parse 'directives t)
     :fields (parse 'fields-definition)))
 
@@ -309,7 +308,7 @@ expand this macro or just use a normal DEFMETHOD."
   (make-node 'input-object-type-extension
     :name (expect-then-parse '("extend" "input") 'name)
     :directives (parse 'directives t)
-    :enum-values (parse 'input-fields-definition)))
+    :fields (parse 'input-fields-definition)))
 
 (defparser description
   (when (peek-description)

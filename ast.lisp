@@ -304,7 +304,6 @@
 
 (defnode interface-type-extension
   name
-  interfaces
   directives
   fields)
 

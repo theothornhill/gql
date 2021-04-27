@@ -331,3 +331,74 @@ i.e. for file streams etc."))
           (generate (name node))
           (gather-nodes (args node) indent-level)
           (gather-nodes (locations node) indent-level)))
+
+(defmethod generate ((node schema-extension) &optional (indent-level 0) (stream nil))
+  (format stream (cat "extend schema "
+                      "~@[~{~a~}~]"
+                      "~@[ {~%~{  ~a~%~}~a}~]")
+          (gather-nodes (directives node) indent-level)
+          (gather-nodes (operation-types node) indent-level)
+          (add-indent (1- indent-level))))
+
+(defmethod generate ((node scalar-type-extension) &optional (indent-level 0) (stream nil))
+  (format stream (cat "extend scalar "
+                      "~@[~a~]"
+                      "~@[ ~{~a~}~]")
+          (generate (name node))
+          (gather-nodes (directives node) indent-level)
+          (add-indent (1- indent-level))))
+
+(defmethod generate ((node object-type-extension) &optional (indent-level 0) (stream nil))
+  (format stream (cat "extend type"
+                      " ~a"
+                      "~@[ implements~{ ~a~^ ~^&~}~]"
+                      "~@[ ~{~a~}~]"
+                      "~@[ {~%~{~a~%~}~a}~]")
+          (generate (name node))
+          (gather-nodes (interfaces node) indent-level)
+          (gather-nodes (directives node) indent-level)
+          (gather-nodes (fields node) (1+ indent-level))
+          (add-indent (1- indent-level))))
+
+(defmethod generate ((node interface-type-extension) &optional (indent-level 0) (stream nil))
+  (format stream (cat "extend interface"
+                      " ~a"
+                      "~@[~{~a~%~}~]"
+                      "~@[ {~%~{~a~%~}~a}~]"
+                      "")
+          (generate (name node))
+          (gather-nodes (directives node) indent-level)
+          (gather-nodes (fields node) (1+ indent-level))
+          (add-indent (1- indent-level))))
+
+(defmethod generate ((node union-type-extension) &optional (indent-level 0) (stream nil))
+  (format stream (cat "extend union"
+                      " ~a"
+                      "~@[ ~{~a~}~]"
+                      "~@[ =~%~{  | ~a~^~%~}~]")
+          (generate (name node))
+          (gather-nodes (directives node) indent-level)
+          (gather-nodes (union-members node) (1+ indent-level))))
+
+(defmethod generate ((node enum-type-extension) &optional (indent-level 0) (stream nil))
+  (format stream (cat "extend enum"
+                      " ~a"
+                      "~@[ ~{~a~}~]"
+                      "~@[ {~%~{~a~%~}~]"
+                      "~a}")
+          (generate (name node))
+          (gather-nodes (directives node) indent-level)
+          (gather-nodes (enum-values node) (1+ indent-level))
+          (add-indent (1- indent-level))))
+
+(defmethod generate ((node input-object-type-extension) &optional (indent-level 0) (stream nil))
+  ;; KLUDGE: This one is particularly ugly.  How to handle the indentation here?
+  (format stream (cat "extend input"
+                      " ~a"
+                      "~@[ ~{~a~}~]"
+                      "~@[ {~%~{  ~a~%~}~]"
+                      "~a}")
+          (generate (name node))
+          (gather-nodes (directives node) indent-level)
+          (gather-nodes (fields node) (1+ indent-level))
+          (add-indent (1- indent-level))))
