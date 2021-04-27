@@ -31,7 +31,7 @@ i.e. for file streams etc."))
   "Convenience macro to define new generator methods.
 Specializes on the NODE-TYPE, so if more granular control is needed, either
 expand this macro or just use a normal DEFMETHOD."
-  `(defmethod generate ((node (eql ',node)) &optional (indent-level 0) (stream ,stream))
+  `(defmethod generate ((node ,node) &optional (indent-level 0) (stream ,stream))
      (declare (ignorable indent-level stream))
      (format stream ,@body)))
 
