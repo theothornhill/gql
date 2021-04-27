@@ -59,10 +59,10 @@ anything is unexpected, signal an error.
 
 
 ## Code generation
-Work has started on generating valid GraphQL statements from an initialized
-object.  It pretty prints by default, so it can be used to produce actual, human
-readable content.  Some time down the line I'll add a lisp dsl to aid with code
-generation, like done in `sxql`.
+Gql can generate valid GraphQL code from initialized ast objects.  It pretty
+prints by default, so it can be used to produce actual, human readable content.
+Some time down the line I'll add a lisp dsl to aid with code generation, like
+done in `sxql`.
 
 ### Example
 ```lisp
@@ -81,7 +81,7 @@ This means that we now can actually detect syntax errors and generate valid Grap
 
 ## TODO:
   - [ ] Complete the spec
-  - [ ] Complete the code generation
+  - [x] Complete the code generation
   - [ ] Create lisp-like dsl
 
 ### Contact
