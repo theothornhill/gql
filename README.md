@@ -45,10 +45,10 @@ parser and the current token into scope.  An example of how to define a parser
 ```lisp
 (defparser directive-definition
   (make-node 'directive-definition
-             :description (parse 'description)
-             :name (expect-then-parse '("directive" at) 'name)
-             :args (parse 'argument-definitions)
-             :locations (expect-then-parse "on" 'directive-locations)))
+    :description (parse 'description)
+    :name (expect-then-parse '("directive" at) 'name)
+    :args (parse 'argument-definitions)
+    :locations (expect-then-parse "on" 'directive-locations)))
 ```
 
 In this case we produce the defmethod for `parse directive-definition`, then
