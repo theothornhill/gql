@@ -14,7 +14,7 @@
 
 (defun gather-nodes (node-list indent-level)
   "Collect a list of formatted subnodes.
-It indents where necessary (with help from calls to GENERATE, then returns a
+It indents where necessary (with help from calls to `generate'), then returns a
 list of strings."
   (mapcar (lambda (node) (format nil "~a" (generate node indent-level)))
           node-list))
