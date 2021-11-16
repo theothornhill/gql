@@ -207,10 +207,10 @@ expand this macro or just use a normal DEFMETHOD."
 
 (defparser directives
   (loop
-    with directives
-    while (peek 'at)
-    do (push (parse 'directive constp) directives)
-    finally (return (nreverse directives))))
+    :with directives
+    :while (peek 'at)
+    :do (push (parse 'directive constp) directives)
+    :finally (return (nreverse directives))))
 
 (defparser directive
   (make-node 'directive

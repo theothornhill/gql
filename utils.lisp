@@ -100,34 +100,34 @@ all nodes."
 (defun any (open-kind parse-kind close-kind &optional (constp nil))
   (expect-token open-kind)
   (loop
-    with nodes = nil
-    until (expect-optional-token close-kind)
-    do (push (parse parse-kind constp) nodes)
-    finally (return (nreverse nodes))))
+    :with nodes = nil
+    :until (expect-optional-token close-kind)
+    :do (push (parse parse-kind constp) nodes)
+    :finally (return (nreverse nodes))))
 
 (defun optional-many (open-kind parse-kind close-kind)
   (when (expect-optional-token open-kind)
     (loop
-      with nodes
-        initially (push (parse parse-kind) nodes)
-      until (expect-optional-token close-kind)
-      do (push (parse parse-kind) nodes)
-      finally (return (nreverse nodes)))))
+      :with nodes
+        :initially (push (parse parse-kind) nodes)
+      :until (expect-optional-token close-kind)
+      :do (push (parse parse-kind) nodes)
+      :finally (return (nreverse nodes)))))
 
 (defun many (open-kind parse-kind close-kind)
   (expect-token open-kind)
   (loop
-    with nodes
-      initially (push (parse parse-kind) nodes)
-    until (expect-optional-token close-kind)
-    do (push (parse parse-kind) nodes)
-    finally (return (nreverse nodes))))
+    :with nodes
+      :initially (push (parse parse-kind) nodes)
+    :until (expect-optional-token close-kind)
+    :do (push (parse parse-kind) nodes)
+    :finally (return (nreverse nodes))))
 
 (defun delimited-many (delimiter-kind parse-kind)
   (expect-optional-token delimiter-kind)
   (loop
-    with nodes
-      initially (push (parse parse-kind) nodes)
-    while (expect-optional-token delimiter-kind)
-    do (push (parse parse-kind) nodes)
-    finally (return (nreverse nodes))))
+    :with nodes
+      :initially (push (parse parse-kind) nodes)
+    :while (expect-optional-token delimiter-kind)
+    :do (push (parse parse-kind) nodes)
+    :finally (return (nreverse nodes))))

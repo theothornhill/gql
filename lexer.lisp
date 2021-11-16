@@ -25,12 +25,12 @@
 
 (defmethod lookahead ((lexer lexer))
   (loop
-    with tok = (token lexer)
-    until (eq (kind tok) 'eof)
-    do (with-slots (next) tok
-         (setf tok (if next next (setf next (read-token lexer tok))))
-         (unless (eq (kind next) 'comment)
-           (return tok)))))
+    :with tok = (token lexer)
+    :until (eq (kind tok) 'eof)
+    :do (with-slots (next) tok
+          (setf tok (if next next (setf next (read-token lexer tok))))
+          (unless (eq (kind next) 'comment)
+            (return tok)))))
 
 ;;; Tokenizers
 
@@ -41,14 +41,14 @@
 
 (defun read-comment (source start line col prev)
   (loop
-    with body = (body source)
-    with pos = start
-    with code = (char-code-at body (incf pos))
-    do (setf code (char-code-at body pos))
-    while (and code (or (> code #x001F) (= code #x0009)))
-    do (incf pos)
-    finally (return (make-token 'comment start pos line col prev
-                                (subseq body (1+ start) pos)))))
+    :with body = (body source)
+    :with pos = start
+    :with code = (char-code-at body (incf pos))
+    :do (setf code (char-code-at body pos))
+    :while (and code (or (> code #x001F) (= code #x0009)))
+    :do (incf pos)
+    :finally (return (make-token 'comment start pos line col prev
+                                 (subseq body (1+ start) pos)))))
 
 (defun char-to-hex (x)
   (cond
@@ -66,16 +66,16 @@
 
 (defun read-string (source start line col prev)
   (loop
-    with body = (body source)
-    with pos = (1+ start)
-    with chunk-start = pos
-    with code = 0
-    with value = ""
-    while (and (< pos (length body))
-               (setf code (char-code-at body pos))
-               (/= code #x000A)
-               (/= code #x000D))
-    do
+    :with body = (body source)
+    :with pos = (1+ start)
+    :with chunk-start = pos
+    :with code = 0
+    :with value = ""
+    :while (and (< pos (length body))
+                (setf code (char-code-at body pos))
+                (/= code #x000A)
+                (/= code #x000D))
+    :do
        (when (= code 34)
          ;; When on closing quote
          (setf value (cat value (subseq body chunk-start pos)))
@@ -120,14 +120,14 @@
 
 (defun read-block-string (source start line col prev lexer)
   (loop
-    with body = (body source)
-    with pos = (+ start 3)
-    with chunk-start = pos
-    with code = 0
-    with raw-value = ""
-    while (and (< pos (length body))
-               (setf code (char-code-at body pos)))
-    do
+    :with body = (body source)
+    :with pos = (+ start 3)
+    :with chunk-start = pos
+    :with code = 0
+    :with raw-value = ""
+    :while (and (< pos (length body))
+                (setf code (char-code-at body pos)))
+    :do
        (when (and (= 34 code)
                   (= 34 (char-code-at body (+ pos 1)))
                   (= 34 (char-code-at body (+ pos 2))))
@@ -165,12 +165,12 @@
 (defun read-digits (source start first-code)
   ;; TODO: some error handling?
   (loop
-    with body = (body source)
-    with pos = start
-    with code = first-code
-    while (<= 48 code 57)
-    do (setf code (char-code-at body (incf pos)))
-    finally (return pos)))
+    :with body = (body source)
+    :with pos = start
+    :with code = first-code
+    :while (<= 48 code 57)
+    :do (setf code (char-code-at body (incf pos)))
+    :finally (return pos)))
 
 (defun read-number (source start first-code line col prev)
   (with-slots (body) source
@@ -217,31 +217,31 @@
 
 (defun read-name (source start line col prev)
   (loop
-    with body = (body source)
-    with pos = (1+ start)
-    with code = 0
-    while (and (/= pos (length body))
-               (setf code (char-code-at body pos))
-               (or ;; _
-                (= code 95)
-                ;; 0-9
-                (<= 48 code 57)
-                ;; A-Z
-                (<= 65 code 90)
-                ;; a-z
-                (<= 97 code 122)))
-    do (incf pos)
-    finally (return
-              (make-token 'name start pos line col prev (subseq body start pos)))))
+    :with body = (body source)
+    :with pos = (1+ start)
+    :with code = 0
+    :while (and (/= pos (length body))
+                (setf code (char-code-at body pos))
+                (or ;; _
+                 (= code 95)
+                 ;; 0-9
+                 (<= 48 code 57)
+                 ;; A-Z
+                 (<= 65 code 90)
+                 ;; a-z
+                 (<= 97 code 122)))
+    :do (incf pos)
+    :finally (return
+               (make-token 'name start pos line col prev (subseq body start pos)))))
 
 (defmethod read-token ((lexer lexer) (prev token))
   (loop
-    with source = (source lexer)
-    with body = (body source)
-    with body-length = (length body)
-    with pos = (end prev)
-    if (< pos body-length)
-      do
+    :with source = (source lexer)
+    :with body = (body source)
+    :with body-length = (length body)
+    :with pos = (end prev)
+    :if (< pos body-length)
+      :do
          (let ((code (char-code-at body pos))
                (line (line lexer))
                (col (- (1+ pos) (line-start lexer))))
@@ -297,14 +297,16 @@
               (45 48 49 50 51 52 53 54 55 56 57)
               (return
                 (read-number source pos code line col prev)))
-             (;; A-Z_a-z
-              (65 66 67 68 69 70 71 72 73 74 75 76 77 78 79 80 81 82 83 84 85 86 87 88 89 90 95 97 98 99 100 101 102 103 104 105 106 107 108 109 110 111 112 113 114 115 116 117 118 119 120 121 122)
+             ((;; A-Z_a-z
+               65 66 67 68 69 70 71 72 73 74 75 76 77 78 79 80 81 82 83 84 85 86
+               87 88 89 90 95 97 98 99 100 101 102 103 104 105 106 107 108 109
+               110 111 112 113 114 115 116 117 118 119 120 121 122)
               (return
                 (read-name source pos line col prev)))
              (t (gql-error (format nil "Unhandled syntax: ~a" (code-char code))))))
-    else
+    :else
       ;; Account for all parser cases here
-      do
+      :do
          ;; We have reached end of file - return it as a token
          (return
            (make-token 'eof body-length body-length (line lexer)
