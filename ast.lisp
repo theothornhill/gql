@@ -24,8 +24,8 @@
   next)
 
 (defmethod print-object ((token token) stream)
-  (format stream "<TOKEN: value = ~a kind = ~a line = ~a column = ~a>"
-          (value token) (kind token) (line token) (column token)))
+  (format stream "<TOKEN: kind = ~a line = ~a column = ~a"
+          (kind token) (line token) (column token)))
 
 (defclass* source
   body
