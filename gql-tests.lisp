@@ -377,15 +377,15 @@ fragment friendFields on User {
            (selection-set-location (gql::location selection-set))
            (x-location (gql::location (car (gql::selections selection-set)))))
       (ok (string= (gql::operation definition) "query"))
-      (ok (= (gql::column (gql::start operation-location)) 1))
-      (ok (= (gql::column (gql::end operation-location)) 11))
-      (ok (= (gql::column (gql::end operation-location)) 11))
+      (ok (= (gql::column (gql::start-token operation-location)) 1))
+      (ok (= (gql::column (gql::end-token operation-location)) 11))
+      (ok (= (gql::column (gql::end-token operation-location)) 11))
 
-      (ok (= (gql::column (gql::start selection-set-location)) 7))
-      (ok (= (gql::column (gql::end selection-set-location)) 11))
+      (ok (= (gql::column (gql::start-token selection-set-location)) 7))
+      (ok (= (gql::column (gql::end-token selection-set-location)) 11))
 
-      (ok (= (gql::column (gql::start x-location)) 9))
-      (ok (= (gql::column (gql::end x-location)) 9))))
+      (ok (= (gql::column (gql::start-token x-location)) 9))
+      (ok (= (gql::column (gql::end-token x-location)) 9))))
 
   (testing "Schema"
     (ok (gql (asdf:system-relative-pathname 'gql #p"test-files/example-schema.txt")))
