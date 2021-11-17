@@ -1,36 +1,56 @@
 (in-package #:gql)
 
 (defun make-token (kind start end line column prev &optional value)
-  (make-instance
-   'token :kind kind :start start :end end :line line :column column :prev prev :value value))
+  "Convenience function to make a GraphQL token.
+KIND is a subclass of TOKEN, and encompasses syntactic constructs in GraphQL.
+
+START and END provides the position in the source file, respectively.
+
+LINE signifies what line this token starts on.  It is 1-based.
+
+COLUMN signifies what column this token starts on. It is 0-based.
+
+PREV is the token preceeding this.
+
+VALUE is the string representation of the token.  It is mostly used for
+literals."
+  (make-instance 'token
+   :kind kind
+   :start start
+   :end end
+   :line line
+   :column column
+   :prev prev
+   :value value))
 
 (defun make-lexer (source)
-  (let ((source (make-instance 'source :body source :name "name" :location-offset 0))
-        (start-of-file (make-token 'sof 0 0 0 0 nil nil)))
-    (make-instance
-     'lexer :source source :token start-of-file :last-token start-of-file :line 1 :line-start 0)))
+  "Convenience function to make a GraphQL lexer.
+SOURCE is a string representation of a GraphQL document."
+  (let ((start-of-file (make-token 'sof 0 0 0 0 nil nil)))
+    (make-instance 'lexer
+     :source (make-instance 'source :body source :name (gensym) :location-offset 0)
+     :token start-of-file
+     :last-token start-of-file
+     :line 1
+     :line-start 0)))
 
 ;;; Lexer api
 
-(defgeneric advance (lexer)
-  (:documentation "Advance the token stream to the next non-ignored token."))
-(defgeneric lookahead (lexer)
-  (:documentation "Look ahead and return the next non-ignored token."))
 (defgeneric read-token (lexer prev-token))
 
-(defmethod advance ((lexer lexer))
+(defun advance (lexer)
   (with-slots (token last-token) lexer
     (setf last-token token)
     (setf token (lookahead lexer))))
 
-(defmethod lookahead ((lexer lexer))
+(defun lookahead (lexer)
   (loop
-    :with tok = (token lexer)
-    :until (eq (kind tok) 'eof)
-    :do (with-slots (next) tok
-          (setf tok (if next next (setf next (read-token lexer tok))))
+    :with token = (token lexer)
+    :until (eq (kind token) 'eof)
+    :do (with-slots (next) token
+          (setf token (if next next (setf next (read-token lexer token))))
           (unless (eq (kind next) 'comment)
-            (return tok)))))
+            (return token)))))
 
 ;;; Tokenizers
 

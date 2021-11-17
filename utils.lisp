@@ -19,7 +19,7 @@
   "Bring the current token into scope anaphorically.
 
 Refer to the current token with TOKEN.  Also works under the assumption that it
-is called primarily through the PARSE DEFMETHOD, so that we actually have the PARSER."
+is called primarily through `parse', so that we actually have the PARSER."
   `(let ((*token* (token (lexer *parser*))))
      ,@body))
 
@@ -27,8 +27,8 @@ is called primarily through the PARSE DEFMETHOD, so that we actually have the PA
   "Bring the expected token into scope anaphorically.
 
 Refer to the token as TOKEN.  This macro also advances lexer one step as a side
-effect.  Also works under the assumption that it is called primarily through the
-PARSE DEFMETHOD, so that we actually have the PARSER."
+effect.  Also works under the assumption that it is called primarily through
+`parse', so that we actually have the PARSER."
   `(let ((*token* (expect-token ,kind)))
      ,@body))
 
