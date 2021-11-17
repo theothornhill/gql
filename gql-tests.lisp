@@ -257,6 +257,7 @@ line\"\"\"")
   (testing "Punctuation lexing"
     (check-token :str "!"   :kind 'gql::bang)
     (check-token :str "$"   :kind 'gql::dollar)
+    (check-token :str "&"   :kind 'gql::amp)
     (check-token :str "("   :kind 'gql::paren-l)
     (check-token :str ")"   :kind 'gql::paren-r)
     (check-token :str "..." :kind 'gql::spread :end 3)
