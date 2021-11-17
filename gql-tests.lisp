@@ -104,8 +104,7 @@
                  :column 3 :value "foo"))
 
   (testing "String lexing"
-    ;; TODO: Need to work without ending space
-    (check-token :str "\"\" "
+    (check-token :str "\"\""
                  :kind 'gql::string
                  :end 2 :value "")
 
@@ -149,7 +148,6 @@
                  :value "unicode ሴ噸邫췯"))
 
   (testing "Block string lexing"
-    ;; TODO: Need to work without ending space
     (check-token :str (format nil "\"\"\"\"\"\"")
                  :kind 'gql::block-string
                  :end 6 :value "")
@@ -237,7 +235,7 @@ line\"\"\"")
                  :value "second_token"))
 
   (testing "Number lexing"
-    ;; TODO: Crashes without trailing space again. Figure this out soon.
+    ;; HACK: Convenience space at EOF
     (check-token :str "4 "           :kind 'gql::int :value "4")
     (check-token :str "4.123 "       :kind 'gql::float :end 5 :value "4.123")
     (check-token :str "-4 "          :kind 'gql::int :end 2 :value "-4")
@@ -253,7 +251,8 @@ line\"\"\"")
     (check-token :str "-1.123E4 "    :kind 'gql::float :end 8 :value "-1.123E4")
     (check-token :str "-1.123e-4 "   :kind 'gql::float :end 9 :value "-1.123e-4")
     (check-token :str "-1.123e+4 "   :kind 'gql::float :end 9 :value "-1.123e+4")
-    (check-token :str "-1.123e4567 " :kind 'gql::float :end 11 :value "-1.123e4567"))
+    (check-token :str "-1.123e4567 " :kind 'gql::float :end 11 :value "-1.123e4567")
+    (signals-with-check "4" gql-simple-error "Unexpected EOF"))
 
   (testing "Punctuation lexing"
     (check-token :str "!"   :kind 'gql::bang)

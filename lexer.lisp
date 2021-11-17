@@ -163,42 +163,43 @@
   (gql-error "Unterminated string"))
 
 (defun read-digits (source start first-code)
-  ;; TODO: some error handling?
   (loop
     :with body = (body source)
     :with pos = start
     :with code = first-code
     :while (<= 48 code 57)
-    :do (setf code (char-code-at body (incf pos)))
+    :do (if (> (1- (length body)) pos)
+            (setf code (char-code-at body (incf pos)))
+            (gql-error "Unexpected EOF"))
     :finally (return pos)))
 
 (defun read-number (source start first-code line col prev)
   (with-slots (body) source
     (let ((code first-code)
           (pos start)
-          is-float)
+          float?)
       (when (= code 45) ;; -
         (setf code (char-code-at body (incf pos))))
 
-      (if (= code 48) ;; 0
-          (progn
-            (setf code (char-code-at body (incf pos)))
-            (when (<= 48 code 57)
-              (gql-error (format nil "Invalid number, unexpected digit after 0: ~a" (code-char code)))))
-          (progn
-            ;; This position goes out of index if number meets end of file
-            ;; https://todo.sr.ht/~theo/gql/1
-            (setf pos (read-digits source pos code))
-            (setf code (char-code-at body pos))))
+      (cond
+        ((= code 48) ;; 0
+         (setf code (char-code-at body (incf pos)))
+         (when (<= 48 code 57)
+           (gql-error (format nil "Invalid number, unexpected digit after 0: ~a"
+                              (code-char code)))))
+
+        (t
+         (setf pos (read-digits source pos code))
+         (setf code (char-code-at body pos))))
 
       (when (= code 46) ;; .
-        (setf is-float t)
+        (setf float? t)
         (setf code (char-code-at body (incf pos)))
         (setf pos (read-digits source pos code))
         (setf code (char-code-at body pos)))
 
       (when (or (= code 69) (= code 101)) ;; E e
-        (setf is-float t)
+        (setf float? t)
         (setf code (char-code-at body (incf pos)))
         (when (or (= code 43) (= code 45)) ;; + -
           (setf code (char-code-at body (incf pos))))
@@ -212,7 +213,7 @@
                     (<= 97 code 122)))
         (gql-error "Invalid number. Expected digit, got foo"))
 
-      (make-token (if is-float 'float 'int) start pos line col prev
+      (make-token (if float? 'float 'int) start pos line col prev
                   (subseq body start pos)))))
 
 (defun read-name (source start line col prev)
@@ -287,7 +288,8 @@
                     (make-token 'pipe pos (1+ pos) line col prev)))
              (125 (return ;; }
                     (make-token 'brace-r pos (1+ pos) line col prev)))
-             (34 (if (and (eq (char body (+ pos 1)) #\")
+             (34 (if (and (> (length body) 2)
+                          (eq (char body (+ pos 1)) #\")
                           (eq (char body (+ pos 2)) #\"))
                      (return ;; "
                        (read-block-string source pos line col prev lexer))
