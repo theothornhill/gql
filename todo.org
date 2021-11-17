@@ -1,0 +1,4 @@
+* GQL todo
+
+** Go over all types and nodes in the new 2021 spec
+- Are there any changes to the apis?
