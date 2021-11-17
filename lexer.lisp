@@ -244,7 +244,7 @@
       :do
          (let ((code (char-code-at body pos))
                (line (line lexer))
-               (col (- (1+ pos) (line-start lexer))))
+               (col (- pos (line-start lexer))))
            (case code
              (;; BOM, \t, space, ','
               (#xfeff 9 32 44) (incf pos))

@@ -17,7 +17,7 @@
                       (start 0)
                       (end 1)
                       (line 1)
-                      (column 1)
+                      (column 0)
                       value
                       (fn #'test-lexer-one-step))
   (let ((token (funcall fn str)))
@@ -41,7 +41,7 @@
   (testing "Accepts BOM headers"
     (check-token :str (format nil "~c foo" #\U+FEFF)
                  :start 2 :end 5
-                 :column 3
+                 :column 2
                  :value "foo"))
 
   (testing "Tracks line breaks"
@@ -77,7 +77,7 @@
     (check-token :str (format nil "~c ~c~c ~c  foo~c"
                               #\Newline #\Return #\Newline #\Return #\Newline)
                  :start 8 :end 11
-                 :line 4 :column 3
+                 :line 4 :column 2
                  :value "foo"))
 
   (testing "Skips whitespace and comments"
@@ -88,7 +88,7 @@
 
 "
                  :start 6 :end 9
-                 :line 3 :column 5
+                 :line 3 :column 4
                  :value "foo")
 
     (check-token :str "
@@ -96,12 +96,12 @@
     foo#comment
 "
                  :start 18 :end 21
-                 :line 3 :column 5
+                 :line 3 :column 4
                  :value "foo")
 
     (check-token :str ",,,foo,,,"
                  :start 3 :end 6
-                 :column 4 :value "foo"))
+                 :column 3 :value "foo"))
 
   (testing "String lexing"
     ;; TODO: Need to work without ending space
@@ -220,7 +220,7 @@ line\"\"\"")
                  :fn #'test-lexer-two-steps
                  :kind 'gql::name
                  :start 71 :end 83
-                 :line 8 :column 6
+                 :line 8 :column 5
                  :value "second_token")
 
     (check-token :str (concatenate
@@ -233,7 +233,7 @@ line\"\"\"")
                  :fn #'test-lexer-two-steps
                  :kind 'gql::name
                  :start 37 :end 49
-                 :line 8 :column 2
+                 :line 8 :column 1
                  :value "second_token"))
 
   (testing "Number lexing"
@@ -377,15 +377,15 @@ fragment friendFields on User {
            (selection-set-location (gql::location selection-set))
            (x-location (gql::location (car (gql::selections selection-set)))))
       (ok (string= (gql::operation definition) "query"))
-      (ok (= (gql::column (gql::start-token operation-location)) 1))
-      (ok (= (gql::column (gql::end-token operation-location)) 11))
-      (ok (= (gql::column (gql::end-token operation-location)) 11))
+      (ok (= (gql::column (gql::start-token operation-location)) 0))
+      (ok (= (gql::column (gql::end-token operation-location)) 10))
+      (ok (= (gql::column (gql::end-token operation-location)) 10))
 
-      (ok (= (gql::column (gql::start-token selection-set-location)) 7))
-      (ok (= (gql::column (gql::end-token selection-set-location)) 11))
+      (ok (= (gql::column (gql::start-token selection-set-location)) 6))
+      (ok (= (gql::column (gql::end-token selection-set-location)) 10))
 
-      (ok (= (gql::column (gql::start-token x-location)) 9))
-      (ok (= (gql::column (gql::end-token x-location)) 9))))
+      (ok (= (gql::column (gql::start-token x-location)) 8))
+      (ok (= (gql::column (gql::end-token x-location)) 8))))
 
   (testing "Schema"
     (ok (gql (asdf:system-relative-pathname 'gql #p"test-files/example-schema.txt")))
