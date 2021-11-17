@@ -2,7 +2,7 @@
 
 # gql
 
-This is a WIP implementation of the [GraphQL spec](https://spec.graphql.org/October2021/).
+This is a WIP implementation of the [GraphQL spec](https://spec.graphql.org/draft/).
 
 Right now this is mostly useful as a poor mans syntax checker for queries,
 should you try to send requests using `hunchentoot` or whatnot. If the string or
@@ -29,12 +29,12 @@ Will lex and parse the contents, signaling conditions when there are any.  Use
 
 ### What parts of the spec is worked on thus far
 
- - [x] [Language](https://spec.graphql.org/October2021/#sec-Language)
- - [x] [Type System](https://spec.graphql.org/October2021/#sec-Type-System)
- - [ ] [Introspection](https://spec.graphql.org/October2021/#sec-Introspection)
- - [ ] [Validation](https://spec.graphql.org/October2021/#sec-Validation)
- - [ ] [Execution](https://spec.graphql.org/October2021/#sec-Execution)
- - [ ] [Response](https://spec.graphql.org/October2021/#sec-Response)
+ - [x] [Language](https://spec.graphql.org/draft/#sec-Language)
+ - [x] [Type System](https://spec.graphql.org/draft/#sec-Type-System)
+ - [ ] [Introspection](https://spec.graphql.org/draft/#sec-Introspection)
+ - [ ] [Validation](https://spec.graphql.org/draft/#sec-Validation)
+ - [ ] [Execution](https://spec.graphql.org/draft/#sec-Execution)
+ - [ ] [Response](https://spec.graphql.org/draft/#sec-Response)
 
 ### Parser api
 The api is not done yet, but the main entry point for the parser is the macro
@@ -80,7 +80,7 @@ done in `sxql`.
 This means that we now can actually detect syntax errors and generate valid GraphQL statements.
 
 ## TODO:
-  - [ ] Complete the spec from 2021
+  - [ ] Complete the Working Draft spec
   - [x] Complete the code generation
   - [ ] Create lisp-like dsl
 
