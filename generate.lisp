@@ -166,7 +166,7 @@ expand this macro or just use a normal DEFMETHOD."
   "~@[$~a~]" (generate (name node)))
 
 (defgenerator variable-definition nil
-  ;; TODO: Not done yet - will probably crash things for now.
+  ;; TODO: Not done yet - will probably crash things for now. (why??)
   "~@[~a~]~@[: ~a~]~@[~a~]~@[~a~]"
   (generate (var node))
   (generate (var-type node))
