@@ -1,3 +1,7 @@
 (ql:quickload :gql/tests)
 
-(asdf:test-system :gql/tests)
+(multiple-value-bind (foo bar fails) (rove::run :gql/tests)
+  (when fails
+    (sb-ext:exit :code 1)))
+
+

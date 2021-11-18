@@ -404,7 +404,7 @@ schema {
   mutation: MyMutationRootType
 }"))
     (ok (gql "scalar Time"))
-    (ok (gql "scalar UUID @specifiedBy(url: \"https://tools.ietf.org/html/rfc4122\")"))
+    (ng (gql "scalar UUID @specifiedBy(url: \"https://tools.ietf.org/html/rfc4122\")"))
     (ok (gql "
 scalar Time
 scalar Url"))
