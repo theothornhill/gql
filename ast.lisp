@@ -60,11 +60,12 @@
 
 (defnode* type-system-definition
   definitions)
+
 (defnode* type-system-extension
   definitions)
 
 (defnode* operation-definition
-  operation
+  operation-type
   name
   variable-definitions
   directives
@@ -85,7 +86,7 @@
   value)
 
 (defnode* fragment-spread
-  name
+  fragment-name
   directives)
 
 (defnode* fragment-definition

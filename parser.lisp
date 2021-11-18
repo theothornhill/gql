@@ -62,10 +62,10 @@ expand this macro or just use a normal DEFMETHOD."
       ;; brace.  If we arrive here we know that we don't have any DIRECTIVES,
       ;; VARIABLE-DEFINITIONS or NAME.  However, we do have the SELECTION-SET.
       (make-node 'operation-definition
-        :operation "query"
+        :operation-type "query"
         :selection-set (parse 'selection-set))
       (make-node 'operation-definition
-        :operation (parse 'operation-type)
+        :operation-type (parse 'operation-type)
         :name (when (peek 'name) (parse 'name))
         :variable-definitions (parse 'variable-definitions)
         :directives (parse 'directives)
@@ -116,7 +116,7 @@ expand this macro or just use a normal DEFMETHOD."
   (let ((type-condition-p (expect-optional-keyword "on")))
     (if (and (not type-condition-p) (peek 'name))
         (make-node 'fragment-spread
-          :name (parse 'fragment-name)
+          :fragment-name (parse 'fragment-name)
           :directives (parse 'directives))
         (make-node 'inline-fragment
           :type-condition (when type-condition-p (parse 'named-type))

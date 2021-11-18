@@ -49,12 +49,12 @@ expand this macro or just use a normal DEFMETHOD."
 
 (defgenerator operation-definition nil
   ;; TODO: Missing definitions
-  (cat "~a"                ;; operation
+  (cat "~a"                ;; operation type
        "~@[ ~a~]"          ;; name
        "~@[(~{~a~^, ~})~]" ;; variable definitions
        "~@[ ~{~a~}~]"      ;; directives
        " ~a")              ;; selection set
-  (operation node)
+  (operation-type node)
   (when (name node) (generate (name node)))
   (gather-nodes (variable-definitions node) indent-level)
   (gather-nodes (directives node) indent-level)
@@ -96,7 +96,7 @@ expand this macro or just use a normal DEFMETHOD."
 (defgenerator fragment-spread nil
   "~a...~@[~a~]~@[ ~a~]"
   (add-indent indent-level)
-  (generate (name node))
+  (generate (fragment-name node))
   (gather-nodes (directives node) indent-level))
 
 (defgenerator fragment-definition nil
