@@ -79,6 +79,51 @@ done in `sxql`.
 ```
 This means that we now can actually detect syntax errors and generate valid GraphQL statements.
 
+
+## Reflection
+Because we return the actual ast as the second value, it is inspectable and
+modifiable from the repl.  I'm not really sure what that can be used to do, but
+it is fun nonetheless.  An example session is:
+
+```
+GQL> (gql #p"~/lol.gql")
+"query withFragments {
+  user(id: 4) {
+    friends(first: 10) {
+      ...friendFields
+    }
+    mutualFriends(first: \"arst\") {
+      ...friendFields
+    }
+  }
+}
+"
+#<DOCUMENT {700778C7D3}>
+GQL> (with-slots (definitions) #v0:1
+       (with-slots (name selection-set) (car definitions)
+         (setf (name name) "qwfpgjluy")
+         (with-slots (selections) selection-set
+           (with-slots (selection-set) (car selections)
+             (destructuring-bind (first second) (selections selection-set)
+               (setf (selections selection-set) (list second))
+               first)))))
+#<FIELD {700778B583}>
+GQL> (generate #v1:0)
+"friends(first: 10) {
+  ...friendFields
+}"
+GQL> (generate #v0:1)
+query qwfpgjluy {
+  user(id: 4) {
+    mutualFriends(first: "arst") {
+      ...friendFields
+    }
+  }
+}
+NIL
+```
+
+
 ## TODO:
   - [ ] Complete the Working Draft spec
   - [x] Complete the code generation
