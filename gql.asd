@@ -21,7 +21,7 @@
 (asdf:defsystem :gql/tests
   :description "Tests for gql"
   :author "Theodor Thornhill <theo@thornhill.no>"
-  :license "GPLv3"
+  :license "AGPLv3"
   :version "0.3.0"
   :depends-on (:rove
                :gql)
