@@ -1,5 +1,17 @@
 (in-package :gql)
 
+(defmacro defclass* (name &body slots)
+  `(defclass ,name ()
+     ,(loop :for slot :in slots
+            :for initarg = (intern (symbol-name slot) :keyword)
+            :collect `(,slot :initarg ,initarg :initform nil :accessor ,slot))))
+
+(defmacro defnode* (name &body slots)
+  `(defclass ,name (ast-node)
+     ,(loop :for slot :in slots
+            :for initarg = (intern (symbol-name slot) :keyword)
+            :collect `(,slot :initarg ,initarg :initform nil :accessor ,slot))))
+
 (defun cat (&rest args)
   (apply #'concatenate 'string args))
 
