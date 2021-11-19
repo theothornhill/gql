@@ -22,6 +22,6 @@
 ;;             :method :post
 ;;             :content (make-query (gql query))
 ;;             :external-format-out 'utf-8
-;;             :additional-headers `(("Content-Type" . "application/json")    
+;;             :additional-headers `(("Content-Type" . "application/json")
 ;;                                   ("Authorization" . ,(concatenate 'string "Bearer "
 ;;                                                                    (uiop:getenv "srhttoken"))))))))

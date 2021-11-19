@@ -123,6 +123,40 @@ query qwfpgjluy {
 NIL
 ```
 
+## Making a request:
+Use your json library of choice, map over a query either from a file or as a
+string to the class `query`, then send it with the appropriate headers.  Easy as
+pie.
+
+```lisp
+
+(defun make-query (query &optional variables)
+  (com.inuoe.jzon:stringify
+   (make-instance 'query :query query)))
+
+(defmethod request (query)
+  (format t "~%~a~%"
+          (flexi-streams:octets-to-string
+           (drakma:http-request
+            "https://git.sr.ht/query"
+            :method :post
+            :content (make-query (gql query))
+            :external-format-out 'utf-8
+            :additional-headers `(("Content-Type" . "application/json")
+                                  ("Authorization" . ,(concatenate 'string "Bearer "
+                                                                   (uiop:getenv "srhttoken"))))))))
+
+```
+
+Now send the thing:
+
+```
+GQL> (request #p"~/lol.gql")
+
+{"data":{"me":{"canonicalName":"~theo","repositories":{"results":[...]}}}}
+
+```
+
 
 ## TODO:
   - [ ] Complete the Working Draft spec
