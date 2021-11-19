@@ -16,7 +16,8 @@
                (:file "introspection")
                (:file "generate")
                (:file "conditions")
-               (:file "gql")))
+               (:file "gql")
+               (:file "request")))
 
 (asdf:defsystem :gql/tests
   :description "Tests for gql"
