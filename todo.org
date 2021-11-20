@@ -1,4 +1,6 @@
 * GQL todo
 
-** Go over all types and nodes in the new 2021 spec
-- Are there any changes to the apis?
+- [ ] Complete the Working Draft spec
+- [x] Complete the code generation
+- [ ] Create lisp-like dsl
+

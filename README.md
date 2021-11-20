@@ -158,14 +158,9 @@ GQL> (request #p"~/lol.gql")
 ```
 
 
-## TODO:
-  - [ ] Complete the Working Draft spec
-  - [x] Complete the code generation
-  - [ ] Create lisp-like dsl
-
-### Contact
-If interested in helping out, you can open an issue at the
-[tracker](https://todo.sr.ht/~theo/gql), or send an email to the [public
-inbox](https://lists.sr.ht/~theo/public-inbox), or directly to
-<~theo/public-inbox@lists.sr.ht>. In addition, you can find my private email
-sitting around in the commits.
+## Development
+Development happens over at [Sourcehut](https://sr.ht/) , you can open an issue
+at the [tracker](https://todo.sr.ht/~theo/gql), or send an email to the [mailing
+lists](https://sr.ht/~theo/gql/lists).  Issues at
+[github](https://github.com/theothornhill/gql) also possible for those not able
+to or willing to use [Sourcehut](https://sr.ht/)
