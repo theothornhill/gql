@@ -1,5 +1,33 @@
 (in-package #:gql)
 
+(defclass* lexer
+  source
+  last-token
+  token
+  line
+  line-start)
+
+(defun make-lexer (source)
+  "Convenience function to make a GraphQL lexer.
+SOURCE is a string representation of a GraphQL document."
+  (let ((start-of-file (make-token 'sof 0 0 0 0 nil nil)))
+    (make-instance 'lexer
+     :source (make-instance 'source :body source :name (gensym) :location-offset 0)
+     :token start-of-file
+     :last-token start-of-file
+     :line 1
+     :line-start 0)))
+
+(defclass* token
+  kind
+  start
+  end
+  line
+  column
+  value
+  prev
+  next)
+
 (defun make-token (kind start end line column prev &optional value)
   "Convenience function to make a GraphQL token.
 KIND is a subclass of TOKEN, and encompasses syntactic constructs in GraphQL.
@@ -23,20 +51,17 @@ literals."
    :prev prev
    :value value))
 
-(defun make-lexer (source)
-  "Convenience function to make a GraphQL lexer.
-SOURCE is a string representation of a GraphQL document."
-  (let ((start-of-file (make-token 'sof 0 0 0 0 nil nil)))
-    (make-instance 'lexer
-     :source (make-instance 'source :body source :name (gensym) :location-offset 0)
-     :token start-of-file
-     :last-token start-of-file
-     :line 1
-     :line-start 0)))
+
+(defmethod print-object ((token token) stream)
+  (format stream "<TOKEN: kind = ~a line = ~a column = ~a"
+          (kind token) (line token) (column token)))
+
+(defclass* source
+  body
+  name
+  location-offset)
 
 ;;; Lexer api
-
-(defgeneric read-token (lexer prev-token))
 
 (defun advance (lexer)
   (with-slots (token last-token) lexer
@@ -255,7 +280,7 @@ SOURCE is a string representation of a GraphQL document."
     :finally (return
                (make-token 'name start pos line col prev (subseq body start pos)))))
 
-(defmethod read-token ((lexer lexer) (prev token))
+(defun read-token (lexer prev)
   (loop
     :with source = (source lexer)
     :with body = (body source)

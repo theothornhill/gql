@@ -3,4 +3,5 @@
 - [ ] Complete the Working Draft spec
 - [x] Complete the code generation
 - [ ] Create lisp-like dsl
+- [ ] How do we handle boolean-value and non-null-type dispatch?
 

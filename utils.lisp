@@ -6,11 +6,82 @@
             :for initarg = (intern (symbol-name slot) :keyword)
             :collect `(,slot :initarg ,initarg :initform nil :accessor ,slot))))
 
-(defmacro defnode* (name &body slots)
+(defmacro defnode (name &body slots)
   `(defclass ,name (ast-node)
      ,(loop :for slot :in slots
             :for initarg = (intern (symbol-name slot) :keyword)
             :collect `(,slot :initarg ,initarg :initform nil :accessor ,slot))))
+
+
+(defmacro defparser (node &body body)
+  "Convenience macro to define new parser methods.
+Specializes on the NODE-TYPE, so if more granular control is needed, either
+expand this macro or just use a normal DEFMETHOD."
+  `(defmethod parse ((node-type (eql ',node)) &optional (constp nil))
+     (declare (ignorable constp))
+     (with-token
+       (declare (ignorable *token*))
+       ,@body)))
+
+(defmacro defgenerator (node &optional (stream nil) &body body)
+  "Convenience macro to define new generator methods.
+Specializes on the NODE-TYPE, so if more granular control is needed, either
+expand this macro or just use a normal DEFMETHOD."
+  `(defmethod generate ((node ,node) &optional (indent-level 0) (stream ,stream))
+     (declare (ignorable indent-level stream))
+     (format stream ,@body)))
+
+(defmacro defgql (node-type &key
+                              (node nil node?)
+                              (parser nil parser?)
+                              (generator nil generator?))
+  (declare (ignorable node-type))
+  (unless node?
+    (gql-error "defgql requires a body for its node definition"))
+  (unless parser?
+    (gql-error "defgql requires a body for its parser definition"))
+  (unless generator?
+    (gql-error "defgql requires a body for its generator definition"))
+  `(progn
+     ,node
+     ,parser
+     ,generator))
+
+(defun add-indent (level)
+  "Add indentation for pretty printing.
+
+(add-indent 0) => \"\"
+(add-indent 1) => \"  \"
+(add-indent 2) => \"    \"
+"
+  (let ((indentation ""))
+    (dotimes (_ level)
+      (setf indentation (cat indentation "  ")))
+    indentation))
+
+(defgeneric parse (node-type &optional constp)
+  (:method :before (node-type &optional (constp nil))
+    (declare (ignorable constp))
+    (when *debug-print*
+      (with-token
+        (with-slots (value kind) *token*
+          (format t "; value: ~Vakind: ~Vanode-type: ~Va~%" 10 value 10 kind 10 node-type)))))
+  (:documentation "Parse node of NODE-TYPE with parser PARSER."))
+
+(defgeneric generate (node &optional indent-level stream)
+  (:documentation "Print a node NODE as a valid GrqphQL statement.
+The top level definitions should default to INDENT-LEVEL 0 and STREAM T.  The
+other nodes should start with whatever indentation they are passed as well as
+nil as STREAM, to keep them as a string when generating.  The toplevel
+nodes (that default to STREAM T) could also of course be passed other streams,
+i.e. for file streams etc."))
+
+(defun gather-nodes (node-list indent-level)
+  "Collect a list of formatted subnodes.
+It indents where necessary (with help from calls to `generate'), then returns a
+list of strings."
+  (mapcar (lambda (node) (format nil "~a" (generate node indent-level)))
+          node-list))
 
 (defun cat (&rest args)
   (apply #'concatenate 'string args))
@@ -18,7 +89,7 @@
 (defun char-code-at (body pos)
   (char-code (char body pos)))
 
-(defmacro string-case (value &rest things)
+(defmacro string-case (value &body things)
   (let ((v (gensym)))
     `(let ((,v ,value))
        (cond
@@ -43,6 +114,9 @@ effect.  Also works under the assumption that it is called primarily through
 `parse', so that we actually have the PARSER."
   `(let ((*token* (expect-token ,kind)))
      ,@body))
+
+(defun peek-description ()
+  (or (peek 'string) (peek 'block-string)))
 
 (defun advance-one-token ()
   (when *parser*
