@@ -19,9 +19,9 @@ object.
     name
     profilePic(width: 100, height: 50)
   }
-}" t)
+}" t) ;; This t enables debug mode, printing lots of garbage to stdout
 
-(gql #p"~/path/to/file")
+(gql #p"~/path/to/file") ;; You can also just supply a file path
 ```
 
 Will lex and parse the contents, signaling conditions when there are any.  Use
@@ -109,7 +109,7 @@ variables to the body.
 
 An example of this is
 ```lisp
-(defgenerator string-value (full)
+(defgenerator string-value (full) ;; This keyword is significant...
     (if (blockp node)
         (format stream "~@[\"\"\"~a\"\"\"~]" (value node))
         (format stream "~@[\"~a\"~]" (value node))))
@@ -117,7 +117,6 @@ An example of this is
 
 #### The resulting macro
 ```lisp
-
 (defgql directive-definition
   :node (defnode directive-definition description name args locations)
   :parser (defparser directive-definition ()
@@ -147,7 +146,7 @@ done in `sxql`.
 ### Example
 ```lisp
 (multiple-value-bind (_ doc-obj) (gql "query { x { y } }")
-  (generate doc-obj 0 t))
+  (generate doc-obj :indent-level 0 :stream t))
 
 ;; Will output this to the repl:
 ;;
