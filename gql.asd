@@ -5,13 +5,15 @@
   :version "0.5.0"
   :serial t
   :depends-on (:cl-ppcre)
-  :components ((:file "package")
-               (:file "specials")
-               (:file "utils")
-               (:file "lexer")
-               (:file "parser")
-               (:file "ast")
-               (:file "introspection")
-               (:file "conditions")
-               (:file "gql")
-               (:file "request")))
+  :components ((:module "src"
+                :components
+                ((:file "package")
+                 (:file "specials")
+                 (:file "utils")
+                 (:file "lexer")
+                 (:file "parser")
+                 (:file "ast")
+                 (:file "introspection")
+                 (:file "conditions")
+                 (:file "gql")
+                 (:file "request")))))
