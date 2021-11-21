@@ -110,9 +110,9 @@ variables to the body.
 An example of this is
 ```lisp
 (defgenerator string-value (full) ;; This keyword is significant...
-    (if (blockp node)
-        (format stream "~@[\"\"\"~a\"\"\"~]" (value node))
-        (format stream "~@[\"~a\"~]" (value node))))
+  (if (blockp node)
+      (format stream "~@[\"\"\"~a\"\"\"~]" (value node))
+      (format stream "~@[\"~a\"~]" (value node))))
 ```
 
 #### The resulting macro
