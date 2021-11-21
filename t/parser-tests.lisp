@@ -118,8 +118,8 @@ fragment friendFields on User {
       (ok (= (gql::column (gql::end-token x-location)) 8))))
 
   (testing "Schema"
-    (ok (gql (asdf:system-relative-pathname 'gql #p"test-files/example-schema.txt")))
-    (signals-with-check (gql (asdf:system-relative-pathname 'gql #p"test-files/empty-object.txt"))
+    (ok (gql (asdf:system-relative-pathname 'gql-tests #p"t/test-files/example-schema.txt")))
+    (signals-with-check (gql (asdf:system-relative-pathname 'gql-tests #p"t/test-files/empty-object.txt"))
                         gql-simple-error "Expected NAME, found BRACE-R")
     (ok (gql "
 \"\"\" 
