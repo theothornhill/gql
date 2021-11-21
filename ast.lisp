@@ -692,4 +692,3 @@
                (gather-nodes (directives node) indent-level)
                (gather-nodes (fields node) (1+ indent-level))
                (add-indent (1- indent-level))))
-
