@@ -1,5 +1,8 @@
 (in-package :gql)
 
+(defun slurp (file)
+  (uiop:read-file-string file))
+
 (defgeneric parse (node-type &key &allow-other-keys)
   (:method :before (node-type &key &allow-other-keys)
     (when *debug-print*

@@ -8,6 +8,7 @@
    #:read-token
    #:make-lexer
    #:gql
+   #:build-schema
    #:gql-simple-error
    #:gql-error
    #:gql-warning

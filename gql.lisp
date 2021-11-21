@@ -1,25 +1,25 @@
 (in-package #:gql)
 
-;;; Utils
-
-(defun slurp (file)
-  (uiop:read-file-string file))
-
-;;; api
-
 (defgeneric gql (input &optional debug)
+  (:method :before (input &optional debug)
+    (setf *debug-print* debug))
+  (:method ((f pathname) &optional debug)
+    (declare (ignorable debug))
+    (let* ((str (slurp f))
+           (*parser* (make-parser str)))
+      (values str (parse 'document))))
+  (:method ((str string) &optional debug)
+    (declare (ignorable debug))
+    (let ((*parser* (make-parser str)))
+      (values str (parse 'document))))
   (:documentation "Entry point for lexing and parsing"))
 
-(defmethod gql :before (input &optional debug)
-  (setf *debug-print* debug))
-
-(defmethod gql ((str string) &optional debug)
-  (declare (ignorable debug))
-  (let ((*parser* (make-parser str)))
-    (values str (parse 'document))))
-
-(defmethod gql ((f pathname) &optional debug)
-  (declare (ignorable debug))
-  (let* ((str (slurp f))
-         (*parser* (make-parser str)))
-    (values str (parse 'document))))
+(defgeneric build-schema (input)
+  (:method ((f pathname))
+    (let ((*parser* (make-parser (slurp f))))
+      (parse 'document)))
+  (:method ((str string))
+    (let ((*parser* (make-parser str)))
+      (parse 'document)))
+  (:documentation "Build a GraphQl schema.
+This is a simple helper to create a parsed document."))
