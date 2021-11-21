@@ -506,7 +506,7 @@ extend type Query {
 
 (defun generator-test (input output)
   (let ((doc (nth-value 1 (gql input))))
-    (ok (string-equal (generate doc 0 nil) output))))
+    (ok (string-equal (generate doc :indent-level 0 :stream nil) output))))
 
 (deftest generator
   (testing "Simple nested query"

@@ -3,4 +3,5 @@
 - [ ] Complete the Working Draft spec
 - [x] Complete the code generation
 - [ ] Create lisp-like dsl
+- [ ] Keywordize and fix the generate method so that it doesn't just wrap format
 

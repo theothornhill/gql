@@ -1,6 +1,6 @@
 (in-package :gql)
 
-(defgeneric parse (node-type &key  &allow-other-keys)
+(defgeneric parse (node-type &key &allow-other-keys)
   ;; (:method :before (node-type &key (constp nil))
   ;;   (declare (ignorable constp))
   ;;   (when *debug-print*
@@ -9,7 +9,7 @@
   ;;         (format t "; value: ~Vakind: ~Vanode-type: ~Va~%" 10 value 10 kind 10 node-type)))))
   (:documentation "Parse node of NODE-TYPE with parser PARSER."))
 
-(defgeneric generate (node &optional indent-level stream)
+(defgeneric generate (node &key &allow-other-keys)
   (:documentation "Print a node NODE as a valid GrqphQL statement.
 The top level definitions should default to INDENT-LEVEL 0 and STREAM T.  The
 other nodes should start with whatever indentation they are passed as well as
@@ -29,7 +29,6 @@ i.e. for file streams etc."))
             :for initarg = (intern (symbol-name slot) :keyword)
             :collect `(,slot :initarg ,initarg :initform nil :accessor ,slot))))
 
-
 (defmacro defparser (node keys &body body)
   "Convenience macro to define new parser methods.
 Specializes on the NODE-TYPE, so if more granular control is needed, either
@@ -40,13 +39,21 @@ expand this macro or just use a normal DEFMETHOD."
        (declare (ignorable *token*))
        ,@body)))
 
-(defmacro defgenerator (node &optional (stream nil) &body body)
+(defmacro defgenerator (node keys &body body)
   "Convenience macro to define new generator methods.
 Specializes on the NODE-TYPE, so if more granular control is needed, either
-expand this macro or just use a normal DEFMETHOD."
-  `(defmethod generate ((node ,node) &optional (indent-level 0) (stream ,stream))
-     (declare (ignorable indent-level stream))
-     (format stream ,@body)))
+expand this macro or just use a normal DEFMETHOD.  FULL is a magic symbol to
+force the possibility to avoid the syntax sugar in the usual form. This is a
+hack and should be avoided somethime down the line."
+  (if (member 'full keys) ;; TODO: Avoid having to do this check
+      `(defmethod generate
+           ((node ,node) &key (indent-level 0) (stream nil) ,@keys &allow-other-keys)
+         (declare (ignorable full indent-level stream))
+         ,@body)
+      `(defmethod generate
+           ((node ,node) &key (indent-level 0) (stream nil) ,@keys &allow-other-keys)
+         (declare (ignorable indent-level stream))
+         (format stream ,@body))))
 
 (defmacro defgql (node-type &key
                               (node nil node?)
@@ -76,11 +83,14 @@ expand this macro or just use a normal DEFMETHOD."
       (setf indentation (cat indentation "  ")))
     indentation))
 
-(defun gather-nodes (node-list indent-level)
+(defun gather-nodes (node-list &optional indent-level stream)
   "Collect a list of formatted subnodes.
 It indents where necessary (with help from calls to `generate'), then returns a
 list of strings."
-  (mapcar (lambda (node) (format nil "~a" (generate node indent-level)))
+  (mapcar (lambda (node)
+            (format
+             nil "~a"
+             (generate node :indent-level indent-level :stream stream)))
           node-list))
 
 (defun cat (&rest args)
