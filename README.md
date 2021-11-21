@@ -243,3 +243,10 @@ at the [tracker](https://todo.sr.ht/~theo/gql), or send an email to the [mailing
 lists](https://sr.ht/~theo/gql/lists).  Issues at
 [github](https://github.com/theothornhill/gql) also possible for those not able
 to or willing to use [Sourcehut](https://sr.ht/)
+
+
+## Test files license
+Some test files are taken from the [GraphQL
+spec](https://spec.graphql.org/draft/), and they are listed under
+`t/test-files`. These carry the same license as the GraphQl spec, which
+currently is MIT.
