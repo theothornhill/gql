@@ -1,5 +1,22 @@
 (in-package :gql)
 
+(defgeneric parse (node-type &key  &allow-other-keys)
+  ;; (:method :before (node-type &key (constp nil))
+  ;;   (declare (ignorable constp))
+  ;;   (when *debug-print*
+  ;;     (with-token
+  ;;       (with-slots (value kind) *token*
+  ;;         (format t "; value: ~Vakind: ~Vanode-type: ~Va~%" 10 value 10 kind 10 node-type)))))
+  (:documentation "Parse node of NODE-TYPE with parser PARSER."))
+
+(defgeneric generate (node &optional indent-level stream)
+  (:documentation "Print a node NODE as a valid GrqphQL statement.
+The top level definitions should default to INDENT-LEVEL 0 and STREAM T.  The
+other nodes should start with whatever indentation they are passed as well as
+nil as STREAM, to keep them as a string when generating.  The toplevel
+nodes (that default to STREAM T) could also of course be passed other streams,
+i.e. for file streams etc."))
+
 (defmacro defclass* (name &body slots)
   `(defclass ,name ()
      ,(loop :for slot :in slots
@@ -13,11 +30,11 @@
             :collect `(,slot :initarg ,initarg :initform nil :accessor ,slot))))
 
 
-(defmacro defparser (node &body body)
+(defmacro defparser (node keys &body body)
   "Convenience macro to define new parser methods.
 Specializes on the NODE-TYPE, so if more granular control is needed, either
 expand this macro or just use a normal DEFMETHOD."
-  `(defmethod parse ((node-type (eql ',node)) &optional (constp nil))
+  `(defmethod parse ((node-type (eql ',node)) &key (constp nil) ,@keys &allow-other-keys)
      (declare (ignorable constp))
      (with-token
        (declare (ignorable *token*))
@@ -58,23 +75,6 @@ expand this macro or just use a normal DEFMETHOD."
     (dotimes (_ level)
       (setf indentation (cat indentation "  ")))
     indentation))
-
-(defgeneric parse (node-type &optional constp)
-  (:method :before (node-type &optional (constp nil))
-    (declare (ignorable constp))
-    (when *debug-print*
-      (with-token
-        (with-slots (value kind) *token*
-          (format t "; value: ~Vakind: ~Vanode-type: ~Va~%" 10 value 10 kind 10 node-type)))))
-  (:documentation "Parse node of NODE-TYPE with parser PARSER."))
-
-(defgeneric generate (node &optional indent-level stream)
-  (:documentation "Print a node NODE as a valid GrqphQL statement.
-The top level definitions should default to INDENT-LEVEL 0 and STREAM T.  The
-other nodes should start with whatever indentation they are passed as well as
-nil as STREAM, to keep them as a string when generating.  The toplevel
-nodes (that default to STREAM T) could also of course be passed other streams,
-i.e. for file streams etc."))
 
 (defun gather-nodes (node-list indent-level)
   "Collect a list of formatted subnodes.
@@ -122,13 +122,13 @@ effect.  Also works under the assumption that it is called primarily through
   (when *parser*
     (advance (lexer *parser*))))
 
-(defun expect-then-parse (things node-type &optional (constp nil))
+(defun expect-then-parse (things node-type &key (constp nil))
   (let ((normalized-things (if (listp things) things (list things))))
     (dolist (thing normalized-things)
       (if (symbolp thing)
           (expect-token thing)
           (expect-keyword thing))))
-  (parse node-type constp))
+  (parse node-type :constp constp))
 
 (defun advance-then-value ()
   (advance-one-token)
@@ -183,12 +183,12 @@ all nodes."
   (let ((token (if token token *token*)))
     (gql-error "Unexpected token: ~a" token)))
 
-(defun any (open-kind parse-kind close-kind &optional (constp nil))
+(defun any (open-kind parse-kind close-kind &key (constp nil))
   (expect-token open-kind)
   (loop
     :with nodes = nil
     :until (expect-optional-token close-kind)
-    :do (push (parse parse-kind constp) nodes)
+    :do (push (parse parse-kind :constp constp) nodes)
     :finally (return (nreverse nodes))))
 
 (defun optional-many (open-kind parse-kind close-kind)
