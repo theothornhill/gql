@@ -6,5 +6,12 @@
   :depends-on (:rove :gql)
   :components ((:module "t"
                 :components
-                ((:file "gql-tests"))))
+                ((:file "package")
+                 (:file "utils")
+                 (:file "lexer-tests")
+                 (:file "parser-tests")
+                 (:file "generator-tests")
+                 (:file "type-system-tests")
+                 (:file "regression-tests")
+                 (:file "type-extension-tests"))))
   :perform (test-op (o c) (symbol-call :rove '#:run :gql-tests)))
