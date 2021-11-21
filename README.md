@@ -103,8 +103,8 @@ the `:generator` section of `defgql`.
 
 What's different with `defgenerator` from the others is that you can optionally
 add a symbol `full` to the definition, thus enabling inserting a full body,
-instead of the convenience wrapper of `(format stream ,@body)` ususally used.
-In addition it works the same way as `defparser`, which can also introduce
+instead of the convenience wrapper of `(format stream ,@body)` usually used.  In
+addition it works the same way as `defparser`, which can also introduce
 variables to the body.
 
 An example of this is
