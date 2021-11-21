@@ -1,7 +1,7 @@
-(defpackage #:gql/tests
+(defpackage #:gql-tests
   (:use #:cl #:gql #:rove))
 
-(in-package #:gql/tests)
+(in-package #:gql-tests)
 
 (defun test-lexer-one-step (str)
   (advance (make-lexer str)))
