@@ -1,12 +1,11 @@
 (in-package :gql)
 
 (defgeneric parse (node-type &key &allow-other-keys)
-  ;; (:method :before (node-type &key (constp nil))
-  ;;   (declare (ignorable constp))
-  ;;   (when *debug-print*
-  ;;     (with-token
-  ;;       (with-slots (value kind) *token*
-  ;;         (format t "; value: ~Vakind: ~Vanode-type: ~Va~%" 10 value 10 kind 10 node-type)))))
+  (:method :before (node-type &key &allow-other-keys)
+    (when *debug-print*
+      (with-token
+        (with-slots (value kind) *token*
+          (format t "; value: ~Vakind: ~Vanode-type: ~Va~%" 10 value 10 kind 10 node-type)))))
   (:documentation "Parse node of NODE-TYPE with parser PARSER."))
 
 (defgeneric generate (node &key &allow-other-keys)
