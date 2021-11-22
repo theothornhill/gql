@@ -33,9 +33,9 @@ i.e. for file streams etc."))
 
 (defmacro defparser (node keys &body body)
   "Convenience macro to define new parser methods.
-Specializes on the NODE-TYPE, so if more granular control is needed, either
-expand this macro or just use a normal DEFMETHOD."
-  `(defmethod parse ((node-type (eql ',node)) &key (constp nil) ,@keys &allow-other-keys)
+Specializes on the NODE, so if more granular control is needed, either expand
+this macro or just use a normal DEFMETHOD."
+  `(defmethod parse ((node (eql ',node)) &key (constp nil) ,@keys &allow-other-keys)
      (declare (ignorable constp))
      (with-token
        (declare (ignorable *token*))
@@ -43,17 +43,17 @@ expand this macro or just use a normal DEFMETHOD."
 
 (defmacro defgenerator (node keys &body body)
   "Convenience macro to define new generator methods.
-Specializes on the NODE-TYPE, so if more granular control is needed, either
-expand this macro or just use a normal DEFMETHOD.  FULL is a magic symbol to
-force the possibility to avoid the syntax sugar in the usual form. This is a
-hack and should be avoided somethime down the line."
+Specializes on the NODE, so if more granular control is needed, either expand
+this macro or just use a normal DEFMETHOD.  FULL is a magic symbol to force the
+possibility to avoid the syntax sugar in the usual form. This is a hack and
+should be avoided somethime down the line."
   (if (member 'full keys) ;; TODO: Avoid having to do this check
       `(defmethod generate
-           ((node ,node) &key (indent-level 0) (stream nil) ,@keys &allow-other-keys)
+           ((node (eql ',node)) &key (indent-level 0) (stream nil) ,@keys &allow-other-keys)
          (declare (ignorable full indent-level stream))
          ,@body)
       `(defmethod generate
-           ((node ,node) &key (indent-level 0) (stream nil) ,@keys &allow-other-keys)
+           ((node (eql ',node)) &key (indent-level 0) (stream nil) ,@keys &allow-other-keys)
          (declare (ignorable indent-level stream))
          (format stream ,@body))))
 
@@ -229,3 +229,15 @@ all nodes."
     :while (expect-optional-token delimiter-kind)
     :do (push (parse parse-kind) nodes)
     :finally (return (nreverse nodes))))
+
+;; (defun collect-fields (object-type
+;;                        selection-set
+;;                        variable-values
+;;                        &optional
+;;                          (visited-fragments nil))
+;;   ;; https://spec.graphql.org/draft/#CollectFields()
+;;   (let ((grouped-fields (make-hash-table :test #'equalp)))
+;;     (loop
+;;       :for selection :in selection-set
+;;       :do (cond
+;;             ))))

@@ -14,4 +14,7 @@
    #:gql-warning
    #:gql-simple-warning
    #:make-parser
-   #:generate))
+   #:generate
+   #:validate
+   #:*data*
+   #:*errors*))

@@ -31,5 +31,13 @@
      (,condition-type (c) (ok (string= (format nil "~a" c) ,expected)))))
 
 (defun generator-test (input output)
-  (let ((doc (nth-value 1 (gql input))))
-    (ok (string-equal (generate doc :indent-level 0 :stream nil) output))))
+  (ok (string-equal
+       (generate (build-schema input) :indent-level 0 :stream nil)
+       output)))
+
+(defun validator-test (input)
+  (setf *errors* nil)
+  (validate (build-schema input)))
+
+(defun validator-errors (input)
+  (nth-value 1 (validator-test input)))

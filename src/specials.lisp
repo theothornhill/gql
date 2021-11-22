@@ -14,3 +14,9 @@ being set to an instance of GQL:TOKEN.")
 
 (defvar *debug-print* nil
   "Set to t if you want to debug the call stack for the parse tree.")
+
+(defvar *data* nil
+  "Data to be returned to client after validation and execution")
+
+(defvar *errors* nil
+  "Errors to be returned to client after validation and execution")

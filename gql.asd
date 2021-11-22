@@ -15,5 +15,6 @@
                  (:file "ast")
                  (:file "introspection")
                  (:file "conditions")
+                 (:file "validation")
                  (:file "gql")
                  (:file "request")))))
