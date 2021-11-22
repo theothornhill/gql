@@ -230,14 +230,73 @@ all nodes."
     :do (push (parse parse-kind) nodes)
     :finally (return (nreverse nodes))))
 
-;; (defun collect-fields (object-type
-;;                        selection-set
-;;                        variable-values
-;;                        &optional
-;;                          (visited-fragments nil))
-;;   ;; https://spec.graphql.org/draft/#CollectFields()
-;;   (let ((grouped-fields (make-hash-table :test #'equalp)))
-;;     (loop
-;;       :for selection :in selection-set
-;;       :do (cond
-;;             ))))
+(defun skippable-field-p (directives)
+  (some (lambda (directive)
+          (with-slots (name arguments) directive
+            (and (or (string= (name name) "skip")
+                     (string= (name name) "include"))
+                 ;; TODO: More cases needed here. For example to check up
+                 ;; against variable list.
+                 (value (car arguments))
+                 t)))
+        directives))
+
+(defun sethash (item key table)
+  ;; TODO: Do we need to check for present-ness if nil is just appendable?
+  (let ((items (if (listp item) item (list item))))
+    (if (gethash key table) ;; TODO: This check iznogood
+      (setf (gethash key table) items))))
+
+(defun collect-fields (fragments
+                       object-type
+                       selection-set
+                       variable-values
+                       &optional
+                         (visited-fragments nil))
+  ;; https://spec.graphql.org/draft/#CollectFields()
+
+  (loop
+    :with grouped-fields = (make-hash-table :test #'equal)
+    :for selection :in selection-set
+    :do (unless (skippable-field-p (directives selection))
+          (with-slots (kind name) selection
+            (with-slots (name) name
+              (ecase kind
+                (field           (format t "wat ~a" name)
+                 (sethash selection name grouped-fields))
+                (fragment-spread
+                 (unless (member name visited-fragments)
+                   (push name visited-fragments)
+                   ;; TODO: This relies on a hash-table of fragments.  Wishful
+                   ;; thinking (sicp p.114)
+                   (let ((fragment (gethash name fragments)))
+                     (when fragment
+                       (with-slots (type-condition) fragment
+                         ;; More wishful thinking
+                         (when (fragment-type-applies-p object-type fragment)
+                           (let* ((frag-selection-set (selection-set fragment))
+                                  (frag-grouped-field-set (collect-fields
+                                                           fragments
+                                                           object-type
+                                                           frag-selection-set
+                                                           variable-values
+                                                           visited-fragments)))
+                             (loop
+                               :for frag-group :in frag-grouped-field-set
+                               :do (sethash frag-group name grouped-fields)))))))))
+                (inline-fragment
+                 (with-slots (type-condition) fragment
+                   (unless (and (not (null type-condition))
+                                (not (fragment-type-applies-p object-type fragment)))
+                     ;; It's getting late...
+                     (let* ((frag-selection-set (selection-set fragment))
+                            (frag-grouped-field-set (collect-fields
+                                                     fragments
+                                                     object-type
+                                                     frag-selection-set
+                                                     variable-values
+                                                     visited-fragments)))
+                       (loop
+                         :for frag-group :in frag-grouped-field-set
+                         :do (sethash frag-group name grouped-fields))))))))))
+    :finally (return grouped-fields)))
