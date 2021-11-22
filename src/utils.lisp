@@ -49,11 +49,11 @@ possibility to avoid the syntax sugar in the usual form. This is a hack and
 should be avoided somethime down the line."
   (if (member 'full keys) ;; TODO: Avoid having to do this check
       `(defmethod generate
-           ((node (eql ',node)) &key (indent-level 0) (stream nil) ,@keys &allow-other-keys)
+           ((node ,node) &key (indent-level 0) (stream nil) ,@keys &allow-other-keys)
          (declare (ignorable full indent-level stream))
          ,@body)
       `(defmethod generate
-           ((node (eql ',node)) &key (indent-level 0) (stream nil) ,@keys &allow-other-keys)
+           ((node ,node) &key (indent-level 0) (stream nil) ,@keys &allow-other-keys)
          (declare (ignorable indent-level stream))
          (format stream ,@body))))
 

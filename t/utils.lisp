@@ -31,9 +31,7 @@
      (,condition-type (c) (ok (string= (format nil "~a" c) ,expected)))))
 
 (defun generator-test (input output)
-  (ok (string-equal
-       (generate (build-schema input) :indent-level 0 :stream nil)
-       output)))
+  (ok (string-equal (generate (build-schema input)) output)))
 
 (defun validator-test (input)
   (setf *errors* nil)
