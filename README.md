@@ -29,11 +29,13 @@ Will lex and parse the contents, signaling conditions when there are any.  Use
 
 ### What parts of the spec is worked on thus far
 
+This does not mean that I'm done here.
+
  - [x] [Language](https://spec.graphql.org/draft/#sec-Language)
  - [x] [Type System](https://spec.graphql.org/draft/#sec-Type-System)
  - [ ] [Introspection](https://spec.graphql.org/draft/#sec-Introspection)
- - [ ] [Validation](https://spec.graphql.org/draft/#sec-Validation)
- - [ ] [Execution](https://spec.graphql.org/draft/#sec-Execution)
+ - [x] [Validation](https://spec.graphql.org/draft/#sec-Validation)
+ - [x] [Execution](https://spec.graphql.org/draft/#sec-Execution)
  - [ ] [Response](https://spec.graphql.org/draft/#sec-Response)
 
 ### ast.lisp
@@ -46,6 +48,7 @@ node.
 #### `defnode`
 Our nodes are defined as a simple `defclass`, inside of the `:node` part of
 `defgql`
+
 ```lisp
 (defnode directive-definition description name args locations)
 ```
@@ -84,6 +87,7 @@ capturing if using this.
     :directives (parse 'directives)
     :selection-set (parse 'selection-set)))
 ```
+
 #### `defgenerator`
 You guessed it, the `defgenerator` works in the same way, by using it inside of
 the `:generator` section of `defgql`.
@@ -116,6 +120,7 @@ An example of this is
 ```
 
 #### The resulting macro
+
 ```lisp
 (defgql directive-definition
   :node (defnode directive-definition description name args locations)
@@ -144,6 +149,7 @@ Some time down the line I'll add a lisp dsl to aid with code generation, like
 done in `sxql`.
 
 ### Example
+
 ```lisp
 (multiple-value-bind (_ doc-obj) (gql "query { x { y } }")
   (generate doc-obj :indent-level 0 :stream t))
@@ -156,6 +162,7 @@ done in `sxql`.
 ;;   }
 ;; }
 ```
+
 This means that we now can actually detect syntax errors and generate valid GraphQL statements.
 
 
@@ -236,7 +243,6 @@ GQL> (request #p"~/lol.gql")
 
 ```
 
-
 ## Development
 Development happens over at [Sourcehut](https://sr.ht/) , you can open an issue
 at the [tracker](https://todo.sr.ht/~theo/gql), or send an email to the [mailing
@@ -249,4 +255,5 @@ to or willing to use [Sourcehut](https://sr.ht/)
 Some test files are taken from the [GraphQL
 spec](https://spec.graphql.org/draft/), and they are listed under
 `t/test-files`. These carry the same license as the GraphQl spec, which
-currently is MIT.
+currently is MIT.  The same goes for the strings in many of the test cases,
+which also is taken from the spec.
