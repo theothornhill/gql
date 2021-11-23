@@ -41,20 +41,21 @@ currently visited fragments.  It is an accumulator of the current state."
               (field (sethash selection (name name) grouped-fields))
               (fragment-spread
                (with-slots (fragment-name) selection
-                 (unless (member (name fragment-name) visited-fragments :test #'equal)
-                   (push fragment-name visited-fragments)
-                   (let ((fragment (gethash (name fragment-name) fragments)))
-                     (when fragment
-                       (with-slots (type-condition) fragment
-                         ;; More wishful thinking
-                         (when (fragment-type-applies-p object-type type-condition)
-                           (with-slots (selection-set) fragment
-                             (maphash (lambda (key value) (sethash value key grouped-fields))
-                                      (collect-fields fragments
-                                                      object-type
-                                                      selection-set
-                                                      variable-values
-                                                      visited-fragments))))))))))
+                 (with-slots (name) fragment-name
+                   (unless (member name visited-fragments :test #'equal)
+                     (push name visited-fragments)
+                     (let ((fragment (gethash name fragments)))
+                       (when fragment
+                         (with-slots (type-condition) fragment
+                           ;; More wishful thinking
+                           (when (fragment-type-applies-p object-type type-condition)
+                             (with-slots (selection-set) fragment
+                               (maphash (lambda (key value) (sethash value key grouped-fields))
+                                        (collect-fields fragments
+                                                        object-type
+                                                        selection-set
+                                                        variable-values
+                                                        visited-fragments)))))))))))
               (inline-fragment
                (with-slots (type-condition) selection
                  (unless (and (not (null type-condition))
