@@ -4,7 +4,7 @@
   (testing "Only allows ExecutableDefintition in a Document"
     ;; https://spec.graphql.org/draft/#sec-Executable-Definitions
     (ok
-     (validator-errors
+     (validator-errors-p
       "query getDogName {
   dog {
     name
@@ -17,7 +17,7 @@ extend type Dog {
 }
 "))
     (ok
-     (validator-errors
+     (validator-errors-p
       "query getDogName {
   dog {
     name
@@ -80,7 +80,7 @@ query getOwnerName {
 }
 "))
     (ok
-     (validator-errors
+     (validator-errors-p
       "query getName {
   dog {
     name
@@ -96,7 +96,7 @@ query getName {
 }
 "))
     (ok
-     (validator-errors
+     (validator-errors-p
       "query dogOperation {
   dog {
     name
@@ -110,7 +110,7 @@ mutation dogOperation {
 }
 "))
     (ok
-     (validator-errors
+     (validator-errors-p
       "{
   dog {
     name
@@ -123,5 +123,55 @@ query getName {
       name
     }
   }
+}")))
+  (testing "Subscription validation"
+    (ng
+     (validator-errors-p
+      "subscription sub {
+  newMessage {
+    body
+    sender
+  }
+}
+"))
+    (ng
+     (validator-errors-p
+      "subscription sub {
+  ...newMessageFields
+}
+
+fragment newMessageFields on Subscription {
+  newMessage {
+    body
+    sender
+  }
+}
+"))
+    (ok
+     (validator-errors-p
+      "subscription sub {
+  newMessage {
+    body
+    sender
+  }
+  disallowedSecondRootField
+}"))
+    (ok
+     (validator-errors-p
+      "subscription sub {
+  ...multipleSubscriptions
+}
+
+fragment multipleSubscriptions on Subscription {
+  newMessage {
+    body
+    sender
+  }
+  disallowedSecondRootField
+}"))
+    (ok
+     (validator-errors-p
+      "subscription sub {
+  __typename
 }"))))
 

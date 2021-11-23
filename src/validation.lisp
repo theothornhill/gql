@@ -57,7 +57,20 @@ expand this macro or just use a normal DEFMETHOD."
                  (> (length definitions) 1))
         :do (make-error "An anonymous definition must be alone." definition))
 
-    ;; TODO: https://spec.graphql.org/draft/#sec-Subscription-Operation-Definitions
-    
+    ;; https://spec.graphql.org/draft/#sec-Subscription-Operation-Definitions
+    (loop
+      :for subscription :in (get-subscriptions node)
+      :for subscription-type = (operation-type subscription)
+      :for selection-set = (selection-set subscription)
+      :for fragments = (fragment-definitions node)
+      :for grouped-field-set = (collect-fields fragments
+                                               subscription-type
+                                               (selections selection-set)
+                                               nil
+                                               nil)
+      :unless (= (hash-table-count grouped-field-set) 1)
+        :do (make-error "A subscription must have exactly one entry." subscription)
+      :when (introspection-field-p grouped-field-set)
+        :do (make-error "Root field must not begin with \"__\"  which is reserved by GraphQL introspection." subscription))
     
     (values *data* *errors*)))

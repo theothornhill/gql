@@ -37,5 +37,5 @@
   (setf *errors* nil)
   (validate (build-schema input)))
 
-(defun validator-errors (input)
+(defun validator-errors-p (input)
   (nth-value 1 (validator-test input)))

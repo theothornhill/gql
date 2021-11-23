@@ -251,3 +251,16 @@ all nodes."
       (dolist (fragment fragments fragments-table)
         (with-slots (name) fragment
           (setf (gethash (name name) fragments-table) fragment))))))
+
+(defun get-subscriptions (document)
+  (remove-if-not
+   (lambda (x)
+     (and (eq (kind x) 'operation-definition)
+          (string= (operation-type x) "Subscription")))
+   (definitions document)))
+
+(declaim (ftype (function (hash-table) boolean) introspection-field-p))
+(defun introspection-field-p (fields)
+  (loop
+    :for v :being :each :hash-key :of fields
+    :thereis (uiop:string-prefix-p "__" v)))
