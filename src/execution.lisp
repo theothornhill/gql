@@ -17,7 +17,7 @@
     ;; that later.
     (t nil)))
 
-(declaim (ftype (function (hash-table string list list &optional list) hash-table) collect-fields))
+(declaim (ftype (function (hash-table string selection-set list &optional list) hash-table) collect-fields))
 (defun collect-fields (fragments
                        object-type
                        selection-set
@@ -27,19 +27,14 @@
   "Collect all fields from a `selection-set'.
 FRAGMENTS is a hash-table of a string key and a `fragment-definition' as value,
 and should consist of all fragments in a `document'.  OBJECT-TYPE is the type of
-the current object. SELECTION-SET are the `selections' of a `selection-set'.
-VARIABLE-VALUES are all the variables supplied with the `document'.
-VISITED-FRAGMENTS is a list of the currently visited fragments.  It is an
-accumulator of the current state."
+the current object. SELECTION-SET is a `selection-set'.  VARIABLE-VALUES are all
+the variables supplied with the `document'.  VISITED-FRAGMENTS is a list of the
+currently visited fragments.  It is an accumulator of the current state."
   ;; https://spec.graphql.org/draft/#CollectFields()
-  ;;
-  ;; TODO: Right now we operate on the actual selections of a selection-set, in
-  ;; that we pass the list.  We might just rather want to pass the class
-  ;; `selection-set', but now sure if that is worth.
   (declare (type list visited-fragments))
   (loop
     :with grouped-fields = (make-hash-table :test #'equal)
-    :for selection :in selection-set
+    :for selection :in (selections selection-set)
     :do (unless (skippable-field-p (directives selection))
           (with-slots (kind name) selection
             (ecase kind
@@ -57,7 +52,7 @@ accumulator of the current state."
                              (maphash (lambda (key value) (sethash value key grouped-fields))
                                       (collect-fields fragments
                                                       object-type
-                                                      (selections selection-set)
+                                                      selection-set
                                                       variable-values
                                                       visited-fragments))))))))))
               (inline-fragment
@@ -68,7 +63,7 @@ accumulator of the current state."
                      (maphash (lambda (key value) (sethash value key grouped-fields))
                               (collect-fields fragments
                                               object-type
-                                              (selections selection-set)
+                                              selection-set
                                               variable-values
                                               visited-fragments)))))))))
     :finally (return grouped-fields)))

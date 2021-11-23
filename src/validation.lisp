@@ -65,7 +65,7 @@ expand this macro or just use a normal DEFMETHOD."
       :for fragments = (fragment-definitions node)
       :for grouped-field-set = (collect-fields fragments
                                                subscription-type
-                                               (selections selection-set)
+                                               selection-set
                                                nil
                                                nil)
       :unless (= (hash-table-count grouped-field-set) 1)

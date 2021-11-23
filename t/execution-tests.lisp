@@ -1,13 +1,13 @@
 (in-package #:gql-tests)
 
 (deftest execution
-  (testing "collectfields returns the correct fields"
+  (testing "collect-fields returns the correct fields"
     (let* ((document (build-schema "{ a { subfield1 } ...ExampleFragment }
                                    fragment ExampleFragment on Query { a { subfield2 } b }"))
            (fragments (gql::fragment-definitions document))
            (operation (car (gql::definitions document)))
            (operation-type (gql::operation-type operation))
-           (selection-set (gql::selections (gql::selection-set operation)))
+           (selection-set (gql::selection-set operation))
            (result (gql::collect-fields fragments operation-type selection-set nil nil)))
       (ok (= (hash-table-count result) 2))
       (ok (= (length (gethash "a" result)) 2))
