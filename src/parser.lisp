@@ -52,9 +52,9 @@
   ;; Disallow other names than query, mutation and subscription.
   (with-expected-token 'name
     (string-case (value *token*)
-      ("query"        "query")
-      ("mutation"     "mutation")
-      ("subscription" "subscription")
+      ("query"        "Query")
+      ("mutation"     "Mutation")
+      ("subscription" "Subscription")
       (t              (unexpected *token*)))))
 
 (defparser selection nil

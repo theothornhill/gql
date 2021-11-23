@@ -106,7 +106,7 @@ fragment friendFields on User {
            (selection-set (gql::selection-set definition))
            (selection-set-location (gql::location selection-set))
            (x-location (gql::location (car (gql::selections selection-set)))))
-      (ok (string= (gql::operation-type definition) "query"))
+      (ok (string= (gql::operation-type definition) "Query"))
       (ok (= (gql::column (gql::start-token operation-location)) 0))
       (ok (= (gql::column (gql::end-token operation-location)) 10))
       (ok (= (gql::column (gql::end-token operation-location)) 10))

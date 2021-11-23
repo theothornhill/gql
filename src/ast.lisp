@@ -66,7 +66,7 @@
                 ;; brace.  If we arrive here we know that we don't have any DIRECTIVES,
                 ;; VARIABLE-DEFINITIONS or NAME.  However, we do have the SELECTION-SET.
                 (make-node 'operation-definition
-                  :operation-type "query"
+                  :operation-type "Query"
                   :selection-set (parse 'selection-set))
                 (make-node 'operation-definition
                   :operation-type (parse 'operation-type)
