@@ -277,16 +277,14 @@ all nodes."
                        (with-slots (type-condition) fragment
                          ;; More wishful thinking
                          (when (fragment-type-applies-p object-type fragment)
-                           (let* ((frag-selection-set (selections (selection-set fragment)))
-                                  (frag-grouped-field-set (collect-fields
-                                                           fragments
-                                                           object-type
-                                                           frag-selection-set
-                                                           variable-values
-                                                           visited-fragments)))
-                             (loop
-                               :for frag-group :in frag-grouped-field-set
-                               :do (sethash frag-group name grouped-fields))))))))))
+                           (with-slots (selection-set) selection
+                             (maphash (lambda (key value) (sethash value key grouped-fields))
+                                      (collect-fields
+                                       fragments
+                                       object-type
+                                       (selections selection-set)
+                                       variable-values
+                                       visited-fragments))))))))))
               (inline-fragment
                (with-slots (type-condition) selection
                  ;; TODO: If fragmentType is not null and
@@ -294,14 +292,12 @@ all nodes."
                  ;; false, continue with the next selection in selectionSet.
                  (unless (and (not (null type-condition))
                               (not (fragment-type-applies-p object-type type-condition)))
-                   (let* ((frag-selection-set (selections (selection-set selection)))
-                          (frag-grouped-field-set (collect-fields
-                                                   fragments
-                                                   object-type
-                                                   frag-selection-set
-                                                   variable-values
-                                                   visited-fragments)))
-                     (maphash (lambda (key value)
-                                (sethash value key grouped-fields))
-                              frag-grouped-field-set))))))))
+                   (with-slots (selection-set) selection
+                     (maphash (lambda (key value) (sethash value key grouped-fields))
+                              (collect-fields
+                               fragments
+                               object-type
+                               (selections selection-set)
+                               variable-values
+                               visited-fragments)))))))))
     :finally (return grouped-fields)))
