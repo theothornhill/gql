@@ -241,63 +241,13 @@ all nodes."
                  t)))
         directives))
 
-(defun sethash (item key table)
-  ;; TODO: Do we need to check for present-ness if nil is just appendable?
-  (let ((items (if (listp item) item (list item))))
-    (setf (gethash key table) (append (gethash key table) items))))
-
-(defun fragment-type-applies-p (object-type fragment-type)
-  ;; TODO: Just default to t for now
-  (declare (ignorable object-type fragment-type))
-  t)
-
-(defun collect-fields (fragments
-                       object-type
-                       selection-set
-                       variable-values
-                       &optional
-                         (visited-fragments nil))
-  ;; https://spec.graphql.org/draft/#CollectFields()
-  (loop
-    :with grouped-fields = (make-hash-table :test #'equal)
-    :for selection :in selection-set
-    :do (unless (skippable-field-p (directives selection))
-          (with-slots (kind name) selection
-            (ecase kind
-              (field
-               (sethash selection (name name) grouped-fields))
-              (fragment-spread
-               (with-slots (name) name
-                 (unless (member name visited-fragments)
-                   (push name visited-fragments)
-                   ;; TODO: This relies on a hash-table of fragments.  Wishful
-                   ;; thinking...
-                   (let ((fragment (gethash name fragments)))
-                     (when fragment
-                       (with-slots (type-condition) fragment
-                         ;; More wishful thinking
-                         (when (fragment-type-applies-p object-type fragment)
-                           (with-slots (selection-set) selection
-                             (maphash (lambda (key value) (sethash value key grouped-fields))
-                                      (collect-fields
-                                       fragments
-                                       object-type
-                                       (selections selection-set)
-                                       variable-values
-                                       visited-fragments))))))))))
-              (inline-fragment
-               (with-slots (type-condition) selection
-                 ;; TODO: If fragmentType is not null and
-                 ;; DoesFragmentTypeApply(objectType, fragmentType) is
-                 ;; false, continue with the next selection in selectionSet.
-                 (unless (and (not (null type-condition))
-                              (not (fragment-type-applies-p object-type type-condition)))
-                   (with-slots (selection-set) selection
-                     (maphash (lambda (key value) (sethash value key grouped-fields))
-                              (collect-fields
-                               fragments
-                               object-type
-                               (selections selection-set)
-                               variable-values
-                               visited-fragments)))))))))
-    :finally (return grouped-fields)))
+(defun fragment-definitions (document)
+  (with-slots (definitions) document
+    (let ((fragments-table (make-hash-table :test #'equal))
+          (fragments
+            (remove-if-not
+             (lambda (x) (equal (kind x) 'fragment-definition))
+             definitions)))
+      (dolist (fragment fragments fragments-table)
+        (with-slots (name) fragment
+          (setf (gethash (name name) fragments-table) fragment))))))
