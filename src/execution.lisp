@@ -68,3 +68,18 @@ is an accumulator of the current state."
                               (collect-fields object-type selection-set variable-values visited-fragments)))))))))
     :finally (return grouped-fields)))
 
+(defun get-operation (document operation-name)
+  (cond
+    ((null operation-name)
+     (let ((operation
+             (remove-if-not (lambda (x) (equal (kind x) 'operation-definition))
+                            (definitions document))))
+       (if (= 1 (length operation))
+           (car operation)
+           (gql-error "Need to raise a request error: https://spec.graphql.org/draft/#GetOperation()"))))
+    (t
+     (let ((operation
+             (gethash operation-name
+                      (get-types 'operation-definition))))
+       (if operation operation
+           (gql-error "Need to raise a request error: https://spec.graphql.org/draft/#GetOperation()"))))))

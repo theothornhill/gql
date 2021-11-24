@@ -268,8 +268,10 @@ Relies on `*schema*' being set."
              (lambda (x) (equal (kind x) node))
              definitions)))
       (dolist (node nodes node-table)
-        (with-slots (name) node
-          (setf (gethash (name name) node-table) node))))))
+        (if (name node)
+            (setf (gethash (name (name node)) node-table) node)
+            ;; TODO: In this case we are probably an anonymous operation-definition
+            (setf (gethash (operation-type node) node-table) node))))))
 
 (defun all-types ()
   "Return a hash-table of all type->type-node.
