@@ -59,10 +59,10 @@ expand this macro or just use a normal DEFMETHOD."
 
     ;; https://spec.graphql.org/draft/#sec-Subscription-Operation-Definitions
     (loop
-      :for subscription :in (get-subscriptions node)
+      :for subscription :in (get-subscriptions)
       :for subscription-type = (operation-type subscription)
       :for selection-set = (selection-set subscription)
-      :for fragments = (fragment-definitions node)
+      :for fragments = (fragment-definitions)
       :for grouped-field-set = (collect-fields fragments
                                                subscription-type
                                                selection-set

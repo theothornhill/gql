@@ -146,7 +146,7 @@ fragment newMessageFields on Subscription {
     sender
   }
 }
-"))
+" :no-schema t))
     (ok
      (validator-errors-p
       "subscription sub {
@@ -155,7 +155,7 @@ fragment newMessageFields on Subscription {
     sender
   }
   disallowedSecondRootField
-}"))
+}" :no-schema t))
     (ok
      (validator-errors-p
       "subscription sub {
@@ -168,10 +168,10 @@ fragment multipleSubscriptions on Subscription {
     sender
   }
   disallowedSecondRootField
-}"))
+}" :no-schema t))
     (ok
      (validator-errors-p
       "subscription sub {
   __typename
-}"))))
+}" :no-schema t))))
 

@@ -241,8 +241,10 @@ all nodes."
                  t)))
         directives))
 
-(defun fragment-definitions (document)
-  (with-slots (definitions) document
+(defun fragment-definitions ()
+  ;; TODO: How shall we access/use *schema*?  Now we just assume it is
+  ;; dynamically bound
+  (with-slots (definitions) *schema*
     (let ((fragments-table (make-hash-table :test #'equal))
           (fragments
             (remove-if-not
@@ -252,15 +254,17 @@ all nodes."
         (with-slots (name) fragment
           (setf (gethash (name name) fragments-table) fragment))))))
 
-(defun get-subscriptions (document)
+(defun get-subscriptions ()
+  ;; TODO: How shall we access/use *schema*?  Now we just assume it is
+  ;; dynamically bound
   (remove-if-not
    (lambda (x)
      (and (eq (kind x) 'operation-definition)
           (string= (operation-type x) "Subscription")))
-   (definitions document)))
+   (definitions *schema*)))
 
 (declaim (ftype (function (hash-table) boolean) introspection-field-p))
 (defun introspection-field-p (fields)
   (loop
     :for v :being :each :hash-key :of fields
-    :thereis (uiop:string-prefix-p "__" v)))
+      :thereis (uiop:string-prefix-p "__" v)))

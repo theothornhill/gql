@@ -4,7 +4,8 @@
   (testing "collect-fields returns the correct fields"
     (let* ((document (build-schema "{ a { subfield1 } ...ExampleFragment }
                                    fragment ExampleFragment on Query { a { subfield2 } b }"))
-           (fragments (gql::fragment-definitions document))
+           (*schema* document)
+           (fragments (gql::fragment-definitions))
            (operation (car (gql::definitions document)))
            (operation-type (gql::operation-type operation))
            (selection-set (gql::selection-set operation))
