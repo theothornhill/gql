@@ -7,7 +7,6 @@
     (setf (gethash key table) (append (gethash key table) items))))
 
 (defun fragment-type-applies-p (object-type fragment-type)
-  ;; TODO: Just default to t for now
   (cond
     ((string= object-type (name (name fragment-type))) t)
     ;; TODO: Handle case 2 and 3 from
@@ -17,22 +16,21 @@
     ;; that later.
     (t nil)))
 
-(declaim (ftype (function (hash-table string selection-set list &optional list) hash-table) collect-fields))
-(defun collect-fields (fragments
-                       object-type
+(declaim (ftype (function (string selection-set list &optional list) hash-table) collect-fields))
+(defun collect-fields (object-type
                        selection-set
                        variable-values
                        &optional
                          (visited-fragments nil))
   "Collect all fields from a `selection-set'.
-FRAGMENTS is a hash-table of a string key and a `fragment-definition' as value,
-and should consist of all fragments in a `document'.  OBJECT-TYPE is the type of
-the current object. SELECTION-SET is a `selection-set'.  VARIABLE-VALUES are all
-the variables supplied with the `document'.  VISITED-FRAGMENTS is a list of the
-currently visited fragments.  It is an accumulator of the current state."
+  OBJECT-TYPE is the type of the current object. SELECTION-SET is a
+`selection-set'.  VARIABLE-VALUES are all the variables supplied with the
+`document'.  VISITED-FRAGMENTS is a list of the currently visited fragments.  It
+is an accumulator of the current state."
   ;; https://spec.graphql.org/draft/#CollectFields()
   (declare (type list visited-fragments))
   (loop
+    :with fragments = (fragment-definitions)
     :with grouped-fields = (make-hash-table :test #'equal)
     :for selection :in (selections selection-set)
     :do (unless (skippable-field-p (directives selection))
@@ -51,8 +49,7 @@ currently visited fragments.  It is an accumulator of the current state."
                            (when (fragment-type-applies-p object-type type-condition)
                              (with-slots (selection-set) fragment
                                (maphash (lambda (key value) (sethash value key grouped-fields))
-                                        (collect-fields fragments
-                                                        object-type
+                                        (collect-fields object-type
                                                         selection-set
                                                         variable-values
                                                         visited-fragments)))))))))))
@@ -62,8 +59,7 @@ currently visited fragments.  It is an accumulator of the current state."
                               (not (fragment-type-applies-p object-type type-condition)))
                    (with-slots (selection-set) selection
                      (maphash (lambda (key value) (sethash value key grouped-fields))
-                              (collect-fields fragments
-                                              object-type
+                              (collect-fields object-type
                                               selection-set
                                               variable-values
                                               visited-fragments)))))))))

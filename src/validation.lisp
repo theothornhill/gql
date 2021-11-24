@@ -62,9 +62,7 @@ expand this macro or just use a normal DEFMETHOD."
       :for subscription :in (get-subscriptions)
       :for subscription-type = (operation-type subscription)
       :for selection-set = (selection-set subscription)
-      :for fragments = (fragment-definitions)
-      :for grouped-field-set = (collect-fields fragments
-                                               subscription-type
+      :for grouped-field-set = (collect-fields subscription-type
                                                selection-set
                                                nil
                                                nil)
