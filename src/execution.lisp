@@ -7,14 +7,23 @@
     (setf (gethash key table) (append (gethash key table) items))))
 
 (defun fragment-type-applies-p (object-type fragment-type)
-  (cond
-    ((string= object-type (name (name fragment-type))) t)
-    ;; TODO: Handle case 2 and 3 from
-    ;; https://spec.graphql.org/draft/#DoesFragmentTypeApply()
-    ;; 
-    ;; We need the interface type checking and union type checking, but let's do
-    ;; that later.
-    (t nil)))
+  (let ((type-definition (gethash object-type (all-types))))
+    (cond
+      (;; TODO: This early exit is probably not good enough.  Why is it ok to do
+       ;; this when we _don't_ get a hit?
+       (null type-definition) t)
+      ((eq (kind type-definition) 'object-type-definition)
+       (string= (name (name type-definition))
+                (name (name fragment-type))))
+      ;; TODO: The next two cases are still not done, though this is more
+      ;; useful.
+      ((eq (kind type-definition) 'interface-type-definition)
+       (string= (name (name type-definition))
+                (name (name fragment-type))))
+      ((eq (kind type-definition) 'union-type-definition)
+       (string= (name (name type-definition))
+                (name (name fragment-type))))
+      (t nil))))
 
 (declaim (ftype (function (string selection-set list &optional list) hash-table) collect-fields))
 (defun collect-fields (object-type
