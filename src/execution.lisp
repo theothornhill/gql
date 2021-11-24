@@ -58,19 +58,13 @@ is an accumulator of the current state."
                            (when (fragment-type-applies-p object-type type-condition)
                              (with-slots (selection-set) fragment
                                (maphash (lambda (key value) (sethash value key grouped-fields))
-                                        (collect-fields object-type
-                                                        selection-set
-                                                        variable-values
-                                                        visited-fragments)))))))))))
+                                        (collect-fields object-type selection-set variable-values visited-fragments)))))))))))
               (inline-fragment
                (with-slots (type-condition) selection
                  (unless (and (not (null type-condition))
                               (not (fragment-type-applies-p object-type type-condition)))
                    (with-slots (selection-set) selection
                      (maphash (lambda (key value) (sethash value key grouped-fields))
-                              (collect-fields object-type
-                                              selection-set
-                                              variable-values
-                                              visited-fragments)))))))))
+                              (collect-fields object-type selection-set variable-values visited-fragments)))))))))
     :finally (return grouped-fields)))
 
