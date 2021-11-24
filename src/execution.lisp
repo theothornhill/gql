@@ -7,6 +7,8 @@
     (setf (gethash key table) (append (gethash key table) items))))
 
 (defun fragment-type-applies-p (object-type fragment-type)
+  ;; TODO: We need to check all kinds of type designators.  Non-null-types,
+  ;; named-types and list-type, at least.
   (let ((type-definition (gethash object-type (all-types))))
     (cond
       (;; TODO: This early exit is probably not good enough.  Why is it ok to do
