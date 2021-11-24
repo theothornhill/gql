@@ -83,3 +83,35 @@ is an accumulator of the current state."
                       (get-types 'operation-definition))))
        (if operation operation
            (gql-error "Need to raise a request error: https://spec.graphql.org/draft/#GetOperation()"))))))
+
+(defun execute-query (operation schema coerced-vars initial-value)
+  (declare (ignorable operation schema coerced-vars initial-value))
+  (gql-error "TODO: execute-query not implemented")
+  nil)
+
+(defun execute-mutation (operation schema coerced-vars initial-value)
+  (declare (ignorable operation schema coerced-vars initial-value))
+  (gql-error "TODO: execute-mutation not implemented")
+  nil)
+
+(defun subscribe (operation schema coerced-vars initial-value)
+  (declare (ignorable operation schema coerced-vars initial-value))
+  (gql-error "TODO: subscribe not implemented")
+  nil)
+
+(defun coerce-vars (schema operation variable-values)
+  (declare (ignorable schema operation variable-values))
+  (gql-error "TODO: coerce-vars not implemented")
+  nil)
+
+(defun execute-request (schema document operation-name variable-values initial-value)
+  ;; https://spec.graphql.org/draft/#sec-Executing-Requests
+  ;;
+  ;; TODO: Still with the *schema*.  This function is supplied a schema as an
+  ;; argument as defined in the spec, but for now we use the global thing.
+  (let* ((operation (get-operation document operation-name))
+         (coerced-vars (coerce-vars schema operation variable-values)))
+    (string-case (operation-type operation)
+      ("Query"        (execute-query operation schema coerced-vars initial-value))
+      ("Mutation"     (execute-mutation operation schema coerced-vars initial-value))
+      ("Subscription" (subscribe operation schema coerced-vars initial-value)))))
