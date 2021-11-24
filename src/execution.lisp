@@ -21,8 +21,10 @@
        (string= (name (name type-definition))
                 (name (name fragment-type))))
       ((eq (kind type-definition) 'union-type-definition)
-       (string= (name (name type-definition))
-                (name (name fragment-type))))
+       (with-slots (union-members) type-definition
+         ;; TODO: I only handle named-types for now, which is no good
+         (let ((members (mapcar (lambda (x) (name (name x))) union-members)))
+           (member (name (name fragment-type)) members :test #'string=))))
       (t nil))))
 
 (declaim (ftype (function (string selection-set list &optional list) hash-table) collect-fields))
