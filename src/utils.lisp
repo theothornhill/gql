@@ -292,3 +292,13 @@ Relies on `*schema*' being set."
         (with-slots (name) node
           (setf (gethash (name name) node-table) node))))))
 
+(defclass* errors
+  nodes
+  message)
+
+(defun make-error (message nodes)
+  (let ((error-nodes (if (listp nodes) nodes (list nodes))))
+    (push (make-instance 'errors
+                         :message message
+                         :nodes error-nodes)
+          *errors*)))
