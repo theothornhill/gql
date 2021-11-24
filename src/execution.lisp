@@ -17,14 +17,11 @@
       ((eq (kind type-definition) 'object-type-definition)
        (string= (name (name type-definition))
                 (name (name fragment-type))))
-      ;; TODO: The next two cases are still not done, though this is more
-      ;; useful.
       ((eq (kind type-definition) 'interface-type-definition)
        (string= (name (name type-definition))
                 (name (name fragment-type))))
       ((eq (kind type-definition) 'union-type-definition)
        (with-slots (union-members) type-definition
-         ;; TODO: I only handle named-types for now, which is no good
          (let ((members (mapcar (lambda (x) (name (name x))) union-members)))
            (member (name (name fragment-type)) members :test #'string=))))
       (t nil))))
@@ -49,7 +46,7 @@ is an accumulator of the current state."
     :do (unless (skippable-field-p (directives selection))
           (with-slots (kind name) selection
             (ecase kind
-              (field (sethash selection (name name) grouped-fields))
+              (field (sethash selection (name-or-alias selection) grouped-fields))
               (fragment-spread
                (with-slots (fragment-name) selection
                  (with-slots (name) fragment-name

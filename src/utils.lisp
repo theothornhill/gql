@@ -302,3 +302,9 @@ Relies on `*schema*' being set."
                          :message message
                          :nodes error-nodes)
           *errors*)))
+
+(defun name-or-alias (field)
+  (with-slots (alias name) field
+    (if alias
+        (name (name alias))
+        (name name))))
