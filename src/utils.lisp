@@ -241,19 +241,6 @@ all nodes."
                  t)))
         directives))
 
-(defun fragment-definitions ()
-  ;; TODO: How shall we access/use *schema*?  Now we just assume it is
-  ;; dynamically bound
-  (with-slots (definitions) *schema*
-    (let ((fragments-table (make-hash-table :test #'equal))
-          (fragments
-            (remove-if-not
-             (lambda (x) (equal (kind x) 'fragment-definition))
-             definitions)))
-      (dolist (fragment fragments fragments-table)
-        (with-slots (name) fragment
-          (setf (gethash (name name) fragments-table) fragment))))))
-
 (defun get-subscriptions ()
   ;; TODO: How shall we access/use *schema*?  Now we just assume it is
   ;; dynamically bound
@@ -268,3 +255,40 @@ all nodes."
   (loop
     :for v :being :each :hash-key :of fields
       :thereis (uiop:string-prefix-p "__" v)))
+
+(defun get-types (node)
+  "Return a hash-table of type->type-node.
+Relies on `*schema*' being set."
+  ;; TODO: How shall we access/use *schema*?  Now we just assume it is
+  ;; dynamically bound
+  (with-slots (definitions) *schema*
+    (let ((node-table (make-hash-table :test #'equal))
+          (nodes
+            (remove-if-not
+             (lambda (x) (equal (kind x) node))
+             definitions)))
+      (dolist (node nodes node-table)
+        (with-slots (name) node
+          (setf (gethash (name name) node-table) node))))))
+
+(defun all-types ()
+  "Return a hash-table of all type->type-node.
+Relies on `*schema*' being set."
+  ;; TODO: How shall we access/use *schema*?  Now we just assume it is
+  ;; dynamically bound
+  (with-slots (definitions) *schema*
+    (let ((node-table (make-hash-table :test #'equal))
+          (nodes
+            (remove-if-not
+             (lambda (x)
+               (let ((kind (kind x)))
+                 (or
+                  (eq kind 'object-type-definition)
+                  (eq kind 'enum-type-definition)
+                  (eq kind 'interface-type-definition)
+                  (eq kind 'union-type-definition))))
+             definitions)))
+      (dolist (node nodes node-table)
+        (with-slots (name) node
+          (setf (gethash (name name) node-table) node))))))
+

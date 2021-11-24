@@ -30,7 +30,7 @@ is an accumulator of the current state."
   ;; https://spec.graphql.org/draft/#CollectFields()
   (declare (type list visited-fragments))
   (loop
-    :with fragments = (fragment-definitions)
+    :with fragments = (get-types 'fragment-definition)
     :with grouped-fields = (make-hash-table :test #'equal)
     :for selection :in (selections selection-set)
     :do (unless (skippable-field-p (directives selection))
@@ -45,7 +45,6 @@ is an accumulator of the current state."
                      (let ((fragment (gethash name fragments)))
                        (when fragment
                          (with-slots (type-condition) fragment
-                           ;; More wishful thinking
                            (when (fragment-type-applies-p object-type type-condition)
                              (with-slots (selection-set) fragment
                                (maphash (lambda (key value) (sethash value key grouped-fields))
