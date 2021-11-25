@@ -4,7 +4,7 @@
 
 ## Documentation
 
-Documentation can be found at the [wiki](index.md)
+Documentation can be found at the [wiki](https://man.sr.ht/~theo/gql/)
 
 This is an implementation of the [GraphQL spec](https://spec.graphql.org/draft/)
 for Common Lisp.
