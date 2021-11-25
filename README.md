@@ -16,7 +16,15 @@ Documentation can be found at the [wiki](https://man.sr.ht/~theo/gql/)
  - [ ] [Response](https://spec.graphql.org/draft/#sec-Response)
 
 
+# Contributing
+
+Contributions are always welcome, and can come in many forms.  You are invited
+to open issues, send patches or just start a discussion for what features are
+most important.  There are no guidelines for contributions yet, because we are
+still in the early stages, so feel free to send some code.
+
 # Development
+
 Development happens over at [Sourcehut](https://git.sr.ht/~theo/gql), and you
 can open an issue at the [tracker](https://todo.sr.ht/~theo/gql), or send an
 email to the [mailing lists](https://sr.ht/~theo/gql/lists).  You are also
@@ -25,6 +33,7 @@ isn't possible to use [Sourcehut](https://sr.ht/)
 
 
 # Test files license
+
 Some test files are taken from the [GraphQL
 spec](https://spec.graphql.org/draft/), and they are listed under
 `t/test-files`. These carry the same license as the GraphQl spec, which
