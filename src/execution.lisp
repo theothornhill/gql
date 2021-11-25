@@ -146,10 +146,51 @@ is an accumulator of the current state."
      (collect-fields object-type selection-set variable-values))
     results))
 
+(declaim (ftype (function (object-type-definition field hash-table) hash-table) coerce-args))
 (defun coerce-args (object-type field variable-values)
   (declare (ignorable object-type field variable-values))
   ;; TODO: https://spec.graphql.org/draft/#sec-Coercing-Field-Arguments
-  t)
+  (loop
+    :with coerced-values = (make-hash-table :test #'equal)
+    :for argument-values = (arguments field)
+    :for field-name = (name-or-alias field)
+    :for argument-definitions = (car (fields object-type))
+    :for argument-definition :in argument-definitions
+    :do (let ((argument-name (name-or-alias argument-definition))
+              (argument-type (ty argument-definition))
+              (;; TODO: Where do I get this value??
+               default-value t)
+              (;; TODO: if argumentValues provides a value for the name argumentName
+               has-value-p nil)
+              (;; TODO: the value provided in argumentValues for the name argumentName
+               argument-value nil)
+              (value))
+          (if (eq (kind argument-value) 'var)
+              (multiple-value-bind (val val-p)
+                  (gethash (name-or-alias argument-value) variable-values)
+                (setf value val has-value-p val-p))
+              (setf value argument-value))
+          (cond
+            (;; including 'null' as a default value
+             (and (null has-value-p) default-value)
+             (sethash default-value argument-name coerced-values))
+            ((and (eq (kind argument-type) 'non-null-type)
+                  (or (null has-value-p)
+                      (null value)))
+             (gql-error "Raise a field error here!"))
+            (has-value-p
+             (cond
+               ((null value)
+                ;; TODO: Is nil ok here?
+                (sethash nil argument-name coerced-values))
+               ((eq (kind argument-value) 'var)
+                (sethash value argument-name coerced-values))
+               (t
+                (let (;; TODO: Coerce the val first for the else part,
+                      ;; find out how
+                      (coerced-value t))
+                  (sethash coerced-value argument-name coerced-values)))))))
+    :finally (return coerced-values)))
 
 (defun resolve-field-value (object-type object-value field-name arg-values)
   ;; TODO: https://spec.graphql.org/draft/#ResolveFieldValue()
@@ -205,8 +246,8 @@ is an accumulator of the current state."
                        (sethash nil var-name coerced-vars)
                        (let (;; TODO: Coerce the val first for the else part,
                              ;; find out how
-                             (coerced-val t))
-                         (sethash coerced-val var-name coerced-vars)))))))
+                             (coerced-value t))
+                         (sethash coerced-value var-name coerced-vars)))))))
       :finally (return coerced-vars))))
 
 (defun execute-request (schema document operation-name variable-values initial-value)
