@@ -1,6 +1,6 @@
 [![builds.sr.ht status](https://builds.sr.ht/~theo/gql/commits/.build.yml.svg)](https://builds.sr.ht/~theo/gql/commits/.build.yml?)
 
-# gql - GraphQL for Common lisp
+# gql - GraphQL for Common Lisp
 
 # Documentation
 
