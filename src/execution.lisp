@@ -68,7 +68,8 @@ is an accumulator of the current state."
                               (collect-fields object-type selection-set variable-values visited-fragments)))))))))
     :finally (return grouped-fields)))
 
-(defun get-operation (document operation-name)
+(defun get-operation (document &optional operation-name)
+  ;; TODO: Still with the *schema*.
   (cond
     ((null operation-name)
      (let ((operation
