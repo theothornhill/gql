@@ -10,7 +10,7 @@ file parses ok, `gql` returns two values, the original string and the parsed
 object.
 
 
-## api
+# api
 
 ```lisp
 (gql "{
@@ -27,14 +27,14 @@ object.
 Will lex and parse the contents, signaling conditions when there are any.  Use
 `t` as the second argument to `gql` to print debug information.
 
-### ast.lisp
+# ast.lisp
 The api isn't really settled yet, but the main entry point for the nodes in
 GraphQL is defined in the file `ast.lisp`.  In here we see a convenience macro
 at work `defgql`, which in turn is defined in `utils.lisp`.  The point of this
 macro is to co-locate all the parts needed for lexing, parsing and generating a
 node.
 
-#### `defnode`
+## `defnode`
 Our nodes are defined as a simple `defclass`, inside of the `:node` part of
 `defgql`
 
@@ -42,7 +42,7 @@ Our nodes are defined as a simple `defclass`, inside of the `:node` part of
 (defnode directive-definition description name args locations)
 ```
 
-#### `defparser`
+## `defparser`
 Our parser is the macro `defparser`.  It creates a new `defmethod parse`, and
 also brings the current parser and the current token into scope. It is used
 inside of the `:parser` part of `defgql`.  An example of how to define a parser
@@ -77,7 +77,7 @@ capturing if using this.
     :selection-set (parse 'selection-set)))
 ```
 
-#### `defgenerator`
+## `defgenerator`
 You guessed it, the `defgenerator` works in the same way, by using it inside of
 the `:generator` section of `defgql`.
 
@@ -108,7 +108,7 @@ An example of this is
       (format stream "~@[\"~a\"~]" (value node))))
 ```
 
-#### The resulting macro
+## The resulting macro
 
 ```lisp
 (defgql directive-definition
@@ -131,13 +131,13 @@ An example of this is
                (gather-nodes (locations node) indent-level)))
 ```
 
-## Code generation
+# Code generation
 Gql can generate valid GraphQL code from initialized ast objects.  It pretty
 prints by default, so it can be used to produce actual, human readable content.
 Some time down the line I'll add a lisp dsl to aid with code generation, like
 done in `sxql`.
 
-### Example
+## Example
 
 ```lisp
 (multiple-value-bind (_ doc-obj) (gql "query { x { y } }")
@@ -155,7 +155,7 @@ done in `sxql`.
 This means that we now can actually detect syntax errors and generate valid GraphQL statements.
 
 
-## Reflection
+# Reflection
 Because we return the actual ast as the second value, it is inspectable and
 modifiable from the repl.  I'm not really sure what that can be used to do, but
 it is fun nonetheless.  An example session is:
@@ -198,7 +198,7 @@ query qwfpgjluy {
 NIL
 ```
 
-## Making a request:
+# Making a request
 Use your json library of choice, map over a query either from a file or as a
 string to the class `query`, then send it with the appropriate headers.  Easy as
 pie.
