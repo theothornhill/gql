@@ -9,6 +9,11 @@ libraries.  However, we do want to be useful in the space of web development, so
 integrations to `hunchentoot`, `woo`, `drakma` or `$LIBRARY` will be considered,
 and possibly made in the future.  For the time being the only goal is the spec.
 
+# Assumptions
+
+There are some assumptions made under development listed
+[here](wiki/assumptions.md).
+
 # api
 
 ```lisp
