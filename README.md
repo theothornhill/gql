@@ -1,5 +1,7 @@
 [![builds.sr.ht status](https://builds.sr.ht/~theo/gql/commits/.build.yml.svg)](https://builds.sr.ht/~theo/gql/commits/.build.yml?)
 
+[Project](https://sr.ht/~theo/gql/) | [Git](https://git.sr.ht/~theo/gql) | [Lists](https://sr.ht/~theo/gql/lists) | [Tracker](https://todo.sr.ht/~theo/gql)
+
 # gql - GraphQL for Common Lisp
 
 # Documentation
