@@ -1,7 +1,7 @@
 # language.lisp
 The api isn't really settled yet, but the main entry point for the nodes in
 GraphQL is defined in the file `language.lisp`.  In here we see a convenience
-macro at work `defgql`, which in turn is defined in `parser-utils.lisp`.  The
+macro at work - `defgql`, which in turn is defined in `parser-utils.lisp`.  The
 point of this macro is to co-locate all the parts needed for lexing, parsing and
 generating a node.
 
