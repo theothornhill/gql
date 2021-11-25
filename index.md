@@ -2,13 +2,12 @@
 
 # gql
 
-This is a WIP implementation of the [GraphQL spec](https://spec.graphql.org/draft/).
-
-Right now this is mostly useful as a poor mans syntax checker for queries,
-should you try to send requests using `hunchentoot` or whatnot. If the string or
-file parses ok, `gql` returns two values, the original string and the parsed
-object.
-
+Our goal is to be a fully compliant implementation of the [GraphQL
+spec](https://spec.graphql.org/draft/). Non-goals are serializing `json`, making
+requests or doing authentication.  This should be handled by better suited
+libraries.  However, we do want to be useful in the space of web development, so
+integrations to `hunchentoot`, `woo`, `drakma` or `$LIBRARY` will be considered,
+and possibly made in the future.  For the time being the only goal is the spec.
 
 # api
 
