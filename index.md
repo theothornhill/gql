@@ -31,12 +31,12 @@ There are some assumptions made under development listed
 Will lex and parse the contents, signaling conditions when there are any.  Use
 `t` as the second argument to `gql` to print debug information.
 
-# ast.lisp
+# language.lisp
 The api isn't really settled yet, but the main entry point for the nodes in
-GraphQL is defined in the file `ast.lisp`.  In here we see a convenience macro
-at work `defgql`, which in turn is defined in `utils.lisp`.  The point of this
-macro is to co-locate all the parts needed for lexing, parsing and generating a
-node.
+GraphQL is defined in the file `language.lisp`.  In here we see a convenience
+macro at work `defgql`, which in turn is defined in `parser-utils.lisp`.  The
+point of this macro is to co-locate all the parts needed for lexing, parsing and
+generating a node.
 
 ## `defnode`
 Our nodes are defined as a simple `defclass`, inside of the `:node` part of

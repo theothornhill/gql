@@ -9,10 +9,10 @@
                 :components
                 ((:file "package")
                  (:file "specials")
+                 (:file "parser-utils")
                  (:file "utils")
                  (:file "lexer")
-                 (:file "parser")
-                 (:file "ast")
+                 (:file "language")
                  (:file "introspection")
                  (:file "conditions")
                  (:file "rules")
