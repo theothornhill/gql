@@ -85,10 +85,33 @@ is an accumulator of the current state."
        (if operation operation
            (gql-error "Need to raise a request error: https://spec.graphql.org/draft/#GetOperation()"))))))
 
-(defun execute-query (operation schema coerced-vars initial-value)
-  (declare (ignorable operation schema coerced-vars initial-value))
-  (gql-error "TODO: execute-query not implemented")
-  nil)
+(defun input-type-p (type)
+  (declare (ignorable type))
+  ;; TODO: https://spec.graphql.org/draft/#IsInputType()
+  ;; (if (or (eq (kind type) 'non-null-type)
+  ;;         (eq (kind type) 'list-type)))
+  t)
+
+(defun output-type-p (type)
+  (declare (ignorable type))
+  ;; TODO: https://spec.graphql.org/draft/#IsOutputType()
+  ;; (if (or (eq (kind type) 'non-null-type)
+  ;;         (eq (kind type) 'list-type)))
+  t)
+
+(declaim (ftype (function (operation-definition document hash-table t) hash-table) execute-query))
+(defun execute-query (query schema variable-values initial-value)
+  ;; TODO: https://spec.graphql.org/draft/#sec-Query
+  ;;
+  ;; TODO: Still with the schema.  I think we can get away without the dynamic
+  ;; var.
+  (declare (ignorable schema))
+  (let ((query-type (gethash "Query" (all-types))))
+    (check-type query-type object-type-definition)
+    (with-slots (selection-set) query
+      (let ((results (make-hash-table :test #'equal)))
+        (setf (gethash "data" results)
+              (execute-selection-set selection-set query-type initial-value variable-values))))))
 
 (defun execute-mutation (operation schema coerced-vars initial-value)
   (declare (ignorable operation schema coerced-vars initial-value))
@@ -100,10 +123,42 @@ is an accumulator of the current state."
   (gql-error "TODO: subscribe not implemented")
   nil)
 
+(defun execute-selection-set (selection-set object-type object-value variable-values)
+  ;; TODO: https://spec.graphql.org/draft/#sec-Executing-Selection-Sets
+  (declare (ignorable object-value))
+  (let ((results (make-hash-table :test #'equal)))
+    (maphash (lambda (key value) (cons key value))
+             (collect-fields object-type selection-set variable-values))
+    results))
+
+(declaim (ftype (function (document operation-definition hash-table) hash-table) coerce-vars))
 (defun coerce-vars (schema operation variable-values)
-  (declare (ignorable schema operation variable-values))
-  (gql-error "TODO: coerce-vars not implemented")
-  nil)
+  ;; TODO: https://spec.graphql.org/draft/#CoerceVariableValues()
+  (declare (ignorable schema)) ;; The assumptino about this schema is that it
+                               ;; should be used by the `execute-*' defuns
+  (with-slots (variable-definitions) operation
+    (loop
+      :with coerced-vars = (make-hash-table :test #'equal)
+      :for variable :in variable-definitions
+      :for var-name = (name (name (var variable)))
+      :for var-type = (var-type variable)
+      :when (input-type-p var-type)
+        :do (with-slots (default-value) variable
+              (multiple-value-bind (val val-p) (gethash var-name variable-values)
+                (cond
+                  ((and (null val-p) default-value)
+                   (sethash default-value var-name coerced-vars))
+                  ((and (eq (kind var-type) 'non-null-type)
+                        (or (null val-p) (null val)))
+                   (gql-error "Need to raise a request error for coerce-vars"))
+                  (val-p
+                   (if (null val)
+                       (sethash nil var-name coerced-vars)
+                       (let (;; TODO: Coerce the val first for the else part,
+                             ;; find out how
+                             (coerced-val t))
+                         (sethash coerced-val var-name coerced-vars)))))))
+      :finally (return coerced-vars))))
 
 (defun execute-request (schema document operation-name variable-values initial-value)
   ;; https://spec.graphql.org/draft/#sec-Executing-Requests
