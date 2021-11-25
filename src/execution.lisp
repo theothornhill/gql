@@ -123,13 +123,62 @@ is an accumulator of the current state."
   (gql-error "TODO: subscribe not implemented")
   nil)
 
+(defun unsubscribe (response-stream)
+  ;; TODO: https://spec.graphql.org/draft/#Unsubscribe()
+  (declare (ignorable response-stream))
+  t)
+
 (defun execute-selection-set (selection-set object-type object-value variable-values)
   ;; TODO: https://spec.graphql.org/draft/#sec-Executing-Selection-Sets
   (declare (ignorable object-value))
   (let ((results (make-hash-table :test #'equal)))
-    (maphash (lambda (key value) (cons key value))
-             (collect-fields object-type selection-set variable-values))
+    (maphash
+     (lambda (response-key fields)
+       (let* ((field-name (name-or-alias (car fields)))
+              ( ;; TODO: This should be the actual type as defined on the
+                ;; object-type-definition.  Maybe make an algo for that?
+               field-type t))
+         (declare (ignorable field-name))
+         (when field-type
+           (sethash (execute-field object-type object-value field-type fields variable-values)
+                    response-key
+                    results))))
+     (collect-fields object-type selection-set variable-values))
     results))
+
+(defun coerce-args (object-type field variable-values)
+  (declare (ignorable object-type field variable-values))
+  ;; TODO: https://spec.graphql.org/draft/#sec-Coercing-Field-Arguments
+  t)
+
+(defun resolve-field-value (object-type object-value field-name arg-values)
+  ;; TODO: https://spec.graphql.org/draft/#ResolveFieldValue()
+  (declare (ignorable object-type object-value field-name arg-values))
+  t)
+
+(defun complete-value (field-type fields result variable-values)
+  ;; TODO: https://spec.graphql.org/draft/#CompleteValue()
+  (declare (ignorable field-type fields result variable-values))
+  t)
+
+(defun coerce-result (leaf-type value)
+  ;; TODO: https://spec.graphql.org/draft/#CoerceResult()
+  (declare (ignorable leaf-type value))
+  t)
+
+(defun resolve-abstract-type (abstract-type object-value)
+  ;; TODO: https://spec.graphql.org/draft/#ResolveAbstractType()
+  (declare (ignorable abstract-type object-value))
+  t)
+
+(defun execute-field (object-type object-value field-type fields variable-values)
+  ;; TODO: https://spec.graphql.org/draft/#sec-Executing-Fields
+  (let* ((field (car fields))
+         (field-name (name-or-alias field))
+         (arg-values (coerce-args object-type field variable-values))
+         (resolved-value
+           (resolve-field-value object-type object-value field-name arg-values)))
+    (complete-value field-type fields resolved-value variable-values)))
 
 (declaim (ftype (function (document operation-definition hash-table) hash-table) coerce-vars))
 (defun coerce-vars (schema operation variable-values)
@@ -171,3 +220,33 @@ is an accumulator of the current state."
       ("Query"        (execute-query operation schema coerced-vars initial-value))
       ("Mutation"     (execute-mutation operation schema coerced-vars initial-value))
       ("Subscription" (subscribe operation schema coerced-vars initial-value)))))
+
+(defun execute-subscription-event (subscription schema variable-values initial-value)
+  ;; TODO: https://spec.graphql.org/draft/#ExecuteSubscriptionEvent()
+  (declare (ignorable subscription schema variable-values initial-value))
+  t)
+
+(defun create-source-event-stream (subscription schema variable-values initial-value)
+  ;; TODO: https://spec.graphql.org/draft/#CreateSourceEventStream()
+  (declare (ignorable subscription schema variable-values initial-value))
+  t)
+
+(defun resolve-field-event-stream (subscription-type root-value field-name argument-values)
+  ;; TODO: https://spec.graphql.org/draft/#ResolveFieldEventStream()
+  (declare (ignorable subscription-type root-value field-name argument-values))
+  t)
+
+(defun map-source-to-response-event (source-stream subscription schema variable-values)
+  ;; TODO: https://spec.graphql.org/draft/#MapSourceToResponseEvent()
+  (declare (ignorable source-stream subscription schema variable-values))
+  t)
+
+(defun merge-selection-sets (fields)
+  ;; TODO: https://spec.graphql.org/draft/#MergeSelectionSets()
+  (loop
+    :with selection-set = nil
+    :for field :in fields
+    :for field-selection-set = (selection-set field)
+    :when field-selection-set
+      :do (setf selection-set (append selection-set field-selection-set))
+    :finally (return selection-set)))
