@@ -1,14 +1,12 @@
 [![builds.sr.ht status](https://builds.sr.ht/~theo/gql/commits/.build.yml.svg)](https://builds.sr.ht/~theo/gql/commits/.build.yml?)
 
-# gql - GraphQl for Common lisp
+# gql - GraphQL for Common lisp
 
 # Documentation
 
 Documentation can be found at the [wiki](https://man.sr.ht/~theo/gql/)
 
 # Progress on the [GraphQL spec](https://spec.graphql.org/draft/)
-
-This does not mean that I'm done here.
 
  - [x] [Language](https://spec.graphql.org/draft/#sec-Language)
  - [x] [Type System](https://spec.graphql.org/draft/#sec-Type-System)
