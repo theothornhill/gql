@@ -1,5 +1,3 @@
-[![builds.sr.ht status](https://builds.sr.ht/~theo/gql/commits/.build.yml.svg)](https://builds.sr.ht/~theo/gql/commits/.build.yml?)
-
 # gql
 
 Our goal is to be a fully compliant implementation of the [GraphQL
