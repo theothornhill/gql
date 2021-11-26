@@ -115,13 +115,11 @@ is an accumulator of the current state."
 
 (defun execute-mutation (operation schema coerced-vars initial-value)
   (declare (ignorable operation schema coerced-vars initial-value))
-  (gql-error "TODO: execute-mutation not implemented")
-  nil)
+  (gql-error "TODO: execute-mutation not implemented"))
 
 (defun subscribe (operation schema coerced-vars initial-value)
   (declare (ignorable operation schema coerced-vars initial-value))
-  (gql-error "TODO: subscribe not implemented")
-  nil)
+  (gql-error "TODO: subscribe not implemented"))
 
 (defun unsubscribe (response-stream)
   ;; TODO: https://spec.graphql.org/draft/#Unsubscribe()
@@ -148,7 +146,6 @@ is an accumulator of the current state."
 
 (declaim (ftype (function (object-type-definition field hash-table) hash-table) coerce-args))
 (defun coerce-args (object-type field variable-values)
-  (declare (ignorable object-type field variable-values))
   ;; TODO: https://spec.graphql.org/draft/#sec-Coercing-Field-Arguments
   (loop
     :with coerced-values = (make-hash-table :test #'equal)
