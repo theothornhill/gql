@@ -199,8 +199,38 @@ is an accumulator of the current state."
 
 (defun complete-value (field-type fields result variable-values)
   ;; TODO: https://spec.graphql.org/draft/#CompleteValue()
-  (declare (ignorable field-type fields result variable-values))
-  t)
+  (when result
+    (ecase (kind field-type)
+      (non-null-type
+       (let ((completed-result
+               (complete-value (ty field-type)
+                               fields
+                               result
+                               variable-values)))
+         (if completed-result completed-result
+             (gql-error "Need to raise a field error here"))))
+      (list-type
+       (if (null (listp result)) ;; TODO: What type is this really?
+           (gql-error "Need to raise a field error here")
+           (mapcar
+            (lambda (result-item)
+              (complete-value (ty field-type) fields result-item variable-values))
+            result)))
+      (;; TODO: Are these the correct types?
+       (scalar-type-definition
+        enum-type-definition)
+       (coerce-result field-type result))
+      (;; TODO: Are these the correct types?
+       (object-type-definition
+        interface-type-definition
+        union-type-definition)
+       (execute-selection-set
+        (merge-selection-sets fields)
+        (if (eq (kind field-type) 'object-type)
+            field-type
+            (resolve-abstract-type field-type result))
+        result
+        variable-values)))))
 
 (defun coerce-result (leaf-type value)
   ;; TODO: https://spec.graphql.org/draft/#CoerceResult()
