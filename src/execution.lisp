@@ -86,18 +86,28 @@ is an accumulator of the current state."
            (gql-error "Need to raise a request error: https://spec.graphql.org/draft/#GetOperation()"))))))
 
 (defun input-type-p (type)
-  (declare (ignorable type))
   ;; TODO: https://spec.graphql.org/draft/#IsInputType()
-  ;; (if (or (eq (kind type) 'non-null-type)
-  ;;         (eq (kind type) 'list-type)))
-  t)
+  (case (kind type)
+    ((non-null-type list-type)
+     (input-type-p (ty type)))
+    ((scalar-type-definition
+      object-type-definition
+      enum-type-definition)
+     t)
+    (t nil)))
 
 (defun output-type-p (type)
-  (declare (ignorable type))
   ;; TODO: https://spec.graphql.org/draft/#IsOutputType()
-  ;; (if (or (eq (kind type) 'non-null-type)
-  ;;         (eq (kind type) 'list-type)))
-  t)
+  (case (kind type)
+    ((non-null-type list-type)
+     (output-type-p (ty type)))
+    ((scalar-type-definition
+      object-type-definition
+      enum-type-definition
+      interface-type-definition
+      union-type-definition)
+     t)
+    (t nil)))
 
 (declaim (ftype (function (operation-definition document hash-table t) hash-table) execute-query))
 (defun execute-query (query schema variable-values initial-value)
