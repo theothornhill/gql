@@ -261,7 +261,7 @@ is an accumulator of the current state."
 (declaim (ftype (function (document operation-definition hash-table) hash-table) coerce-vars))
 (defun coerce-vars (schema operation variable-values)
   ;; TODO: https://spec.graphql.org/draft/#CoerceVariableValues()
-  (declare (ignorable schema)) ;; The assumptino about this schema is that it
+  (declare (ignorable schema)) ;; The assumption about this schema is that it
                                ;; should be used by the `execute-*' defuns
   (with-slots (variable-definitions) operation
     (loop
