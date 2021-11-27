@@ -29,6 +29,13 @@
   :node (defnode document definitions)
   :parser (defparser document ()
             (make-node 'document :definitions (many 'sof 'definition 'eof)))
+  :validator (defvalidator document ()
+               (with-slots (definitions) node
+                 (every-definition-executable-p definitions)
+                 (operation-name-unique-p definitions)
+                 (anonymous-operation-definition-p definitions)
+                 (subscription-operation-valid-p)
+                 (values *data* *errors*)))
   :generator (defgenerator document ()
                "~{~a~%~}" (gather-nodes (definitions node) indent-level)))
 

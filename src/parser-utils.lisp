@@ -54,9 +54,20 @@ should be avoided somethime down the line."
          (declare (ignorable indent-level stream))
          (format stream ,@body))))
 
+(defgeneric validate (node &key &allow-other-keys)
+  (:documentation "TODO"))
+
+(defmacro defvalidator (node keys &body body)
+  "Convenience macro to define new validator methods.
+Specializes on the NODE-TYPE, so if more granular control is needed, either
+expand this macro or just use a normal DEFMETHOD."
+  `(defmethod validate ((node ,node) &key ,@keys &allow-other-keys)
+     ,@body))
+
 (defmacro defgql (node-type &key
                               (node nil node?)
                               (parser nil parser?)
+                              (validator nil)
                               (generator nil generator?))
   (declare (ignorable node-type))
   (unless node?
@@ -68,6 +79,7 @@ should be avoided somethime down the line."
   `(progn
      ,node
      ,parser
+     ,validator
      ,generator))
 
 (defun add-indent (level)
