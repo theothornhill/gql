@@ -51,6 +51,8 @@ Relies on `*schema*' being set."
 Relies on `*schema*' being set."
   ;; TODO: How shall we access/use *schema*?  Now we just assume it is
   ;; dynamically bound
+  (unless *schema*
+    (gql-error "Schema not bound, cannot get all-types.  Consider your options."))
   (with-slots (definitions) *schema*
     (let ((node-table (make-hash-table :test #'equal))
           (nodes
@@ -58,10 +60,12 @@ Relies on `*schema*' being set."
              (lambda (x)
                (let ((kind (kind x)))
                  (or
+                  (eq kind 'scalar-type-definition)
                   (eq kind 'object-type-definition)
-                  (eq kind 'enum-type-definition)
                   (eq kind 'interface-type-definition)
-                  (eq kind 'union-type-definition))))
+                  (eq kind 'union-type-definition)
+                  (eq kind 'enum-type-definition)
+                  (eq kind 'input-object-type-definition))))
              definitions)))
       (dolist (node nodes node-table)
         (with-slots (name) node
@@ -79,7 +83,17 @@ Relies on `*schema*' being set."
           *errors*)))
 
 (defun name-or-alias (field)
+  ;; TODO: This one is probably no good
   (with-slots (alias name) field
     (if alias
         (name (name alias))
         (name name))))
+
+(defun nameof (type)
+  (check-type type named-type)
+  (name (name type)))
+
+(defmacro with-schema (schema &body body)
+  `(let* ((*schema* ,schema)
+          (*all-types* (all-types)))
+     ,@body))

@@ -16,6 +16,8 @@
    #:make-parser
    #:generate
    #:validate
+   #:with-schema
    #:*schema*
+   #:*all-types*
    #:*data*
    #:*errors*))

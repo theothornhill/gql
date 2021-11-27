@@ -5,6 +5,7 @@
     (let* ((document (build-schema "{ a { subfield1 } ...ExampleFragment }
                                    fragment ExampleFragment on Query { a { subfield2 } b }"))
            (*schema* document)
+           (*all-types* (gql::all-types))
            (operation (car (gql::definitions document)))
            (operation-type (gql::operation-type operation))
            (selection-set (gql::selection-set operation))

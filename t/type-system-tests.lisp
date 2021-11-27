@@ -123,3 +123,31 @@ scalar Url
   | FRAGMENT_SPREAD
   | INLINE_FRAGMENT
 ")))
+
+(deftest input-output-types
+  (testing "scalar"
+    (with-schema (build-schema (asdf:system-relative-pathname 'gql-tests #p"t/test-files/validation-schema.graphql"))
+      (let ((dog (gethash "Dog" *all-types*)))
+        (ok (gql::input-type-p (gql::ty (car (gql::fields dog)))))
+        (ok (gql::input-type-p (gql::ty (cadr (gql::fields dog)))))
+        (ok (gql::output-type-p (gql::ty (car (gql::fields dog)))))
+        (ok (gql::output-type-p (gql::ty (cadr (gql::fields dog))))))))
+  (testing "enum"
+    (with-schema (build-schema (asdf:system-relative-pathname 'gql-tests #p"t/test-files/validation-schema.graphql"))
+      (let ((human-or-alien (gethash "HumanOrAlien" *all-types*)))
+        (ng (gql::input-type-p (car (gql::union-members human-or-alien))))
+        (ng (gql::input-type-p (cadr (gql::union-members human-or-alien))))
+        (ok (gql::output-type-p (car (gql::union-members human-or-alien))))
+        (ok (gql::output-type-p (cadr (gql::union-members human-or-alien)))))))
+  (testing "object"
+    (with-schema (build-schema (asdf:system-relative-pathname 'gql-tests #p"t/test-files/validation-schema.graphql"))
+      (let ((dog-or-human (gethash "DogOrHuman" *all-types*)))
+        (ng (gql::input-type-p (car (gql::union-members dog-or-human))))
+        (ng (gql::input-type-p (cadr (gql::union-members dog-or-human))))
+        (ok (gql::output-type-p (car (gql::union-members dog-or-human))))
+        (ok (gql::output-type-p (cadr (gql::union-members dog-or-human)))))))
+  (testing "interface"
+    (with-schema (build-schema (asdf:system-relative-pathname 'gql-tests #p"t/test-files/validation-schema.graphql"))
+      (let ((cat (gethash "Cat" *all-types*)))
+        (ng (gql::input-type-p (car (gql::interfaces cat))))
+        (ok (gql::output-type-p (car (gql::interfaces cat))))))))

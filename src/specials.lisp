@@ -20,8 +20,35 @@ being set to an instance of GQL:TOKEN.")
 Note: This is probably not a really good way to do things, as we need to
 ensure we have initialized the schema.")
 
+(defvar *all-types* nil
+  "Hash-table containing all types from schema *SCHEMA*.
+Should be bound together with *schema* when needed.")
+
 (defvar *data* nil
   "Data to be returned to client after validation and execution.")
 
 (defvar *errors* nil
   "Errors to be returned to client after validation and execution.")
+
+(defun built-in-scalar-p (scalar)
+  (member scalar '("Int" "Float" "String" "Boolean" "ID") :test #'string=))
+
+(deftype built-in-scalar ()
+  '(and string (satisfies built-in-scalar-p)))
+
+(deftype wrapper-type ()
+  '(member non-null-type list-type))
+
+(deftype input-types ()
+  '(member
+    scalar-type-definition
+    input-object-type-definition
+    enum-type-definition))
+
+(deftype output-types ()
+  '(member
+    scalar-type-definition
+    object-type-definition
+    enum-type-definition
+    interface-type-definition
+    union-type-definition))

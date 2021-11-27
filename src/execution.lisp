@@ -9,7 +9,7 @@
 (defun fragment-type-applies-p (object-type fragment-type)
   ;; TODO: We need to check all kinds of type designators.  Non-null-types,
   ;; named-types and list-type, at least.
-  (let ((type-definition (gethash object-type (all-types))))
+  (let ((type-definition (gethash object-type *all-types*)))
     (cond
       (;; TODO: This early exit is probably not good enough.  Why is it ok to do
        ;; this when we _don't_ get a hit?
@@ -87,27 +87,25 @@ is an accumulator of the current state."
 
 (defun input-type-p (type)
   ;; TODO: https://spec.graphql.org/draft/#IsInputType()
-  (case (kind type)
-    ((non-null-type list-type)
-     (input-type-p (ty type)))
-    ((scalar-type-definition
-      object-type-definition
-      enum-type-definition)
-     t)
-    (t nil)))
+  (with-slots (kind) type
+    (if (typep kind 'wrapper-type)
+        (input-type-p (ty type))
+        (let ((possible-type (gethash (nameof type) *all-types*)))
+          ;; Get the type corresponding to the name in question
+          (if possible-type
+              (typep (kind possible-type) 'input-types)
+              (typep (nameof type) 'built-in-scalar))))))
 
 (defun output-type-p (type)
   ;; TODO: https://spec.graphql.org/draft/#IsOutputType()
-  (case (kind type)
-    ((non-null-type list-type)
-     (output-type-p (ty type)))
-    ((scalar-type-definition
-      object-type-definition
-      enum-type-definition
-      interface-type-definition
-      union-type-definition)
-     t)
-    (t nil)))
+  (with-slots (kind) type
+    (if (typep kind 'wrapper-type)
+        (output-type-p (ty type))
+        (let ((possible-type (gethash (nameof type) *all-types*)))
+          ;; Get the type corresponding to the name in question
+          (if possible-type
+              (typep (kind possible-type) 'output-types)
+              (typep (nameof type) 'built-in-scalar))))))
 
 (declaim (ftype (function (operation-definition document hash-table t) hash-table) execute-query))
 (defun execute-query (query schema variable-values initial-value)
@@ -116,7 +114,7 @@ is an accumulator of the current state."
   ;; TODO: Still with the schema.  I think we can get away without the dynamic
   ;; var.
   (declare (ignorable schema))
-  (let ((query-type (gethash "Query" (all-types))))
+  (let ((query-type (gethash "Query" *all-types*)))
     (check-type query-type object-type-definition)
     (with-slots (selection-set) query
       (let ((results (make-hash-table :test #'equal)))
