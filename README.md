@@ -4,28 +4,18 @@
 
 # GraphQL for Common Lisp
 
-# Documentation
+## Documentation
 
 Documentation can be found at the [wiki](https://man.sr.ht/~theo/gql/)
 
-# Progress on the [GraphQL spec](https://spec.graphql.org/draft/)
-
- - [x] [Language](https://spec.graphql.org/draft/#sec-Language)
- - [x] [Type System](https://spec.graphql.org/draft/#sec-Type-System)
- - [ ] [Introspection](https://spec.graphql.org/draft/#sec-Introspection)
- - [x] [Validation](https://spec.graphql.org/draft/#sec-Validation)
- - [x] [Execution](https://spec.graphql.org/draft/#sec-Execution)
- - [ ] [Response](https://spec.graphql.org/draft/#sec-Response)
-
-
-# Contributing
+## Contributing
 
 Contributions are always welcome, and can come in many forms.  You are invited
 to open issues, send patches or just start a discussion for what features are
 most important.  There are no guidelines for contributions yet, because we are
 still in the early stages, so feel free to send some code.
 
-# Development
+## Development
 
 Development happens over at [Sourcehut](https://git.sr.ht/~theo/gql), and you
 can open an issue at the [tracker](https://todo.sr.ht/~theo/gql), or send an
@@ -34,7 +24,7 @@ welcome to open issues at [github](https://github.com/theothornhill/gql) if it
 isn't possible to use [Sourcehut](https://sr.ht/)
 
 
-# Test files license
+## Test files license
 
 Some test files are taken from the [GraphQL
 spec](https://spec.graphql.org/draft/), and they are listed under
