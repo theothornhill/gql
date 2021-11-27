@@ -710,7 +710,7 @@
                (gather-nodes (fields node) (1+ indent-level))
                (add-indent (1- indent-level))))
 
-(defparser definition nil
+(defparser definition ()
   (cond 
     ;; We only peek here so that we can read the whole thing in their
     ;; respective handlers.  This way we can still assert with
@@ -741,7 +741,7 @@
     ((peek-description) (parse 'type-system-definition))
     (t                  (unexpected))))
 
-(defparser operation-type nil
+(defparser operation-type ()
   ;; Disallow other names than query, mutation and subscription.
   (with-expected-token 'name
     (string-case (value *token*)
@@ -750,38 +750,38 @@
       ("subscription" "Subscription")
       (t              (unexpected *token*)))))
 
-(defparser selection nil
+(defparser selection ()
   (if (peek 'spread)
       (parse 'fragment)
       (parse 'field)))
 
-(defparser fragment nil
+(defparser fragment ()
   (expect-token 'spread)
   (let ((type-condition-p (expect-optional-keyword "on")))
     (if (and (not type-condition-p) (peek 'name))
         (parse 'fragment-spread)
         (parse 'inline-fragment :type-condition-p type-condition-p))))
 
-(defparser fragment-name nil
+(defparser fragment-name ()
   (if (string= (value *token*) "on")
       (unexpected)
       (parse 'name)))
 
-(defparser arguments nil
+(defparser arguments ()
   (optional-many
    'paren-l
    (if constp 'const-argument 'argument)
    'paren-r))
 
-(defparser const-argument nil
+(defparser const-argument ()
   (make-node 'argument
     :name (parse 'name)
     :value (expect-then-parse 'colon 'value :constp t)))
 
-(defparser variable-definitions nil
+(defparser variable-definitions ()
   (optional-many 'paren-l 'variable-definition 'paren-r))
 
-(defparser value nil
+(defparser value ()
   (case (kind *token*)
     (bracket-l
      (parse 'list-value :constp constp))
@@ -804,14 +804,14 @@
      (unless constp (parse 'var)))
     (t (unexpected))))
 
-(defparser directives nil
+(defparser directives ()
   (loop
     :with directives
     :while (peek 'at)
     :do (push (parse 'directive :constp constp) directives)
     :finally (return (nreverse directives))))
 
-(defparser type-reference nil
+(defparser type-reference ()
   (let ((ty (if (expect-optional-token 'bracket-l)
                 (parse 'list-type)
                 (parse 'named-type))))
@@ -819,35 +819,35 @@
         (parse 'non-null-type :ty ty)
         ty)))
 
-(defparser description nil
+(defparser description ()
   (when (peek-description)
     (parse 'string-value)))
 
-(defparser implements-interfaces nil
+(defparser implements-interfaces ()
   (when (expect-optional-keyword "implements")
     (delimited-many 'amp 'named-type)))
 
-(defparser fields-definition nil
+(defparser fields-definition ()
   (optional-many 'brace-l 'field-definition 'brace-r))
 
-(defparser argument-definitions nil
+(defparser argument-definitions ()
   (optional-many 'paren-l 'input-value-definition 'paren-r))
 
-(defparser default-value nil
+(defparser default-value ()
   (when (expect-optional-token 'equals)
     (parse 'value :constp t)))
 
-(defparser union-member-types nil
+(defparser union-member-types ()
   (when (expect-token 'equals)
     (delimited-many 'pipe 'named-type)))
 
-(defparser enum-values nil
+(defparser enum-values ()
   (optional-many 'brace-l 'enum-value-definition 'brace-r))
 
-(defparser input-fields-definition nil
+(defparser input-fields-definition ()
   (optional-many 'brace-l 'input-value-definition 'brace-r))
 
-(defparser directive-locations nil
+(defparser directive-locations ()
   (delimited-many 'pipe 'directive-location))
 
 (defvar *executable-directive-location*
@@ -858,7 +858,7 @@
   '("schema" "scalar" "object" "field_definition" "argument_definition"
     "interface" "union" "enum" "enum_value" "input_object" "input_field_definition"))
 
-(defparser directive-location nil
+(defparser directive-location ()
   (let ((name (parse 'name)))
     (if (some (lambda (x) (string-equal (name name) x))
               (append
