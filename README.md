@@ -1,12 +1,8 @@
-[Project](https://sr.ht/~theo/gql/) | [Git](https://git.sr.ht/~theo/gql) | [Lists](https://sr.ht/~theo/gql/lists) | [Tracker](https://todo.sr.ht/~theo/gql)
+[Project](https://sr.ht/~theo/gql/) | [Git](https://git.sr.ht/~theo/gql) | [Lists](https://sr.ht/~theo/gql/lists) | [Tracker](https://todo.sr.ht/~theo/gql) | [Documentation](https://man.sr.ht/~theo/gql/)
 
 [![builds.sr.ht status](https://builds.sr.ht/~theo/gql/commits/.build.yml.svg)](https://builds.sr.ht/~theo/gql/commits/.build.yml?)
 
 # GraphQL for Common Lisp
-
-## Documentation
-
-Documentation can be found at the [wiki](https://man.sr.ht/~theo/gql/)
 
 ## Contributing
 
