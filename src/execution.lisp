@@ -28,11 +28,6 @@
                        variable-values
                        &optional
                          (visited-fragments nil))
-  "Collect all fields from a `selection-set'.
-  OBJECT-TYPE is the type of the current object. SELECTION-SET is a
-`selection-set'.  VARIABLE-VALUES are all the variables supplied with the
-`document'.  VISITED-FRAGMENTS is a list of the currently visited fragments.  It
-is an accumulator of the current state."
   ;; https://spec.graphql.org/draft/#CollectFields()
   (declare (type list visited-fragments))
   (loop
