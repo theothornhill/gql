@@ -108,12 +108,8 @@ is an accumulator of the current state."
               (typep (nameof type) 'built-in-scalar))))))
 
 (declaim (ftype (function (operation-definition document hash-table t) hash-table) execute-query))
-(defun execute-query (query schema variable-values initial-value)
+(defun execute-query (query variable-values initial-value)
   ;; TODO: https://spec.graphql.org/draft/#sec-Query
-  ;;
-  ;; TODO: Still with the schema.  I think we can get away without the dynamic
-  ;; var.
-  (declare (ignorable schema))
   (let ((query-type (gethash "Query" *all-types*)))
     (check-type query-type object-type-definition)
     (with-slots (selection-set) query
@@ -132,23 +128,24 @@ is an accumulator of the current state."
 (defun unsubscribe (response-stream)
   ;; TODO: https://spec.graphql.org/draft/#Unsubscribe()
   (declare (ignorable response-stream))
-  t)
+  (gql-error "TODO: unsubscribe not implemented"))
 
 (defun execute-selection-set (selection-set object-type object-value variable-values)
   ;; TODO: https://spec.graphql.org/draft/#sec-Executing-Selection-Sets
-  (declare (ignorable object-value))
   (let ((results (make-hash-table :test #'equal)))
     (maphash
      (lambda (response-key fields)
-       (let* ((field-name (name-or-alias (car fields)))
-              ( ;; TODO: This should be the actual type as defined on the
-                ;; object-type-definition.  Maybe make an algo for that?
-               field-type t))
-         (declare (ignorable field-name))
-         (when field-type
-           (sethash (execute-field object-type object-value field-type fields variable-values)
-                    response-key
-                    results))))
+       (let* (;; TODO: This should be unaffected if an alias is used.  What does
+              ;; that mean?
+              (field-name (nameof (car fields)))
+              (field-definition
+                (car (remove-if-not (lambda (obj) (string= (nameof obj) field-name))
+                                    (gethash (nameof object-type) *all-types*)))))
+         (with-slots (ty) field-definition
+           (when ty
+             (sethash (execute-field object-type object-value ty fields variable-values)
+                      response-key
+                      results)))))
      (collect-fields object-type selection-set variable-values))
     results))
 
