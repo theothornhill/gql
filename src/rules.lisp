@@ -41,7 +41,7 @@
     :for subscription-type = (operation-type subscription)
     :for selection-set = (selection-set subscription)
     :for grouped-field-set = (collect-fields subscription-type
-                                             selection-set
+                                             (selections selection-set)
                                              nil
                                              nil)
     :unless (= (hash-table-count grouped-field-set) 1)

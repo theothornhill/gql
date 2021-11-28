@@ -9,7 +9,7 @@
            (operation (car (gql::definitions document)))
            (operation-type (gql::operation-type operation))
            (selection-set (gql::selection-set operation))
-           (result (gql::collect-fields operation-type selection-set nil nil)))
+           (result (gql::collect-fields operation-type (gql::selections selection-set) nil nil)))
       (ok (= (hash-table-count result) 2))
       (ok (= (length (gethash "a" result)) 2))
       (ok (= (length (gethash "b" result)) 1))))

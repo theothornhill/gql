@@ -33,7 +33,7 @@
   (loop
     :with fragments = (get-types 'fragment-definition *schema*)
     :with grouped-fields = (make-hash-table :test #'equal)
-    :for selection :in (selections selection-set)
+    :for selection :in selection-set
     :do (unless (skippable-field-p (directives selection))
           (with-slots (kind name) selection
             (ecase kind
@@ -49,14 +49,14 @@
                            (when (fragment-type-applies-p object-type type-condition)
                              (with-slots (selection-set) fragment
                                (maphash (lambda (key value) (sethash value key grouped-fields))
-                                        (collect-fields object-type selection-set variable-values visited-fragments)))))))))))
+                                        (collect-fields object-type (selections selection-set) variable-values visited-fragments)))))))))))
               (inline-fragment
                (with-slots (type-condition) selection
                  (unless (and (not (null type-condition))
                               (not (fragment-type-applies-p object-type type-condition)))
                    (with-slots (selection-set) selection
                      (maphash (lambda (key value) (sethash value key grouped-fields))
-                              (collect-fields object-type selection-set variable-values visited-fragments)))))))))
+                              (collect-fields object-type (selections selection-set) variable-values visited-fragments)))))))))
     :finally (return grouped-fields)))
 
 (defun get-operation (document &optional operation-name)
@@ -105,7 +105,7 @@
     (with-slots (selection-set) query
       (let ((results (make-hash-table :test #'equal)))
         (setf (gethash "data" results)
-              (execute-selection-set selection-set query-type initial-value variable-values))))))
+              (execute-selection-set (selections selection-set) query-type initial-value variable-values))))))
 
 (defun execute-mutation (operation coerced-vars initial-value)
   (declare (ignorable operation coerced-vars initial-value))
@@ -310,5 +310,7 @@
     :for field :in fields
     :for field-selection-set = (selection-set field)
     :when field-selection-set
-      :do (setf selection-set (append selection-set field-selection-set))
-    :finally (return selection-set)))
+      :do (loop
+            :for selection :in (selections field-selection-set)
+            :do (push selection selection-set))
+    :finally (return (nreverse selection-set))))
