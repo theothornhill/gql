@@ -25,7 +25,6 @@
            (member (nameof fragment-type) members :test #'string=))))
       (t nil))))
 
-(declaim (ftype (function (string selection-set list &optional list) hash-table) collect-fields))
 (defun collect-fields (object-type
                        selection-set
                        variable-values
@@ -39,7 +38,7 @@ is an accumulator of the current state."
   ;; https://spec.graphql.org/draft/#CollectFields()
   (declare (type list visited-fragments))
   (loop
-    :with fragments = (get-types 'fragment-definition)
+    :with fragments = (get-types 'fragment-definition *schema*)
     :with grouped-fields = (make-hash-table :test #'equal)
     :for selection :in (selections selection-set)
     :do (unless (skippable-field-p (directives selection))
@@ -68,7 +67,7 @@ is an accumulator of the current state."
     :finally (return grouped-fields)))
 
 (defun get-operation (document &optional operation-name)
-  ;; TODO: Still with the *schema*.
+  ;; TODO: https://spec.graphql.org/draft/#GetOperation()
   (cond
     ((null operation-name)
      (let ((operation
@@ -79,8 +78,7 @@ is an accumulator of the current state."
            (gql-error "Need to raise a request error: https://spec.graphql.org/draft/#GetOperation()"))))
     (t
      (let ((operation
-             (gethash operation-name
-                      (get-types 'operation-definition))))
+             (gethash operation-name (get-types 'operation-definition document))))
        (if operation operation
            (gql-error "Need to raise a request error: https://spec.graphql.org/draft/#GetOperation()"))))))
 
@@ -106,7 +104,7 @@ is an accumulator of the current state."
               (typep (kind possible-type) 'output-types)
               (typep (nameof type) 'built-in-scalar))))))
 
-(declaim (ftype (function (operation-definition document hash-table t) hash-table) execute-query))
+(declaim (ftype (function (operation-definition hash-table t) hash-table) execute-query))
 (defun execute-query (query variable-values initial-value)
   ;; TODO: https://spec.graphql.org/draft/#sec-Query
   (let ((query-type (gethash "Query" *all-types*)))
@@ -116,12 +114,12 @@ is an accumulator of the current state."
         (setf (gethash "data" results)
               (execute-selection-set selection-set query-type initial-value variable-values))))))
 
-(defun execute-mutation (operation schema coerced-vars initial-value)
-  (declare (ignorable operation schema coerced-vars initial-value))
+(defun execute-mutation (operation coerced-vars initial-value)
+  (declare (ignorable operation coerced-vars initial-value))
   (gql-error "TODO: execute-mutation not implemented"))
 
-(defun subscribe (operation schema coerced-vars initial-value)
-  (declare (ignorable operation schema coerced-vars initial-value))
+(defun subscribe (operation coerced-vars initial-value)
+  (declare (ignorable operation coerced-vars initial-value))
   (gql-error "TODO: subscribe not implemented"))
 
 (defun unsubscribe (response-stream)
@@ -139,7 +137,9 @@ is an accumulator of the current state."
               (field-name (nameof (car fields)))
               (field-definition
                 (find-if (lambda (obj) (string= (nameof obj) field-name))
-                         (gethash (nameof object-type) *all-types*))))
+                         ;; TODO: Just doing fields here is wrong - that surely
+                         ;; cannot be the only alternative here?
+                         (fields (gethash (nameof object-type) *all-types*)))))
          (with-slots (ty) field-definition
            (when ty
              (sethash (execute-field object-type object-value ty fields variable-values)
@@ -148,13 +148,13 @@ is an accumulator of the current state."
      (collect-fields object-type selection-set variable-values))
     results))
 
-(declaim (ftype (function (object-type-definition field hash-table) hash-table) coerce-args))
 (defun coerce-args (object-type field variable-values)
   ;; TODO: https://spec.graphql.org/draft/#sec-Coercing-Field-Arguments
   (loop
     :with coerced-values = (make-hash-table :test #'equal)
     :for argument-values = (arguments field)
-    :for field-name = (name-or-alias field)
+    :for field-name = (nameof field)
+    ;; TODO: This smells fishy
     :for argument-definitions = (car (fields object-type))
     :for argument-definition :in argument-definitions
     :do (let ((argument-name (name-or-alias argument-definition))
@@ -214,7 +214,7 @@ is an accumulator of the current state."
             (lambda (result-item)
               (complete-value (ty field-type) fields result-item variable-values))
             result)))
-      (t
+      (named-type
        (let ((field-definition (gethash (nameof field-type) *all-types*)))
          ;; TODO: Maybe check for presentness rather than nil?
          (if (typep (nameof field-type) 'built-in-scalar)
@@ -229,15 +229,15 @@ is an accumulator of the current state."
                 (execute-selection-set
                  (merge-selection-sets fields)
                  (if (typep field-definition 'object-type-definition)
-                     field-type
-                     (resolve-abstract-type field-type result))
+                     field-definition
+                     (resolve-abstract-type field-definition result))
                  result
                  variable-values)))))))))
 
 (defun coerce-result (leaf-type value)
   ;; TODO: https://spec.graphql.org/draft/#CoerceResult()
   ;; Coerce NONE OF THE THINGS!
-  (format nil "~a ~a" leaf-type value))
+  (format nil "~a ~a" (nameof leaf-type) value))
 
 (defun resolve-abstract-type (abstract-type object-value)
   ;; TODO: https://spec.graphql.org/draft/#ResolveAbstractType()
@@ -282,17 +282,14 @@ is an accumulator of the current state."
                          (sethash coerced-value var-name coerced-vars)))))))
       :finally (return coerced-vars))))
 
-(defun execute-request (schema document operation-name variable-values initial-value)
+(defun execute-request (document operation-name variable-values initial-value)
   ;; https://spec.graphql.org/draft/#sec-Executing-Requests
-  ;;
-  ;; TODO: Still with the *schema*.  This function is supplied a schema as an
-  ;; argument as defined in the spec, but for now we use the global thing.
   (let* ((operation (get-operation document operation-name))
-         (coerced-vars (coerce-vars schema operation variable-values)))
+         (coerced-vars (coerce-vars document operation variable-values)))
     (string-case (operation-type operation)
-      ("Query"        (execute-query operation schema coerced-vars initial-value))
-      ("Mutation"     (execute-mutation operation schema coerced-vars initial-value))
-      ("Subscription" (subscribe operation schema coerced-vars initial-value)))))
+      ("Query"        (execute-query operation coerced-vars initial-value))
+      ("Mutation"     (execute-mutation operation coerced-vars initial-value))
+      ("Subscription" (subscribe operation coerced-vars initial-value)))))
 
 (defun execute-subscription-event (subscription schema variable-values initial-value)
   ;; TODO: https://spec.graphql.org/draft/#ExecuteSubscriptionEvent()

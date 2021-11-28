@@ -29,12 +29,12 @@
     :for v :being :each :hash-key :of fields
       :thereis (uiop:string-prefix-p "__" v)))
 
-(defun get-types (node)
+(defun get-types (node document)
   "Return a hash-table of type->type-node.
 Relies on `*schema*' being set."
   ;; TODO: How shall we access/use *schema*?  Now we just assume it is
   ;; dynamically bound
-  (with-slots (definitions) *schema*
+  (with-slots (definitions) document
     (let ((node-table (make-hash-table :test #'equal))
           (nodes
             (remove-if-not
