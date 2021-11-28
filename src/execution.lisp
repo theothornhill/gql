@@ -6,20 +6,18 @@
     (setf (gethash key table) (append (gethash key table) items))))
 
 (defun fragment-type-applies-p (object-type fragment-type)
-  ;; TODO: We need to check all kinds of type designators.  Non-null-types,
-  ;; named-types and list-type, at least.
+  ;; TODO: https://spec.graphql.org/draft/#DoesFragmentTypeApply()
   (let ((type-definition (gethash object-type *all-types*)))
-    (cond
-      (;; TODO: This early exit is probably not good enough.  Why is it ok to do
-       ;; this when we _don't_ get a hit?
-       (null type-definition) t)
-      ((eq (kind type-definition) 'object-type-definition)
+    (typecase type-definition
+      (;; TODO: Remove this somehow.  It crashes tests.  No big problem?
+       null t)
+      (object-type-definition
        (string= (nameof type-definition)
                 (nameof fragment-type)))
-      ((eq (kind type-definition) 'interface-type-definition)
+      (interface-type-definition
        (string= (nameof type-definition)
                 (nameof fragment-type)))
-      ((eq (kind type-definition) 'union-type-definition)
+      (union-type-definition
        (with-slots (union-members) type-definition
          (let ((members (mapcar (lambda (x) (nameof x)) union-members)))
            (member (nameof fragment-type) members :test #'string=))))
