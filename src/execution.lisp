@@ -236,13 +236,13 @@ is an accumulator of the current state."
 
 (defun coerce-result (leaf-type value)
   ;; TODO: https://spec.graphql.org/draft/#CoerceResult()
-  (declare (ignorable leaf-type value))
-  (gql-error "TODO: coerce-result not implemented"))
+  ;; Coerce NONE OF THE THINGS!
+  (format nil "~a ~a" leaf-type value))
 
 (defun resolve-abstract-type (abstract-type object-value)
   ;; TODO: https://spec.graphql.org/draft/#ResolveAbstractType()
-  (declare (ignorable abstract-type object-value))
-  (gql-error "TODO: resolve-abstract-type not implemented"))
+  ;; Resolve NONE OF THE THINGS!
+  (format nil "~a ~a" abstract-type object-value))
 
 (defun execute-field (object-type object-value field-type fields variable-values)
   ;; TODO: https://spec.graphql.org/draft/#sec-Executing-Fields
