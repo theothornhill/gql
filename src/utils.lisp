@@ -90,7 +90,6 @@ Relies on `*schema*' being set."
         (name name))))
 
 (defun nameof (type)
-  (check-type type named-type)
   (name (name type)))
 
 (defmacro with-schema (schema &body body)
