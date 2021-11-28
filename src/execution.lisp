@@ -140,9 +140,8 @@ is an accumulator of the current state."
                          (fields (gethash (nameof object-type) *all-types*)))))
          (with-slots (ty) field-definition
            (when ty
-             (sethash (execute-field object-type object-value ty fields variable-values)
-                      response-key
-                      results)))))
+             (setf (gethash response-key results)
+                   (execute-field object-type object-value ty fields variable-values))))))
      (collect-fields object-type selection-set variable-values))
     results))
 
@@ -172,7 +171,7 @@ is an accumulator of the current state."
           (cond
             (;; including 'null' as a default value
              (and (null has-value-p) default-value)
-             (sethash default-value argument-name coerced-values))
+             (setf (gethash argument-name coerced-values) default-value))
             ((and (eq (kind argument-type) 'non-null-type)
                   (or (null has-value-p)
                       (null value)))
@@ -181,14 +180,14 @@ is an accumulator of the current state."
              (cond
                ((null value)
                 ;; TODO: Is nil ok here?
-                (sethash nil argument-name coerced-values))
+                (setf (gethash argument-name coerced-values) nil))
                ((eq (kind argument-value) 'var)
-                (sethash value argument-name coerced-values))
+                (setf (gethash argument-name coerced-values) value))
                (t
                 (let (;; TODO: Coerce the val first for the else part,
                       ;; find out how
                       (coerced-value t))
-                  (sethash coerced-value argument-name coerced-values)))))))
+                  (setf (gethash argument-name coerced-values) coerced-value)))))))
     :finally (return coerced-values)))
 
 (defun resolve-field-value (object-type object-value field-name arg-values)
@@ -267,17 +266,17 @@ is an accumulator of the current state."
               (multiple-value-bind (val val-p) (gethash var-name variable-values)
                 (cond
                   ((and (null val-p) default-value)
-                   (sethash default-value var-name coerced-vars))
+                   (setf (gethash var-name coerced-vars) default-value))
                   ((and (eq (kind var-type) 'non-null-type)
                         (or (null val-p) (null val)))
                    (gql-error "Need to raise a request error for coerce-vars"))
                   (val-p
                    (if (null val)
-                       (sethash nil var-name coerced-vars)
+                       (setf (gethash var-name coerced-vars) nil)
                        (let (;; TODO: Coerce the val first for the else part,
                              ;; find out how
                              (coerced-value t))
-                         (sethash coerced-value var-name coerced-vars)))))))
+                         (setf (gethash var-name coerced-vars) coerced-value)))))))
       :finally (return coerced-vars))))
 
 (defun execute-request (document operation-name variable-values initial-value)
