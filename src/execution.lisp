@@ -202,6 +202,10 @@ is an accumulator of the current state."
 (defun complete-value (field-type fields result variable-values)
   ;; TODO: https://spec.graphql.org/draft/#CompleteValue()
   (when result
+    ;; TODO: We cannot check for KIND here because we need the resolved type
+    ;; from *all-types*.  Don't we..?  I mean, we cannot possibly check for
+    ;; "Alien" here without knowing what it is.  And what about leaves like
+    ;; ENUM?  Can we handle that easily?
     (ecase (kind field-type)
       (non-null-type
        (let ((completed-result
