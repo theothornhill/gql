@@ -15,6 +15,10 @@ We made some [assumptions](wiki/assumptions.md) during development
 
 Descriptions for how we implement the [language](wiki/language.md)
 
+# How the [fuck](wiki/how.md)
+
+How do I do anything here?
+
 # api
 
 ```lisp
