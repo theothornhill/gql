@@ -1,6 +1,5 @@
 (in-package #:gql)
 
-
 (defun sethash (item key table)
   ;; TODO: Do we need to check for present-ness if nil is just appendable?
   (let ((items (if (listp item) item (list item))))
@@ -15,15 +14,15 @@
        ;; this when we _don't_ get a hit?
        (null type-definition) t)
       ((eq (kind type-definition) 'object-type-definition)
-       (string= (name (name type-definition))
-                (name (name fragment-type))))
+       (string= (nameof type-definition)
+                (nameof fragment-type)))
       ((eq (kind type-definition) 'interface-type-definition)
-       (string= (name (name type-definition))
-                (name (name fragment-type))))
+       (string= (nameof type-definition)
+                (nameof fragment-type)))
       ((eq (kind type-definition) 'union-type-definition)
        (with-slots (union-members) type-definition
-         (let ((members (mapcar (lambda (x) (name (name x))) union-members)))
-           (member (name (name fragment-type)) members :test #'string=))))
+         (let ((members (mapcar (lambda (x) (nameof x)) union-members)))
+           (member (nameof fragment-type) members :test #'string=))))
       (t nil))))
 
 (declaim (ftype (function (string selection-set list &optional list) hash-table) collect-fields))
@@ -266,7 +265,7 @@ is an accumulator of the current state."
     (loop
       :with coerced-vars = (make-hash-table :test #'equal)
       :for variable :in variable-definitions
-      :for var-name = (name (name (var variable)))
+      :for var-name = (nameof (var variable))
       :for var-type = (var-type variable)
       :when (input-type-p var-type)
         :do (with-slots (default-value) variable

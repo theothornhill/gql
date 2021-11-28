@@ -42,7 +42,7 @@ Relies on `*schema*' being set."
              definitions)))
       (dolist (node nodes node-table)
         (if (name node)
-            (setf (gethash (name (name node)) node-table) node)
+            (setf (gethash (nameof node) node-table) node)
             ;; TODO: In this case we are probably an anonymous operation-definition
             (setf (gethash (operation-type node) node-table) node))))))
 
@@ -86,7 +86,7 @@ Relies on `*schema*' being set."
   ;; TODO: This one is probably no good
   (with-slots (alias name) field
     (if alias
-        (name (name alias))
+        (nameof alias)
         (name name))))
 
 (defun nameof (type)
