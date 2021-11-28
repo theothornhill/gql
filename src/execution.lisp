@@ -201,41 +201,38 @@ is an accumulator of the current state."
 (defun complete-value (field-type fields result variable-values)
   ;; TODO: https://spec.graphql.org/draft/#CompleteValue()
   (when result
-    ;; TODO: We cannot check for KIND here because we need the resolved type
-    ;; from *all-types*.  Don't we..?  I mean, we cannot possibly check for
-    ;; "Alien" here without knowing what it is.  And what about leaves like
-    ;; ENUM?  Can we handle that easily?
     (ecase (kind field-type)
       (non-null-type
        (let ((completed-result
-               (complete-value (ty field-type)
-                               fields
-                               result
-                               variable-values)))
+               (complete-value (ty field-type) fields result variable-values)))
          (if completed-result completed-result
              (gql-error "Need to raise a field error here"))))
       (list-type
-       (if (null (listp result)) ;; TODO: What type is this really?
+       (if (null (listp result)) ;; TODO: What type is result really?
            (gql-error "Need to raise a field error here")
            (mapcar
             (lambda (result-item)
               (complete-value (ty field-type) fields result-item variable-values))
             result)))
-      (;; TODO: Are these the correct types?
-       (scalar-type-definition
-        enum-type-definition)
-       (coerce-result field-type result))
-      (;; TODO: Are these the correct types?
-       (object-type-definition
-        interface-type-definition
-        union-type-definition)
-       (execute-selection-set
-        (merge-selection-sets fields)
-        (if (eq (kind field-type) 'object-type)
-            field-type
-            (resolve-abstract-type field-type result))
-        result
-        variable-values)))))
+      (t
+       (let ((field-definition (gethash (nameof field-type) *all-types*)))
+         ;; TODO: Maybe check for presentness rather than nil?
+         (if (typep (nameof field-type) 'built-in-scalar)
+             (coerce-result field-type result)
+             (etypecase field-definition
+               ((or scalar-type-definition
+                    enum-type-definition)
+                (coerce-result field-type result))
+               ((or object-type-definition
+                    interface-type-definition
+                    union-type-definition)
+                (execute-selection-set
+                 (merge-selection-sets fields)
+                 (if (typep field-definition 'object-type-definition)
+                     field-type
+                     (resolve-abstract-type field-type result))
+                 result
+                 variable-values)))))))))
 
 (defun coerce-result (leaf-type value)
   ;; TODO: https://spec.graphql.org/draft/#CoerceResult()
