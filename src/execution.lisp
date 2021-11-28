@@ -139,8 +139,8 @@ is an accumulator of the current state."
               ;; that mean?
               (field-name (nameof (car fields)))
               (field-definition
-                (car (remove-if-not (lambda (obj) (string= (nameof obj) field-name))
-                                    (gethash (nameof object-type) *all-types*)))))
+                (find-if (lambda (obj) (string= (nameof obj) field-name))
+                         (gethash (nameof object-type) *all-types*))))
          (with-slots (ty) field-definition
            (when ty
              (sethash (execute-field object-type object-value ty fields variable-values)
