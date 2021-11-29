@@ -42,7 +42,7 @@
     :for selection-set = (selection-set subscription)
     :for grouped-field-set = (collect-fields subscription-type
                                              (selections selection-set)
-                                             nil
+                                             (make-hash-table)
                                              nil)
     :unless (= (hash-table-count grouped-field-set) 1)
       :do (make-error "A subscription must have exactly one entry." subscription)
