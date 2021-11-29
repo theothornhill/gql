@@ -136,9 +136,7 @@
   (let ((results (make-hash-table :test #'equal)))
     (maphash
      (lambda (response-key fields)
-       (let* (;; TODO: This should be unaffected if an alias is used.  What does
-              ;; that mean?
-              (field-name (name-or-alias (car fields)))
+       (let* ((field-name (name-or-alias (car fields)))
               (field-definition
                 (find-if (lambda (obj) (string= (nameof obj) field-name))
                          ;; TODO: Just doing fields here is wrong - that surely
