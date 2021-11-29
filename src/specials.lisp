@@ -15,6 +15,9 @@ being set to an instance of GQL:TOKEN.")
 (defvar *debug-print* nil
   "Set to t if you want to debug the call stack for the parse tree.")
 
+(defvar *fake-db* nil
+  "Fake database for stuff when debugging.  Put whatever you need here.")
+
 (defvar *schema* nil
   "The current schema in scope for validation and execution.
 Note: This is probably not a really good way to do things, as we need to

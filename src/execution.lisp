@@ -4,7 +4,9 @@
   (:documentation "A function to resolve arbitrary values."))
 
 (defmethod resolve (object-type object-value field-name arg-values)
-  (values object-type object-value field-name arg-values))
+  (declare (ignorable object-type object-value field-name arg-values))
+  ;; TODO: This is obviously a bad idea, but something happened at least.
+  'resolved)
 
 (defun sethash (item key table)
   ;; TODO: Do we need to check for present-ness if nil is just appendable?
