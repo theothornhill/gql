@@ -15,8 +15,6 @@
         directives))
 
 (defun get-subscriptions ()
-  ;; TODO: How shall we access/use *schema*?  Now we just assume it is
-  ;; dynamically bound
   (remove-if-not
    (lambda (x)
      (and (eq (kind x) 'operation-definition)
@@ -30,10 +28,9 @@
       :thereis (uiop:string-prefix-p "__" v)))
 
 (defun get-types (node document)
-  "Return a hash-table of type->type-node.
-Relies on `*schema*' being set."
-  ;; TODO: How shall we access/use *schema*?  Now we just assume it is
-  ;; dynamically bound
+  "Get specific NODE from a DOCUMENT.
+This is not tied to the `*schema*', so that it is usable for other kinds of
+documents."
   (with-slots (definitions) document
     (let ((node-table (make-hash-table :test #'equal))
           (nodes
@@ -47,10 +44,7 @@ Relies on `*schema*' being set."
             (setf (gethash (operation-type node) node-table) node))))))
 
 (defun all-types ()
-  "Return a hash-table of all type->type-node.
-Relies on `*schema*' being set."
-  ;; TODO: How shall we access/use *schema*?  Now we just assume it is
-  ;; dynamically bound
+  "Get all user defined types within a schema."
   (unless *schema*
     (gql-error "Schema not bound, cannot get all-types.  Consider your options."))
   (with-slots (definitions) *schema*
