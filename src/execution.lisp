@@ -136,12 +136,7 @@
   (let ((results (make-hash-table :test #'equal)))
     (maphash
      (lambda (response-key fields)
-       (let* ((field-name (name-or-alias (car fields)))
-              (field-definition
-                (find-if (lambda (obj) (string= (nameof obj) field-name))
-                         ;; TODO: Just doing fields here is wrong - that surely
-                         ;; cannot be the only alternative here?
-                         (fields (gethash (nameof object-type) *all-types*)))))
+       (let* ((field-definition (get-field-definition (car fields) object-type)))
          (with-slots (ty) field-definition
            (when ty
              (setf (gethash response-key results)
@@ -254,11 +249,9 @@
            (resolve-field-value object-type object-value field-name arg-values)))
     (complete-value field-type fields resolved-value variable-values)))
 
-(declaim (ftype (function (document operation-definition hash-table) hash-table) coerce-vars))
-(defun coerce-vars (schema operation variable-values)
+(declaim (ftype (function (operation-definition hash-table) hash-table) coerce-vars))
+(defun coerce-vars (operation variable-values)
   ;; TODO: https://spec.graphql.org/draft/#CoerceVariableValues()
-  (declare (ignorable schema)) ;; The assumption about this schema is that it
-                               ;; should be used by the `execute-*' defuns
   (with-slots (variable-definitions) operation
     (loop
       :with coerced-vars = (make-hash-table :test #'equal)
@@ -286,7 +279,7 @@
 (defun execute-request (document operation-name variable-values initial-value)
   ;; https://spec.graphql.org/draft/#sec-Executing-Requests
   (let* ((operation (get-operation document operation-name))
-         (coerced-vars (coerce-vars document operation variable-values)))
+         (coerced-vars (coerce-vars operation variable-values)))
     (string-case (operation-type operation)
       ("Query"        (execute-query operation coerced-vars initial-value))
       ("Mutation"     (execute-mutation operation coerced-vars initial-value))

@@ -90,3 +90,8 @@ documents."
   `(let* ((*schema* ,schema)
           (*all-types* (all-types)))
      ,@body))
+
+(defun get-field-definition (field object-type)
+  (let ((field-name (name-or-alias field)))
+    (find-if (lambda (obj) (string= (nameof obj) field-name))
+             (fields (gethash (nameof object-type) *all-types*)))))
