@@ -105,17 +105,26 @@
     (with-slots (selection-set) query
       (let ((results (make-hash-table :test #'equal)))
         (setf (gethash "data" results)
-              (execute-selection-set (selections selection-set) query-type initial-value variable-values))))))
+              (execute-selection-set (selections selection-set) query-type initial-value variable-values))
+        (setf (gethash "errors" results) *errors*)
+        results))))
 
-(defun execute-mutation (operation coerced-vars initial-value)
-  (declare (ignorable operation coerced-vars initial-value))
+(declaim (ftype (function (operation-definition hash-table t) hash-table) execute-mutation))
+(defun execute-mutation (mutation variable-values initial-value)
   ;; TODO: https://spec.graphql.org/draft/#ExecuteMutation()
-  (gql-error "TODO: execute-mutation not implemented"))
+  (let ((mutation-type (gethash "Mutation" *all-types*)))
+    (check-type mutation-type object-type-definition)
+    (with-slots (selection-set) mutation
+      (let ((results (make-hash-table :test #'equal)))
+        (setf (gethash "data" results)
+              (execute-selection-set (selections selection-set) mutation-type initial-value variable-values))
+        (setf (gethash "errors" results) *errors*)
+        results))))
 
-(defun subscribe (operation coerced-vars initial-value)
-  (declare (ignorable operation coerced-vars initial-value))
+(defun subscribe (subscription variable-values initial-value)
   ;; TODO: https://spec.graphql.org/draft/#Subscribe()
-  (gql-error "TODO: subscribe not implemented"))
+  (let ((source-stream (create-source-event-stream subscription variable-values initial-value)))
+    (map-source-to-response-event source-stream subscription variable-values)))
 
 (defun unsubscribe (response-stream)
   ;; TODO: https://spec.graphql.org/draft/#Unsubscribe()
@@ -285,14 +294,14 @@
       ("Mutation"     (execute-mutation operation coerced-vars initial-value))
       ("Subscription" (subscribe operation coerced-vars initial-value)))))
 
-(defun execute-subscription-event (subscription schema variable-values initial-value)
+(defun execute-subscription-event (subscription variable-values initial-value)
   ;; TODO: https://spec.graphql.org/draft/#ExecuteSubscriptionEvent()
-  (declare (ignorable subscription schema variable-values initial-value))
+  (declare (ignorable subscription variable-values initial-value))
   t)
 
-(defun create-source-event-stream (subscription schema variable-values initial-value)
+(defun create-source-event-stream (subscription variable-values initial-value)
   ;; TODO: https://spec.graphql.org/draft/#CreateSourceEventStream()
-  (declare (ignorable subscription schema variable-values initial-value))
+  (declare (ignorable subscription variable-values initial-value))
   t)
 
 (defun resolve-field-event-stream (subscription-type root-value field-name argument-values)
@@ -300,9 +309,9 @@
   (declare (ignorable subscription-type root-value field-name argument-values))
   t)
 
-(defun map-source-to-response-event (source-stream subscription schema variable-values)
+(defun map-source-to-response-event (source-stream subscription variable-values)
   ;; TODO: https://spec.graphql.org/draft/#MapSourceToResponseEvent()
-  (declare (ignorable source-stream subscription schema variable-values))
+  (declare (ignorable source-stream subscription variable-values))
   t)
 
 (defun merge-selection-sets (fields)
