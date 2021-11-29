@@ -30,9 +30,10 @@
   (testing "merge-selection-sets should merge multiple fields"
     (with-schema (build-schema (asdf:system-relative-pathname 'gql-tests #p"t/test-files/validation-schema.graphql"))
       (let* ((res (gql::execute-request (build-schema " query { dog { name } dog { owner { name } } }") nil (make-hash-table) nil))
-             (dog-res (gethash "dog" res)))
+             (data (gethash "data" res))
+             (dog-res (gethash "dog" data)))
         (ok (typep res 'hash-table))
-        (ok (= (hash-table-count res) 1))
+        (ok (= (hash-table-count res) 2))
         (ok (= (hash-table-count dog-res) 2))
         (ok (gethash "name" dog-res))
         (ok (gethash "owner" dog-res))))))
