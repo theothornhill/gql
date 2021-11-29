@@ -1,5 +1,11 @@
 (in-package #:gql)
 
+(defgeneric resolve (object-type object-value field-name arg-values)
+  (:documentation "A function to resolve arbitrary values."))
+
+(defmethod resolve (object-type object-value field-name arg-values)
+  (values object-type object-value field-name arg-values))
+
 (defun sethash (item key table)
   ;; TODO: Do we need to check for present-ness if nil is just appendable?
   (let ((items (if (listp item) item (list item))))
@@ -191,8 +197,7 @@
 
 (defun resolve-field-value (object-type object-value field-name arg-values)
   ;; TODO: https://spec.graphql.org/draft/#ResolveFieldValue()
-  (declare (ignorable object-type object-value field-name arg-values))
-  t)
+  (resolve object-type object-value field-name arg-values))
 
 (defun complete-value (field-type fields result variable-values)
   ;; TODO: https://spec.graphql.org/draft/#CompleteValue()
