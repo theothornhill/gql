@@ -29,7 +29,7 @@
       (ok (gql::get-operation *schema* "Mutation"))))
   (testing "merge-selection-sets should merge multiple fields"
     (with-schema (build-schema (asdf:system-relative-pathname 'gql-tests #p"t/test-files/validation-schema.graphql"))
-      (let* ((res (gql::execute-request (build-schema " query { dog { name } dog { owner { name } } }") nil (make-hash-table) nil))
+      (let* ((res (gql::execute-request (build-schema "query { dog { name } dog { owner { name } } }") nil (make-hash-table) nil))
              (data (gethash "data" res))
              (dog-res (gethash "dog" data)))
         (ok (typep res 'hash-table))
@@ -39,11 +39,35 @@
         (ok (gethash "owner" dog-res)))))
   (testing "A query should handle alias"
     (with-schema (build-schema (asdf:system-relative-pathname 'gql-tests #p"t/test-files/validation-schema.graphql"))
-      (let* ((res (gql::execute-request (build-schema " query { dog { name owner { name: nameAlias } } }") nil (make-hash-table) nil))
+      (let* ((res (gql::execute-request (build-schema "query { dog { name owner { name: nameAlias } } }") nil (make-hash-table) nil))
              (data (gethash "data" res))
              (dog-res (gethash "dog" data)))
         (ok (typep res 'hash-table))
         (ok (= (hash-table-count res) 2))
         (ok (= (hash-table-count dog-res) 2))
         (ok (gethash "name" dog-res))
-        (ok (gethash "owner" dog-res))))))
+        (ok (gethash "owner" dog-res)))))
+  (testing "A query should handle alias"
+    (with-schema (build-schema (asdf:system-relative-pathname 'gql-tests #p"t/test-files/validation-schema.graphql"))
+      (let* ((res (gql::execute-request (build-schema "query { dog { name owner { name: nameAlias } } }") nil (make-hash-table) nil))
+             (data (gethash "data" res))
+             (dog-res (gethash "dog" data)))
+        (ok (typep res 'hash-table))
+        (ok (= (hash-table-count res) 2))
+        (ok (= (hash-table-count dog-res) 2))
+        (ok (gethash "name" dog-res))
+        (ok (gethash "owner" dog-res)))))
+  (testing "A query should handle variables and arguments"
+    (with-schema (build-schema (asdf:system-relative-pathname 'gql-tests #p"t/test-files/validation-schema.graphql"))
+      (let ((variable-values (make-hash-table :test #'equal)))
+        (setf (gethash "sit" variable-values) "SIT")
+        (let* ((res (gql::execute-request
+                     (build-schema "query x($sit: String) { dog { doesKnowCommand(dogCommand: $sit) } }")
+                     nil
+                     variable-values
+                     nil))
+               (data (gethash "data" res))
+               (dog (gethash "dog" data))
+               (command (gethash "doesKnowCommand" dog)))
+          (ok (string= command "Boolean RESOLVED")))))))
+

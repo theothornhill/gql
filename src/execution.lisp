@@ -152,27 +152,23 @@
      (collect-fields object-type selection-set variable-values))
     results))
 
-(defun coerce-args (object-type field variable-values)
+(defun coerce-argument-values (object-type field variable-values)
   ;; TODO: https://spec.graphql.org/draft/#sec-Coercing-Field-Arguments
+  (declare (optimize (debug 3)))
   (loop
     :with coerced-values = (make-hash-table :test #'equal)
     :for argument-values = (arguments field)
-    :for field-name = (nameof field)
-    ;; TODO: This smells fishy
-    :for argument-definitions = (car (fields object-type))
-    :for argument-definition :in argument-definitions
-    :do (let ((argument-name (name-or-alias argument-definition))
-              (argument-type (ty argument-definition))
-              (;; TODO: Where do I get this value??
-               default-value t)
-              (;; TODO: if argumentValues provides a value for the name argumentName
-               has-value-p nil)
-              (;; TODO: the value provided in argumentValues for the name argumentName
-               argument-value nil)
-              (value))
+    :for argument-definition :in (args (get-field-definition field object-type))
+    :do (let* ((argument-name (nameof argument-definition))
+               (argument-type (ty argument-definition))
+               (default-value (default-value argument-definition))
+               (argument (find-if (lambda (obj) (string= (nameof obj) argument-name)) argument-values))
+               (has-value-p (and argument t))
+               (argument-value (and has-value-p (value argument)))
+               (value))
           (if (eq (kind argument-value) 'var)
               (multiple-value-bind (val val-p)
-                  (gethash (name-or-alias argument-value) variable-values)
+                  (gethash (nameof argument-value) variable-values)
                 (setf value val has-value-p val-p))
               (setf value argument-value))
           (cond
@@ -191,11 +187,13 @@
                ((eq (kind argument-value) 'var)
                 (setf (gethash argument-name coerced-values) value))
                (t
-                (let (;; TODO: Coerce the val first for the else part,
-                      ;; find out how
-                      (coerced-value t))
+                (let (;; TODO: Coerce the val first for the else part, find out
+                      ;; how.  Values are likely to be coerced to strings or
+                      ;; numbers.  I'm sensing nil/bool troubles here.
+                      (coerced-value (format nil "~a" value)))
                   (setf (gethash argument-name coerced-values) coerced-value)))))))
     :finally (return coerced-values)))
+
 
 (defun resolve-field-value (object-type object-value field-name arg-values)
   ;; TODO: https://spec.graphql.org/draft/#ResolveFieldValue()
@@ -251,7 +249,7 @@
   ;; TODO: https://spec.graphql.org/draft/#sec-Executing-Fields
   (let* ((field (car fields))
          (field-name (name-or-alias field))
-         (arg-values (coerce-args object-type field variable-values))
+         (arg-values (coerce-argument-values object-type field variable-values))
          (resolved-value
            (resolve-field-value object-type object-value field-name arg-values)))
     (complete-value field-type fields resolved-value variable-values)))
@@ -278,8 +276,10 @@
                    (if (null val)
                        (setf (gethash var-name coerced-vars) nil)
                        (let (;; TODO: Coerce the val first for the else part,
-                             ;; find out how
-                             (coerced-value t))
+                             ;; find out how.  Values are likely to be coerced
+                             ;; to strings or numbers.  I'm sensing nil/bool
+                             ;; troubles here.
+                             (coerced-value (format nil "~a" val)))
                          (setf (gethash var-name coerced-vars) coerced-value)))))))
       :finally (return coerced-vars))))
 
