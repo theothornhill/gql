@@ -80,7 +80,7 @@ documents."
   ;; TODO: This one is probably no good
   (with-slots (alias name) field
     (if alias
-        (nameof alias)
+        (name alias)
         (name name))))
 
 (defun nameof (type)
