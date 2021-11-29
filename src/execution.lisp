@@ -109,10 +109,12 @@
 
 (defun execute-mutation (operation coerced-vars initial-value)
   (declare (ignorable operation coerced-vars initial-value))
+  ;; TODO: https://spec.graphql.org/draft/#ExecuteMutation()
   (gql-error "TODO: execute-mutation not implemented"))
 
 (defun subscribe (operation coerced-vars initial-value)
   (declare (ignorable operation coerced-vars initial-value))
+  ;; TODO: https://spec.graphql.org/draft/#Subscribe()
   (gql-error "TODO: subscribe not implemented"))
 
 (defun unsubscribe (response-stream)
