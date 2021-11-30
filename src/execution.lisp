@@ -190,7 +190,7 @@
                 (let (;; TODO: Coerce the val first for the else part, find out
                       ;; how.  Values are likely to be coerced to strings or
                       ;; numbers.  I'm sensing nil/bool troubles here.
-                      (coerced-value (format nil "~a" value)))
+                      (coerced-value value))
                   (setf (gethash argument-name coerced-values) coerced-value)))))))
     :finally (return coerced-values)))
 
@@ -238,12 +238,14 @@
 (defun coerce-result (leaf-type value)
   ;; TODO: https://spec.graphql.org/draft/#CoerceResult()
   ;; Coerce NONE OF THE THINGS!
-  (format nil "~a ~a" (nameof leaf-type) value))
+  (declare (ignorable leaf-type))
+  (format nil "~a" value))
 
 (defun resolve-abstract-type (abstract-type object-value)
   ;; TODO: https://spec.graphql.org/draft/#ResolveAbstractType()
   ;; Resolve NONE OF THE THINGS!
-  (format nil "~a ~a" abstract-type object-value))
+  (declare (ignorable abstract-type))
+  (format nil "~a" object-value))
 
 (defun execute-field (object-type object-value field-type fields variable-values)
   ;; TODO: https://spec.graphql.org/draft/#sec-Executing-Fields

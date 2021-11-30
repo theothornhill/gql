@@ -1,12 +1,12 @@
 (in-package #:gql-tests)
 
 (defun test-lexer-one-step (str)
-  (advance (make-lexer str)))
+  (gql::advance (gql::make-lexer str)))
 
 (defun test-lexer-two-steps (str)
-  (let ((lexer (make-lexer str)))
-    (advance lexer)
-    (advance lexer)))
+  (let ((lexer (gql::make-lexer str)))
+    (gql::advance lexer)
+    (gql::advance lexer)))
 
 (defun check-token (&key
                       str
@@ -34,15 +34,13 @@
   (ok (string-equal (generate (build-schema input)) output)))
 
 (defun validator-test (input &key no-schema)
-  (let* ((*schema*
-           (if no-schema
-               (build-schema input)
-               (build-schema (asdf:system-relative-pathname
-                              'gql-tests
-                              #p"t/test-files/validation-schema.graphql"))))
-         (*all-types* (gql::all-types))
-         (*errors* nil)
-         (*data* nil))
+  (with-schema (if no-schema
+                   (build-schema input)
+                   (build-schema (asdf:system-relative-pathname
+                                  'gql-tests
+                                  #p"t/test-files/validation-schema.graphql")))
+    (setf gql::*errors* nil)
+    (setf gql::*data* nil)
     (validate (build-schema input))))
 
 (defun validator-errors-p (input &key no-schema)

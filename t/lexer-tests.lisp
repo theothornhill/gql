@@ -3,7 +3,7 @@
 (deftest lexer
   (testing "Disallows uncommon control characters"
     (ok (signals (test-lexer-one-step (format nil "~c" #\U+0007))
-            'gql-simple-error)))
+            'gql::gql-simple-error)))
 
   (testing "Accepts BOM headers"
     (check-token :str (format nil "~c foo" #\U+FEFF)
@@ -219,7 +219,7 @@ line\"\"\"")
     (check-token :str "-1.123e-4 "   :kind 'gql::float :end 9 :value "-1.123e-4")
     (check-token :str "-1.123e+4 "   :kind 'gql::float :end 9 :value "-1.123e+4")
     (check-token :str "-1.123e4567 " :kind 'gql::float :end 11 :value "-1.123e4567")
-    (signals-with-check "4" gql-simple-error "Unexpected EOF"))
+    (signals-with-check "4" gql::gql-simple-error "Unexpected EOF"))
 
   (testing "Punctuation lexing"
     (check-token :str "!"   :kind 'gql::bang)
