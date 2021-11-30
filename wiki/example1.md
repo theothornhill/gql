@@ -79,7 +79,7 @@ Very nice.  The last thing is now to eval this line in your repl, from inside of
 (hunchentoot:start *server*)
 ```
 
-Now, proceed to [localhost:3000/home](localhost:3000/home), then start typing
+Now, proceed to [localhost:3000/home](http://localhost:3000/home), then start typing
 queries in the url like so:
 
 ```
