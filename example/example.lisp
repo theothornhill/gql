@@ -1,5 +1,5 @@
 (eval-when (:compile-toplevel :load-toplevel :execute)
-  (ql:quickload '(:gql :cl-json :drakma :hunchentoot) :silent t))
+  (ql:quickload '(:gql :cl-json :hunchentoot) :silent t))
 
 (defpackage :gql-exampleapp
   (:use :cl :gql))
@@ -24,8 +24,9 @@
 
 (hunchentoot:define-easy-handler (home :uri "/home") (item)
   (setf (hunchentoot:content-type*) "text/plain")
-  (with-schema *example-schema*
-    (let ((result (execute-request (query item) nil *variable-values* nil)))
-      (format nil "~a~%" (cl-json:encode-json-to-string result)))))
+  (when item
+    (with-schema *example-schema*
+      (let ((result (execute-request (query item) nil *variable-values* nil)))
+        (format nil "~a~%" (cl-json:encode-json-to-string result))))))
 
 ;; Eval this when you want to run the app (hunchentoot:start *server*)
