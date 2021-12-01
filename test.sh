@@ -8,4 +8,4 @@ sbcl --non-interactive \
      --eval '(ql:quickload :gql)' \
      --eval '(ql:quickload :gql-tests)' \
      --eval '(ql:quickload :gql-tests)' \
-     --eval '(multiple-value-bind (foo bar fails) (rove:run :gql-tests) (when fails (sb-ext:exit :code 1)))'
+     --eval '(multiple-value-bind (foo bar fails) (rove:run :gql-tests :style :dot) (when fails (sb-ext:exit :code 1)))'
