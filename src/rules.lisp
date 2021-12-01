@@ -21,18 +21,19 @@
        (loop
          :for v :being :each :hash-value :of operations
          :when (> (length v) 1)
-           ;; What format to push here? Maybe we should push some more metadata
-           ;; as to what happened?
            :do (make-error "Each operation must have a unique name." v))))
 
 (defun anonymous-operation-definition-p (definitions)
   ;; https://spec.graphql.org/draft/#sec-Anonymous-Operation-Definitions
   (loop
+    :with anonymous = nil
     :for definition :in definitions
     :for name-node = (name definition)
-    :when (and (null name-node)
-               (> (length definitions) 1))
-      :do (make-error "An anonymous definition must be alone." definition)))
+    :when (null name-node)
+      :do (push definition anonymous)
+          (when (and (> (length definitions) 1) anonymous)
+            (make-error "An anonymous definition must be alone." definition)
+            (return))))
 
 (defun subscription-operation-valid-p ()
   ;; https://spec.graphql.org/draft/#sec-Subscription-Operation-Definitions

@@ -173,5 +173,24 @@ fragment multipleSubscriptions on Subscription {
      (validator-errors-p
       "subscription sub {
   __typename
-}" :no-schema t))))
+}" :no-schema t))
+    )
+  (testing "Each fragment’s name must be unique within a document"
+    (ok
+     (validator-errors-p
+      "{
+  dog {
+    ...fragmentOne
+  }
+}
+
+fragment fragmentOne on Dog {
+  name
+}
+
+fragment fragmentOne on Dog {
+  owner {
+    name
+  }
+}"))))
 
