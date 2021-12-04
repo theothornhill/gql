@@ -67,5 +67,32 @@
                (data (gethash "data" res))
                (dog (gethash "dog" data))
                (command (gethash "doesKnowCommand" dog)))
-          (ok (string= command "RESOLVED")))))))
+          (ok (string= command "Field error for string"))))))
+  (testing "Result coercing"
+    (flet ((named-type (name)
+             (make-instance 'gql::named-type
+                            :name (make-instance 'gql::name :name name))))
+      (flet ((test (name value ty &optional return-val)
+               (let ((res (gql::coerce-result (named-type name) value)))
+                 (and (typep res ty)
+                      (equalp res (or return-val value))))))
+        (ok (test "Int" 3 'integer))
+        (ok (test "Int" -3 'integer))
+        (ng (test "String" -3 'integer "Field error for int"))
+        (ng (test "Boolean" -3 'integer "Field error for int"))
 
+        (ok (test "Float" -3.9 'double-float))
+        (ok (test "Float" 3.9 'double-float))
+        (ok (test "Float" 3342.91231236 'double-float))
+        (ng (test "Int" 3342.91231236 'double-float))
+        (ng (test "String" 3342.91231236 'double-float))
+        (ng (test "Boolean" 3342.91231236 'double-float))
+
+        (ok (test "String" "Look at this string!" 'string "Look at this string!"))
+        (ok (test "ID" "Look at this string!" 'string))
+        (ok (test "Boolean" "Look at this string!" 'string "Field error for string"))
+        (ok (test "Int" "Look at this string!" 'string "Field error for string"))
+        (ok (test "" "Look at this string!" 'string "Field error for string"))
+
+        (ok (test "Boolean" t '(integer 1) 1))
+        (ok (test "Boolean" nil '(integer 0) 0))))))

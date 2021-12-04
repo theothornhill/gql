@@ -23,7 +23,7 @@
          :when (> (length v) 1)
            :do (make-error "Each operation must have a unique name." v))))
 
-(defun anonymous-operation-definition-p (definitions)
+(defun single-anonymous-operation-definition-p (definitions)
   ;; https://spec.graphql.org/draft/#sec-Anonymous-Operation-Definitions
   (loop
     :with anonymous = nil

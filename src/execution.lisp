@@ -6,7 +6,7 @@
 (defmethod resolve (object-type object-value field-name arg-values)
   (declare (ignorable object-type object-value field-name arg-values))
   ;; TODO: This is obviously a bad idea, but something happened at least.
-  'resolved)
+  "Resolved")
 
 (defun sethash (item key table)
   ;; TODO: Do we need to check for present-ness if nil is just appendable?
@@ -201,8 +201,9 @@
 
 (defun complete-value (field-type fields result variable-values)
   ;; TODO: https://spec.graphql.org/draft/#CompleteValue()
+  (declare (optimize (debug 3)))
   (when result
-    (ecase (kind field-type)
+    (typecase field-type
       (non-null-type
        (let ((completed-result
                (complete-value (ty field-type) fields result variable-values)))
@@ -237,9 +238,32 @@
 
 (defun coerce-result (leaf-type value)
   ;; TODO: https://spec.graphql.org/draft/#CoerceResult()
-  ;; Coerce NONE OF THE THINGS!
-  (declare (ignorable leaf-type))
-  (format nil "~a" value))
+  ;;
+  ;; Avoid coercing across types for the time being.  That means don't coerce
+  ;; "123" to 123, or something like that
+  ;; TODO: OOF can we be both named-types and wrapper-types??
+  (let ((leaf-type-name (nameof leaf-type)))
+    (etypecase value
+      ;; TODO: This should report a field error if out of coerce range.
+      (integer
+       (or (and (string= leaf-type-name "Int") (coerce value '(signed-byte 32)))
+           "Field error for int"))
+      ;; TODO: This should report a field error if non-finite internal values (NaN
+      ;; and Infinity.
+      ((or single-float double-float)
+       (or (and (string= leaf-type-name "Float") (coerce value 'double-float))
+           "Field error for float"))
+      ;; TODO: We may return "true" for t and "1" for integer 1.
+      (string
+       (or (and (or (string= leaf-type-name "String")
+                    (string= leaf-type-name "ID"))
+                value)
+           "Field error for string"))
+      ;; TODO: Should we return 1/0 or t/nil here?  This will be the actual value.
+      (boolean
+       (or (and (string= leaf-type-name "Boolean") (if (equal value t) 1 0))
+           "Field error for boolean"))
+      (t "We really screwed up result coercing here!"))))
 
 (defun resolve-abstract-type (abstract-type object-value)
   ;; TODO: https://spec.graphql.org/draft/#ResolveAbstractType()
