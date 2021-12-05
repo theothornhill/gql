@@ -271,9 +271,22 @@
 
 (defun resolve-abstract-type (abstract-type object-value)
   ;; TODO: https://spec.graphql.org/draft/#ResolveAbstractType()
-  ;; Resolve NONE OF THE THINGS!
-  (declare (ignorable abstract-type))
-  (format nil "~a" object-value))
+  ;;
+  ;; In this function we want to return an `object-type-definition', but we need
+  ;; to resolve it from an abstract type.  We cannot use the interface/union
+  ;; itself, so we need to find the actual implementors.
+  (declare (ignorable abstract-type)
+           (optimize (debug 3)))
+  ;; TODO: General algorithm here, as I don't have battery to continue:
+  ;;
+  ;; 1. If abstract-type = interface
+  ;;    - Check if object-value is subtype of abstract-type
+  ;;    - If yes then return the proper object type definition
+  ;;
+  ;; 2. If abstract-type = union
+  ;;    - Check if object-value is one of union members
+  ;;    - If yes then return the proper object type definition
+  (format nil "~a ~a" abstract-type object-value))
 
 (defun execute-field (object-type object-value field-type fields variable-values)
   ;; TODO: https://spec.graphql.org/draft/#sec-Executing-Fields
