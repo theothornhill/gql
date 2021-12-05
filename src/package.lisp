@@ -9,4 +9,5 @@
    #:validate
    #:with-schema
    #:execute-request
+   #:*resolvers*
    #:resolve))

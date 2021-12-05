@@ -30,6 +30,9 @@ Should be bound together with *schema* when needed.")
 (defvar *errors* nil
   "Errors to be returned to client after validation and execution.")
 
+(defvar *resolvers* nil
+  "Hash table to store the resolvers corresponding to the schema")
+
 (defun built-in-scalar-p (scalar)
   (member scalar '("Int" "Float" "String" "Boolean" "ID") :test #'string=))
 

@@ -6,16 +6,20 @@
 
 (in-package :gql-exampleapp)
 
-(defparameter *fake-db* (make-hash-table :test #'equal))
-(setf (gethash "name" *fake-db*) "Theodor")
-(setf (gethash "age" *fake-db*) 31)
-
 (defvar *example-schema*
   (build-schema (asdf:system-relative-pathname 'gql "example/schema.graphql")))
 (defvar *variable-values* (make-hash-table :test #'equal))
 
-(defmethod resolve (object-type object-value field-name arg-values)
-  (gethash field-name *fake-db*))
+;; We make the hash table corresponding to the type in "example/schema.graphql"
+(defparameter *Query* (make-hash-table :test #'equal))
+
+;; The functions in here are to be used by the `resolve' internally in gql
+(setf (gethash "name" *Query*) (lambda () "Theodor Thornhill"))
+(setf (gethash "age" *Query*) (lambda () 31))
+
+;; Make sure that we actually set the resolver 
+(setf *resolvers* (make-hash-table :test #'equal))
+(setf (gethash "Query" *resolvers*) *Query*)
 
 (defvar *server* (make-instance 'hunchentoot:easy-acceptor :port 3000))
 

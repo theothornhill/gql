@@ -5,8 +5,13 @@
 
 (defmethod resolve (object-type object-value field-name arg-values)
   (declare (ignorable object-type object-value field-name arg-values))
-  ;; TODO: This is obviously a bad idea, but something happened at least.
-  "Resolved")
+  ;; TODO: Ok, so now we get the corresponding type in the hash table, then
+  ;; funcall the function mapped to by field name.  We still need to handle
+  ;; arguments and such.  What should we use object-value for?
+  (let ((objtype (gethash (nameof object-type) *resolvers*)))
+    (if (> (hash-table-count arg-values) 0)
+        (funcall (gethash field-name objtype) arg-values)
+        (funcall (gethash field-name objtype)))))
 
 (defun sethash (item key table)
   ;; TODO: Do we need to check for present-ness if nil is just appendable?
@@ -154,7 +159,6 @@
 
 (defun coerce-argument-values (object-type field variable-values)
   ;; TODO: https://spec.graphql.org/draft/#sec-Coercing-Field-Arguments
-  (declare (optimize (debug 3)))
   (loop
     :with coerced-values = (make-hash-table :test #'equal)
     :for argument-values = (arguments field)
@@ -187,21 +191,21 @@
                ((eq (kind argument-value) 'var)
                 (setf (gethash argument-name coerced-values) value))
                (t
-                (let (;; TODO: Coerce the val first for the else part, find out
-                      ;; how.  Values are likely to be coerced to strings or
-                      ;; numbers.  I'm sensing nil/bool troubles here.
-                      (coerced-value value))
-                  (setf (gethash argument-name coerced-values) coerced-value)))))))
+                (setf (gethash argument-name coerced-values)
+                      (coerce-result argument-type value)))))))
     :finally (return coerced-values)))
 
 
 (defun resolve-field-value (object-type object-value field-name arg-values)
   ;; TODO: https://spec.graphql.org/draft/#ResolveFieldValue()
+  ;;
+  ;; This function should access the hash table *resolvers* created by the
+  ;; implementors of the api.  It is good form to make sure that all the fields
+  ;; are covered.
   (resolve object-type object-value field-name arg-values))
 
 (defun complete-value (field-type fields result variable-values)
   ;; TODO: https://spec.graphql.org/draft/#CompleteValue()
-  (declare (optimize (debug 3)))
   (when result
     (typecase field-type
       (non-null-type
@@ -295,23 +299,21 @@
                 (cond
                   ((and (null val-p) default-value)
                    (setf (gethash var-name coerced-vars) default-value))
-                  ((and (eq (kind var-type) 'non-null-type)
+                  ((and (typep var-type 'non-null-type)
                         (or (null val-p) (null val)))
                    (gql-error "Need to raise a request error for coerce-vars"))
                   (val-p
                    (if (null val)
                        (setf (gethash var-name coerced-vars) nil)
-                       (let (;; TODO: Coerce the val first for the else part,
-                             ;; find out how.  Values are likely to be coerced
-                             ;; to strings or numbers.  I'm sensing nil/bool
-                             ;; troubles here.
-                             (coerced-value (format nil "~a" val)))
-                         (setf (gethash var-name coerced-vars) coerced-value)))))))
+                       ;; TODO: Handle the errors that can percolate up
+                       (setf (gethash var-name coerced-vars)
+                             (coerce-result var-type val)))))))
       :finally (return coerced-vars))))
 
 (defun execute-request (document operation-name variable-values initial-value)
   ;; https://spec.graphql.org/draft/#sec-Executing-Requests
-  (let* ((operation (get-operation document operation-name))
+  (let* ((*errors* nil)
+         (operation (get-operation document operation-name))
          (coerced-vars (coerce-vars operation variable-values)))
     (string-case (operation-type operation)
       ("Query"        (execute-query operation coerced-vars initial-value))

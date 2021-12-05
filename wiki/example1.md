@@ -17,15 +17,6 @@ Then, we need to define our package and go inside of it.
 (in-package :gql-exampleapp)
 ```
 
-Because this is merely a simple demonstration to show the proof of concept, we
-don't need a full database.  In a typical web app this is not how we should
-persist data, but it is good enough for our purposes.
-
-```lisp
-(defparameter *fake-db* (make-hash-table :test #'equal))
-(setf (gethash "name" *fake-db*) "Theodor")
-(setf (gethash "age" *fake-db*) 31)
-```
 
 We create our database and add in a couple of mappings.  Now for the more
 interesting part.  There are a couple of things needed in order to make queries
@@ -48,13 +39,25 @@ We define it, along with our variable-values like so:
 ```
 
 Great, this is a good start!  The last item on our agenda is resolving
-information from our database.  `gql` provides a generic function, `resolve`,
-which sole purpose is to deal with this.  We need only a simple one here:
+information.  `gql` provides a dynamic variable, `*resolvers*`, which sole
+purpose is to deal with this.  We need only a simple one here:
 
 ```lisp
-(defmethod resolve (object-type object-value field-name arg-values)
-  (gethash field-name *fake-db*))
+(setf (gethash "name" *Query*) (lambda () "Bongodor"))
+(setf (gethash "age" *Query*) (lambda () 22))
+
+(setf *resolvers* (make-hash-table :test #'equal))
+(setf (gethash "Query" *resolvers*) *Query*)
 ```
+
+The main point here is that we want to mimick the structure from the schema, but
+return functions adhering to the contract defined in the schema.  In this case
+it is easy, we just supply a lambda that returns a value.  These functions are
+then called internally by `gql`.  We could supply arguments and variables here,
+and that would make our functions take an argument, a hash-table of
+param->value.  We don't need that here, so we just supply the functions without
+any arguments.  Later we will use convenience macros for this, because it is
+tedious work...
 
 The last few things is running a server and defining an easy handler:
 
@@ -83,9 +86,9 @@ Now, proceed to [localhost:3000/home](http://localhost:3000/home), then start ty
 queries in the url like so:
 
 ```
-localhost:3000/home?item=age
-localhost:3000/home?item=name
-localhost:3000/home?item=name age
+http://localhost:3000/home?item=age
+http://localhost:3000/home?item=name
+http://localhost:3000/home?item=name age
 ```
 
 And off we go!  The full file can be found here:
