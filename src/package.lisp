@@ -10,4 +10,7 @@
    #:with-schema
    #:execute-request
    #:*resolvers*
-   #:resolve))
+   #:resolve
+   #:bool
+   #:true
+   #:false))

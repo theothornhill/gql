@@ -4,19 +4,12 @@
   (:documentation "A function to resolve arbitrary values."))
 
 (defmethod resolve (object-type object-value field-name arg-values)
-  (declare (ignorable object-type object-value field-name arg-values))
   ;; TODO: Ok, so now we get the corresponding type in the hash table, then
-  ;; funcall the function mapped to by field name.  We still need to handle
-  ;; arguments and such.  What should we use object-value for?
+  ;; funcall the function mapped to by field name.
   (let ((objtype (gethash (nameof object-type) *resolvers*)))
     (if (> (hash-table-count arg-values) 0)
-        (funcall (gethash field-name objtype) arg-values)
-        (funcall (gethash field-name objtype)))))
-
-(defun sethash (item key table)
-  ;; TODO: Do we need to check for present-ness if nil is just appendable?
-  (let ((items (if (listp item) item (list item))))
-    (setf (gethash key table) (append (gethash key table) items))))
+        (funcall (gethash field-name objtype) object-value arg-values)
+        (funcall (gethash field-name objtype) object-value))))
 
 (defun fragment-type-applies-p (object-type fragment-type)
   ;; TODO: https://spec.graphql.org/draft/#DoesFragmentTypeApply()
@@ -39,36 +32,38 @@
                        variable-values
                        &optional
                          (visited-fragments nil))
-  ;; https://spec.graphql.org/draft/#CollectFields()
-  (declare (type list visited-fragments))
-  (loop
-    :with fragments = (get-types 'fragment-definition *schema*)
-    :with grouped-fields = (make-hash-table :test #'equal)
-    :for selection :in selection-set
-    :do (unless (skippable-field-p (directives selection))
-          (with-slots (kind name) selection
-            (ecase kind
-              (field (sethash selection (nameof selection) grouped-fields))
-              (fragment-spread
-               (with-slots (fragment-name) selection
-                 (with-slots (name) fragment-name
-                   (unless (member name visited-fragments :test #'equal)
-                     (push name visited-fragments)
-                     (let ((fragment (gethash name fragments)))
-                       (when fragment
-                         (with-slots (type-condition) fragment
-                           (when (fragment-type-applies-p object-type type-condition)
-                             (with-slots (selection-set) fragment
-                               (maphash (lambda (key value) (sethash value key grouped-fields))
-                                        (collect-fields object-type (selections selection-set) variable-values visited-fragments)))))))))))
-              (inline-fragment
-               (with-slots (type-condition) selection
-                 (unless (and (not (null type-condition))
-                              (not (fragment-type-applies-p object-type type-condition)))
-                   (with-slots (selection-set) selection
-                     (maphash (lambda (key value) (sethash value key grouped-fields))
-                              (collect-fields object-type (selections selection-set) variable-values visited-fragments)))))))))
-    :finally (return grouped-fields)))
+  ;; TODO: https://spec.graphql.org/draft/#CollectFields()
+  (labels ((sethash (item key table)
+               (let ((items (if (listp item) item (list item))))
+                 (setf (gethash key table) (append (gethash key table) items)))))
+    (loop
+      :with fragments = (get-types 'fragment-definition *schema*)
+      :with grouped-fields = (make-hash-table :test #'equal)
+      :for selection :in selection-set
+      :do (unless (skippable-field-p (directives selection))
+            (with-slots (kind name) selection
+              (ecase kind
+                (field (sethash selection (nameof selection) grouped-fields))
+                (fragment-spread
+                 (with-slots (fragment-name) selection
+                   (with-slots (name) fragment-name
+                     (unless (member name visited-fragments :test #'equal)
+                       (push name visited-fragments)
+                       (let ((fragment (gethash name fragments)))
+                         (when fragment
+                           (with-slots (type-condition) fragment
+                             (when (fragment-type-applies-p object-type type-condition)
+                               (with-slots (selection-set) fragment
+                                 (maphash (lambda (key value) (sethash value key grouped-fields))
+                                          (collect-fields object-type (selections selection-set) variable-values visited-fragments)))))))))))
+                (inline-fragment
+                 (with-slots (type-condition) selection
+                   (unless (and (not (null type-condition))
+                                (not (fragment-type-applies-p object-type type-condition)))
+                     (with-slots (selection-set) selection
+                       (maphash (lambda (key value) (sethash value key grouped-fields))
+                                (collect-fields object-type (selections selection-set) variable-values visited-fragments)))))))))
+      :finally (return grouped-fields))))
 
 (defun get-operation (document &optional operation-name)
   ;; TODO: https://spec.graphql.org/draft/#GetOperation()
@@ -145,11 +140,10 @@
   (let ((results (make-hash-table :test #'equal)))
     (maphash
      (lambda (response-key fields)
-       (let ((field-definition (get-field-definition (car fields) object-type)))
-         (with-slots (ty) field-definition
-           (when ty
-             (setf (gethash response-key results)
-                   (execute-field object-type object-value ty fields variable-values))))))
+       (with-slots (ty) (get-field-definition (car fields) object-type)
+         (when ty
+           (setf (gethash response-key results)
+                 (execute-field object-type object-value ty fields variable-values)))))
      (collect-fields object-type selection-set variable-values))
     results))
 
@@ -260,8 +254,9 @@
                 value)
            "Field error for string"))
       ;; TODO: Should we return 1/0 or t/nil here?  This will be the actual value.
-      (boolean
-       (or (and (string= leaf-type-name "Boolean") (if (equal value t) 1 0))
+      (bool
+       (or (and (string= leaf-type-name "Boolean")
+                (if (equal value 'true) "true" "false"))
            "Field error for boolean"))
       (t "We really screwed up result coercing here!"))))
 

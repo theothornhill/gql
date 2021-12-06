@@ -38,11 +38,13 @@
             (human-resolver (make-hash-table :test #'equal)))
         (setf (gethash "Query" *resolvers*) query-resolver)
         (setf (gethash "Human" *resolvers*) human-resolver)
-        (setf (gethash "name" human-resolver) (lambda () "Bingo-bongo-pappa"))
+        (setf (gethash "name" human-resolver) (lambda (arg) (declare (ignorable arg))
+                                                "Bingo-bongo-pappa"))
         (setf (gethash "Dog" *resolvers*) dog-resolver)
-        (setf (gethash "dog" query-resolver) (lambda () t))
-        (setf (gethash "name" dog-resolver) (lambda () "Bingo-bongo"))
-        (setf (gethash "owner" dog-resolver) (lambda () t))
+        (setf (gethash "dog" query-resolver) (lambda (arg) (declare (ignorable arg)) t))
+        (setf (gethash "name" dog-resolver) (lambda (arg) (declare (ignorable arg))
+                                              "Bingo-bongo"))
+        (setf (gethash "owner" dog-resolver) (lambda (arg) (declare (ignorable arg)) t))
         (let* ((res (gql::execute-request (build-schema "query { dog { name } dog { owner { name } } }") nil (make-hash-table) nil))
                (data (gethash "data" res))
                (dog-res (gethash "dog" data)))
@@ -59,11 +61,13 @@
              (human-resolver (make-hash-table :test #'equal)))
         (setf (gethash "Query" *resolvers*) query-resolver)
         (setf (gethash "Human" *resolvers*) human-resolver)
-        (setf (gethash "name" human-resolver) (lambda () "Bingo-bongo-pappa"))
+        (setf (gethash "name" human-resolver) (lambda (arg) (declare (ignorable arg))
+                                                "Bingo-bongo-pappa"))
         (setf (gethash "Dog" *resolvers*) dog-resolver)
-        (setf (gethash "dog" query-resolver) (lambda () t))
-        (setf (gethash "name" dog-resolver) (lambda () "Bingo-bongo"))
-        (setf (gethash "owner" dog-resolver) (lambda () t))
+        (setf (gethash "dog" query-resolver) (lambda (arg) (declare (ignorable arg)) t))
+        (setf (gethash "name" dog-resolver) (lambda (arg) (declare (ignorable arg))
+                                              "Bingo-bongo"))
+        (setf (gethash "owner" dog-resolver) (lambda (arg) (declare (ignorable arg)) t))
         (let* ((res (gql::execute-request (build-schema "query { dog { name owner { name: nameAlias } } }") nil (make-hash-table) nil))
                (data (gethash "data" res))
                (dog-res (gethash "dog" data)))
@@ -82,10 +86,11 @@
         (setf (gethash "Query" *resolvers*) query-resolver)
         (setf (gethash "Dog" *resolvers*) dog-resolver)
         (setf (gethash "dog" query-resolver)
-              (lambda () t))
+              (lambda (arg) (declare (ignorable arg)) t))
         (setf (gethash "doesKnowCommand" dog-resolver)
-              (lambda (args)
-                (string= (gethash "dogCommand" args) "SIT")))
+              (lambda (arg args) (declare (ignorable arg))
+                (if (string= (gethash "dogCommand" args) "SIT")
+                    'true 'false)))
         (let* ((res (gql::execute-request
                      (build-schema "query x($sit: String) { dog { doesKnowCommand(dogCommand: $sit) } }")
                      nil
@@ -94,7 +99,7 @@
                (data (gethash "data" res))
                (dog (gethash "dog" data))
                (command (gethash "doesKnowCommand" dog)))
-          (ok (= command 1))))))
+          (ok (string= command "true"))))))
   (testing "Result coercing"
     (flet ((named-type (name)
              (make-instance 'gql::named-type
@@ -121,5 +126,73 @@
         (ok (test "Int" "Look at this string!" 'string "Field error for string"))
         (ok (test "" "Look at this string!" 'string "Field error for string"))
 
-        (ok (test "Boolean" t '(integer 1) 1))
-        (ok (test "Boolean" nil '(integer 0) 0))))))
+        (ok (test "Boolean" 'true 'string "true"))
+        (ok (test "Boolean" 'false 'string "false")))))
+  (testing "Using resolvers that access the object from the 'db'"
+    (with-schema (build-schema (asdf:system-relative-pathname 'gql-tests #p"t/test-files/validation-schema.graphql"))
+      (let* ((*resolvers* (make-hash-table :test #'equal))
+             (query-resolver (make-hash-table :test #'equal))
+             (dog-resolver (make-hash-table :test #'equal)))
+        (gql::defclass* dog name owner)
+        (setf (gethash "Query" *resolvers*) query-resolver)
+        (setf (gethash "Dog" *resolvers*) dog-resolver)
+        (setf (gethash "dog" query-resolver)
+              (lambda (arg) (declare (ignorable arg))
+                (make-instance 'dog :name "Bingo-bongo")))
+        (setf (gethash "name" dog-resolver) (lambda (dog) (name dog)))
+        (let* ((res (gql::execute-request
+                     (build-schema "query { dog { name } }") nil (make-hash-table) nil))
+               (data (gethash "data" res))
+               (dog (gethash "dog" data))
+               (name (gethash "name" dog)))
+          (ok (string= name "Bingo-bongo")))
+        (let* ((res (gql::execute-request
+                     (build-schema "query { dog { name: bongo } }") nil (make-hash-table) nil))
+               (data (gethash "data" res))
+               (dog (gethash "dog" data))
+               (name (gethash "bongo" dog)))
+          (ok (string= name "Bingo-bongo"))))))
+  (testing "A query should handle variables and arguments"
+    (with-schema (build-schema (asdf:system-relative-pathname 'gql-tests #p"t/test-files/validation-schema.graphql"))
+      (let ((variable-values (make-hash-table :test #'equal))
+            (query-resolver (make-hash-table :test #'equal))
+            (dog-resolver (make-hash-table :test #'equal))
+            (*resolvers* (make-hash-table :test #'equal)))
+        (gql::defclass* dog name does-know-command)
+        (setf (gethash "sit" variable-values) "SIT")
+        
+        (setf (gethash "Query" *resolvers*) query-resolver)
+        (setf (gethash "Dog" *resolvers*) dog-resolver)
+        (setf (gethash "dog" query-resolver)
+              (lambda (arg) (declare (ignorable arg))
+                (make-instance 'dog
+                               :name "Bingo-bongo"
+                               :does-know-command '("SIT" "DOWN" "HEEL"))))
+        (setf (gethash "name" dog-resolver) (lambda (dog) (name dog)))
+
+        (setf (gethash "doesKnowCommand" dog-resolver)
+              (lambda (arg args) (declare (ignorable arg))
+                (with-slots (does-know-command) arg
+                  (if (member (gethash "dogCommand" args) does-know-command
+                              :test #'equal)
+                      'true 'false))))
+
+        (let* ((res (gql::execute-request
+                     (build-schema "query x($sit: String) { dog { doesKnowCommand(dogCommand: $sit) } }")
+                     nil
+                     variable-values
+                     nil))
+               (data (gethash "data" res))
+               (dog (gethash "dog" data))
+               (command (gethash "doesKnowCommand" dog)))
+          (ok (string= command "true")))
+        (setf (gethash "sit" variable-values) "SITT")
+        (let* ((res (gql::execute-request
+                     (build-schema "query x($sit: String) { dog { doesKnowCommand(dogCommand: $sit) } }")
+                     nil
+                     variable-values
+                     nil))
+               (data (gethash "data" res))
+               (dog (gethash "dog" data))
+               (command (gethash "doesKnowCommand" dog)))
+          (ok (string= command "false")))))))

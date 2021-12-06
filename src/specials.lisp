@@ -55,3 +55,6 @@ Should be bound together with *schema* when needed.")
     enum-type-definition
     interface-type-definition
     union-type-definition))
+
+(deftype bool ()
+  '(member true false))
