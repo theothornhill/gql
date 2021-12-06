@@ -48,7 +48,7 @@
     :do (unless (skippable-field-p (directives selection))
           (with-slots (kind name) selection
             (ecase kind
-              (field (sethash selection (name-or-alias selection) grouped-fields))
+              (field (sethash selection (nameof selection) grouped-fields))
               (fragment-spread
                (with-slots (fragment-name) selection
                  (with-slots (name) fragment-name
@@ -145,7 +145,7 @@
   (let ((results (make-hash-table :test #'equal)))
     (maphash
      (lambda (response-key fields)
-       (let* ((field-definition (get-field-definition (car fields) object-type)))
+       (let ((field-definition (get-field-definition (car fields) object-type)))
          (with-slots (ty) field-definition
            (when ty
              (setf (gethash response-key results)
@@ -288,7 +288,7 @@
 (defun execute-field (object-type object-value field-type fields variable-values)
   ;; TODO: https://spec.graphql.org/draft/#sec-Executing-Fields
   (let* ((field (car fields))
-         (field-name (name-or-alias field))
+         (field-name (name-or-alias field)) ;; TODO: Is nameof correct here??
          (arg-values (coerce-argument-values object-type field variable-values))
          (resolved-value
            (resolve-field-value object-type object-value field-name arg-values)))
