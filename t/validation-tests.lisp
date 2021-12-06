@@ -134,19 +134,6 @@ query getName {
   }
 }
 "))
-    (ng
-     (validator-errors-p
-      "subscription sub {
-  ...newMessageFields
-}
-
-fragment newMessageFields on Subscription {
-  newMessage {
-    body
-    sender
-  }
-}
-" :no-schema t))
     (ok
      (validator-errors-p
       "subscription sub {

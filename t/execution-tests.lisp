@@ -4,13 +4,18 @@
   (testing "collect-fields returns the correct fields"
     (with-schema (build-schema "{ a { subfield1 } ...ExampleFragment }
                                    fragment ExampleFragment on Query { a { subfield2 } b }")
-      (let* ((operation (car (gql::definitions gql::*schema*)))
-             (operation-type (gql::operation-type operation))
-             (selection-set (gql::selection-set operation))
-             (result (gql::collect-fields operation-type (gql::selections selection-set) nil nil)))
-        (ok (= (hash-table-count result) 2))
-        (ok (= (length (gethash "a" result)) 2))
-        (ok (= (length (gethash "b" result)) 1)))))
+      (let ((gql::*all-types* (make-hash-table :test #'equal)))
+        ;; HACK: omg, eww!
+        (setf (gethash "Query" gql::*all-types*)
+              (make-instance 'gql::object-type-definition
+                             :name (make-instance 'gql::named-type :name "Query")))
+        (let* ((operation (car (gql::definitions gql::*schema*)))
+               (operation-type (gql::operation-type operation))
+               (selection-set (gql::selection-set operation))
+               (result (gql::collect-fields operation-type (gql::selections selection-set) nil nil)))
+          (ok (= (hash-table-count result) 2))
+          (ok (= (length (gethash "a" result)) 2))
+          (ok (= (length (gethash "b" result)) 1)))  )))
   (testing "get-operation should return the correct operation"
     (let ((gql::*schema* (build-schema "{ a { subfield1 } } ")))
       (ok (gql::get-operation gql::*schema* "Query")))

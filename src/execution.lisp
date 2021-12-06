@@ -22,8 +22,6 @@
   ;; TODO: https://spec.graphql.org/draft/#DoesFragmentTypeApply()
   (let ((type-definition (gethash object-type *all-types*)))
     (typecase type-definition
-      (;; TODO: Remove this somehow.  It crashes tests.  No big problem?
-       null t)
       (object-type-definition
        (string= (nameof type-definition)
                 (nameof fragment-type)))
@@ -77,7 +75,7 @@
   (cond
     ((null operation-name)
      (let ((operation
-             (remove-if-not (lambda (x) (equal (kind x) 'operation-definition))
+             (remove-if-not (lambda (x) (typep x 'operation-definition))
                             (definitions document))))
        (if (= 1 (length operation))
            (car operation)
@@ -90,25 +88,23 @@
 
 (defun input-type-p (type)
   ;; TODO: https://spec.graphql.org/draft/#IsInputType()
-  (with-slots (kind) type
-    (if (typep kind 'wrapper-type)
-        (input-type-p (ty type))
-        (let ((possible-type (gethash (nameof type) *all-types*)))
-          ;; Get the type corresponding to the name in question
-          (if possible-type
-              (typep (kind possible-type) 'input-types)
-              (typep (nameof type) 'built-in-scalar))))))
+  (if (typep (kind type) 'wrapper-type)
+      (input-type-p (ty type))
+      (let ((possible-type (gethash (nameof type) *all-types*)))
+        ;; Get the type corresponding to the name in question
+        (if possible-type
+            (typep (kind possible-type) 'input-types)
+            (typep (nameof type) 'built-in-scalar)))))
 
 (defun output-type-p (type)
   ;; TODO: https://spec.graphql.org/draft/#IsOutputType()
-  (with-slots (kind) type
-    (if (typep kind 'wrapper-type)
-        (output-type-p (ty type))
-        (let ((possible-type (gethash (nameof type) *all-types*)))
-          ;; Get the type corresponding to the name in question
-          (if possible-type
-              (typep (kind possible-type) 'output-types)
-              (typep (nameof type) 'built-in-scalar))))))
+  (if (typep (kind type) 'wrapper-type)
+      (output-type-p (ty type))
+      (let ((possible-type (gethash (nameof type) *all-types*)))
+        ;; Get the type corresponding to the name in question
+        (if possible-type
+            (typep (kind possible-type) 'output-types)
+            (typep (nameof type) 'built-in-scalar)))))
 
 (declaim (ftype (function (operation-definition hash-table t) hash-table) execute-query))
 (defun execute-query (query variable-values initial-value)
@@ -275,8 +271,7 @@
   ;; In this function we want to return an `object-type-definition', but we need
   ;; to resolve it from an abstract type.  We cannot use the interface/union
   ;; itself, so we need to find the actual implementors.
-  (declare (ignorable abstract-type)
-           (optimize (debug 3)))
+
   ;; TODO: General algorithm here, as I don't have battery to continue:
   ;;
   ;; 1. If abstract-type = interface
@@ -286,7 +281,9 @@
   ;; 2. If abstract-type = union
   ;;    - Check if object-value is one of union members
   ;;    - If yes then return the proper object type definition
-  (format nil "~a ~a" abstract-type object-value))
+  (etypecase abstract-type
+    (interface-type-definition (gethash object-value *all-types*))
+    (union-type-definition nil)))
 
 (defun execute-field (object-type object-value field-type fields variable-values)
   ;; TODO: https://spec.graphql.org/draft/#sec-Executing-Fields
