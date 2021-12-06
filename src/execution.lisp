@@ -176,8 +176,8 @@
             (has-value-p
              (cond
                ((null value)
-                ;; TODO: Is nil ok here?
-                (setf (gethash argument-name coerced-values) nil))
+                ;; TODO: Is 'null ok here?
+                (setf (gethash argument-name coerced-values) 'null))
                ((eq (kind argument-value) 'var)
                 (setf (gethash argument-name coerced-values) value))
                (t
@@ -232,11 +232,9 @@
 
 (defun coerce-result (leaf-type value)
   ;; TODO: https://spec.graphql.org/draft/#CoerceResult()
-  ;;
-  ;; Avoid coercing across types for the time being.  That means don't coerce
-  ;; "123" to 123, or something like that
-  ;; TODO: OOF can we be both named-types and wrapper-types??
-  (let ((leaf-type-name (nameof leaf-type)))
+  (let ((leaf-type-name (if (typep (kind leaf-type) 'wrapper-type)
+                            (nameof (ty leaf-type))
+                            (nameof leaf-type))))
     (etypecase value
       ;; TODO: This should report a field error if out of coerce range.
       (integer
@@ -309,7 +307,8 @@
                    (gql-error "Need to raise a request error for coerce-vars"))
                   (val-p
                    (if (null val)
-                       (setf (gethash var-name coerced-vars) nil)
+                       ;; TODO: Is 'null ok here?
+                       (setf (gethash var-name coerced-vars) 'null)
                        ;; TODO: Handle the errors that can percolate up
                        (setf (gethash var-name coerced-vars)
                              (coerce-result var-type val)))))))

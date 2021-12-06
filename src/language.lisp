@@ -274,9 +274,9 @@
                "~@[~a~]!" (generate (ty node) :indent-level indent-level :stream stream)))
 
 (defgql null-value
-  :node (defnode null-value)
+  :node (defnode null-value value)
   :parser (defparser null-value ()
-            (make-node 'null-value))
+            (make-node 'null-value :value 'null))
   :generator (defgenerator null-value ()
                "null"))
 

@@ -195,4 +195,23 @@
                (data (gethash "data" res))
                (dog (gethash "dog" data))
                (command (gethash "doesKnowCommand" dog)))
+          (ok (string= command "false")))
+        ;; (setf (gethash "sit" variable-values) "SIT")
+        ;; (let* ((res (gql::execute-request
+        ;;              (build-schema "query { dog { doesKnowCommand(dogCommand: \"SIT\") } }")
+        ;;              nil
+        ;;              variable-values
+        ;;              nil))
+        ;;        (data (gethash "data" res))
+        ;;        (dog (gethash "dog" data))
+        ;;        (command (gethash "doesKnowCommand" dog)))
+        ;;   (ok (string= command "true")))
+        (let* ((res (gql::execute-request
+                     (build-schema "query { dog { doesKnowCommand(dogCommand: \"LOL\") } }")
+                     nil
+                     variable-values
+                     nil))
+               (data (gethash "data" res))
+               (dog (gethash "dog" data))
+               (command (gethash "doesKnowCommand" dog)))
           (ok (string= command "false")))))))
