@@ -1,10 +1,7 @@
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (ql:quickload '(:gql :cl-json :hunchentoot) :silent t))
 
-(defpackage :gql-exampleapp
-  (:use :cl :gql))
-
-(in-package :gql-exampleapp)
+(in-package :gql-example)
 
 (defvar *example-schema*
   (build-schema (asdf:system-relative-pathname 'gql "example/schema.graphql")))

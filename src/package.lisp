@@ -13,4 +13,5 @@
    #:resolve
    #:bool
    #:true
-   #:false))
+   #:false
+   #:gql-object))

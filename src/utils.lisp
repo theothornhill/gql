@@ -95,3 +95,5 @@ documents."
   (let ((field-name (name-or-alias field)))
     (find-if (lambda (obj) (string= (nameof obj) field-name))
              (fields (gethash (nameof object-type) *all-types*)))))
+
+(defclass* gql-object type-name)

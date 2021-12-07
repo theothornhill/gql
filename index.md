@@ -22,6 +22,7 @@ do I do anything here?
 # Tutorials
 
 1. [exampleapp1](wiki/example1.md)
+1. [exampleapp2](wiki/example2.md)
 
 
 # api

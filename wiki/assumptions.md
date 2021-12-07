@@ -25,4 +25,16 @@ do that where available, and this also makes it a little clearer what is
 directly from the spec, and what are utilities and helpers.  If no link to a
 spec is provided, that is also considered a bug.
 
+## Classes also acts as interfaces
 
+GraphQL uses interfaces to abstract away some information.  CLOS doesn't really
+have interfaces the way we see in java and c#, so we will just by convention try
+to create classes that look like interfaces, then use inheritance to gain the
+properties.  Use this mindfully.
+
+## `type-name` as a property
+
+To simplify with inferencing of interfaces to classes we add our own object,
+`gql-object` to use as a parent class when defining types to resolve.  This is
+very naive at the moment, and we really should learn clos to see how we can deal
+with this better.

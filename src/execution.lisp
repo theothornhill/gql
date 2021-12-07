@@ -33,7 +33,7 @@
                        variable-values
                        &optional
                          (visited-fragments nil))
-  ;; TODO: https://spec.graphql.org/draft/#CollectFields()
+  ;; TODO: https://spec.graphql.org/draft/#CollectFields() #10
   (labels ((sethash (item key table)
                (let ((items (if (listp item) item (list item))))
                  (setf (gethash key table) (append (gethash key table) items)))))
@@ -231,6 +231,7 @@
 
 (defun coerce-result (leaf-type value)
   ;; TODO: https://spec.graphql.org/draft/#CoerceResult()
+  ;; TODO: #28
   (let ((leaf-type-name (if (typep (kind leaf-type) 'wrapper-type)
                             (nameof (ty leaf-type))
                             (nameof leaf-type))))
@@ -259,22 +260,10 @@
 
 (defun resolve-abstract-type (abstract-type object-value)
   ;; TODO: https://spec.graphql.org/draft/#ResolveAbstractType()
-  ;;
-  ;; In this function we want to return an `object-type-definition', but we need
-  ;; to resolve it from an abstract type.  We cannot use the interface/union
-  ;; itself, so we need to find the actual implementors.
-
-  ;; TODO: General algorithm here, as I don't have battery to continue:
-  ;;
-  ;; 1. If abstract-type = interface
-  ;;    - Check if object-value is subtype of abstract-type
-  ;;    - If yes then return the proper object type definition
-  ;;
-  ;; 2. If abstract-type = union
-  ;;    - Check if object-value is one of union members
-  ;;    - If yes then return the proper object type definition
+  ;; TODO: #29
+  (check-type object-value gql-object)
   (etypecase abstract-type
-    (interface-type-definition (gethash object-value *all-types*))
+    (interface-type-definition (gethash (type-name object-value) *all-types*))
     (union-type-definition nil)))
 
 (defun execute-field (object-type object-value field-type fields variable-values)
