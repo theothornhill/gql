@@ -147,7 +147,7 @@ We can add aliases to our queries, so that we can be super agile(tm) in the fron
 
 Now we get:
 
-```lisp
+```json
 {
   "data": {
     "dog": {
