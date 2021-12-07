@@ -19,6 +19,7 @@
        (string= (nameof type-definition)
                 (nameof fragment-type)))
       (interface-type-definition
+       ;; TODO: Not good enough.  We need to see if we are an implementation.
        (string= (nameof type-definition)
                 (nameof fragment-type)))
       (union-type-definition
@@ -86,7 +87,6 @@
   (if (typep (kind type) 'wrapper-type)
       (input-type-p (ty type))
       (let ((possible-type (gethash (nameof type) *all-types*)))
-        ;; Get the type corresponding to the name in question
         (if possible-type
             (typep (kind possible-type) 'input-types)
             (typep (nameof type) 'built-in-scalar)))))
@@ -96,7 +96,6 @@
   (if (typep (kind type) 'wrapper-type)
       (output-type-p (ty type))
       (let ((possible-type (gethash (nameof type) *all-types*)))
-        ;; Get the type corresponding to the name in question
         (if possible-type
             (typep (kind possible-type) 'output-types)
             (typep (nameof type) 'built-in-scalar)))))
