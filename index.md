@@ -15,14 +15,10 @@ We made some [assumptions](wiki/assumptions.md) during development
 
 Descriptions for how we implement the [language](wiki/language.md)
 
-# How the [fuck](wiki/how.md)
-
-do I do anything here?
-
 # Tutorials
 
-1. [exampleapp1](wiki/example1.md)
-1. [exampleapp2](wiki/example2.md)
+1. [exampleapp1](wiki/examples/example1.md)
+1. [exampleapp2](wiki/examples/example2.md)
 
 
 # api
