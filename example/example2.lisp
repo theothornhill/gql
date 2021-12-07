@@ -55,7 +55,7 @@
   (with-schema (build-schema (asdf:system-relative-pathname 'gql-tests #p"t/test-files/validation-schema.graphql"))
     (let* ((res (gql::execute-request
                  (build-schema query) nil (make-hash-table :test #'equal) nil)))
-      (format t "~a" (cl-json:encode-json-to-string res)))))
+      (format t "~%~a" (cl-json:encode-json-to-string res)))))
 
 (let ((*resolvers* (make-hash-table :test #'equal)))
   (setf (gethash "Query" *resolvers*) *query-resolvers*)

@@ -251,7 +251,6 @@
                     (string= leaf-type-name "ID"))
                 value)
            "Field error for string"))
-      ;; TODO: Should we return 1/0 or t/nil here?  This will be the actual value.
       (bool
        (or (and (string= leaf-type-name "Boolean")
                 (if (equal value 'true) "true" "false"))
