@@ -259,13 +259,15 @@
 
 (defun resolve-abstract-type (abstract-type object-value)
   ;; TODO: https://spec.graphql.org/draft/#ResolveAbstractType()
-  ;; TODO: #29
   (check-type object-value gql-object)
-  (etypecase abstract-type
-    (interface-type-definition
-     ;; TODO: Should this error handle somehow?
-     (gethash (type-name object-value) *all-types*))
-    (union-type-definition nil)))
+  (let* ((type-name (type-name object-value))
+         (object-definition (gethash type-name *all-types*)))
+    (etypecase abstract-type
+      (interface-type-definition object-definition)
+      (union-type-definition
+       (let ((union-member
+               (find type-name (union-members abstract-type) :key #'nameof :test #'string=)))
+         (gethash (nameof union-member) *all-types*))))))
 
 (defun execute-field (object-type object-value field-type fields variable-values)
   ;; TODO: https://spec.graphql.org/draft/#sec-Executing-Fields
