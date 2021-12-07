@@ -37,7 +37,7 @@ An assumption is made here that classes also can act as interfaces, and that we
 by convention try not to muddle up everything.  So pet inherits from an external
 class from `gql`, `gql-object`.  This is just to provide one property,
 `type-name` to the classes.  This is used internally in `gql` to simplify
-inference of interfaces.  See [assumptions](assumptions.md)
+inference of interfaces.  See [assumptions](wiki/assumptions.md)
 
 Let's see our "database":
 
@@ -168,3 +168,6 @@ Now we get:
   "errors": null
 }
 ```
+
+That's it!  The full file can be found here:
+[example2.lisp](https://git.sr.ht/~theo/gql/tree/master/item/example/example2.lisp)

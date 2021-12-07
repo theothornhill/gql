@@ -92,4 +92,4 @@ http://localhost:3000/home?item=name age
 ```
 
 And off we go!  The full file can be found here:
-[example.lisp](https://git.sr.ht/~theo/gql/tree/master/item/example/example.lisp)
+[example1.lisp](https://git.sr.ht/~theo/gql/tree/master/item/example/example1.lisp)
