@@ -4,11 +4,11 @@ Let's try something a little more complicated.  We do want to be able to define
 and use nested structures, such as the ones defined in the
 [spec](https://spec.graphql.org/draft/#example-19f2a).  So let's use this.
 
-The parts we will be exploring now is accessing a `Dog`, and get the properties
-from the `owner`, and at least get one `Pet`.  The interesting part here is that
-`Pet` is an interface, so we need to be able to figure out what actually is
-inside that list.  We still don't want to set up a database, so we'll just
-define a simple object.
+The parts we will be exploring now are accessing a `Dog`, and getting the
+properties from the `owner`, and at least get one `Pet`.  The interesting part
+here is that `Pet` is an interface, so we need to be able to figure out what
+actually is inside that list.  We still don't want to set up a database, so
+we'll just define a simple object.
 
 First, we need some libraries, including `gql`.  Let's quickload them:
 
@@ -108,7 +108,7 @@ Now we just bind the resolvers to the exported `*resolvers*` symbol and run our 
   (setf (gethash "Query" *resolvers*) *query-resolvers*)
   (setf (gethash "Dog" *resolvers*) *dog-resolvers*)
   (setf (gethash "Human" *resolvers*) *human-resolvers*)
-  (example2 "query { dog { name owner { name pets { name } } }}"))
+  (example2 "query { dog { name owner { name pets { name } } } }"))
 ```
 
 This yields:
@@ -121,6 +121,40 @@ This yields:
       "owner": {
         "name": "Wingle Wangle",
         "pets": [
+          {
+            "name": "Bingo-Bongo"
+          },
+          {
+            "name": "Bango-Wango"
+          }
+        ]
+      }
+    }
+  },
+  "errors": null
+}
+```
+
+We can add aliases to our queries, so that we can be super agile(tm) in the front-end:
+
+```lisp
+(let ((*resolvers* (make-hash-table :test #'equal)))
+  (setf (gethash "Query" *resolvers*) *query-resolvers*)
+  (setf (gethash "Dog" *resolvers*) *dog-resolvers*)
+  (setf (gethash "Human" *resolvers*) *human-resolvers*)
+  (example2 "query { dog { name owner: wingle { name pets: dogs { name } } } }"))
+```
+
+Now we get:
+
+```lisp
+{
+  "data": {
+    "dog": {
+      "name": "Bingo-Bongo",
+      "wingle": {
+        "name": "Wingle Wangle",
+        "dogs": [
           {
             "name": "Bingo-Bongo"
           },

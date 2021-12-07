@@ -61,6 +61,12 @@
   (setf (gethash "Query" *resolvers*) *query-resolvers*)
   (setf (gethash "Dog" *resolvers*) *dog-resolvers*)
   (setf (gethash "Human" *resolvers*) *human-resolvers*)
-  (example2 "query { dog { name owner { name pets { name } } }}"))
+  (example2 "query { dog { name owner { name pets { name } } } }"))
+
+(let ((*resolvers* (make-hash-table :test #'equal)))
+  (setf (gethash "Query" *resolvers*) *query-resolvers*)
+  (setf (gethash "Dog" *resolvers*) *dog-resolvers*)
+  (setf (gethash "Human" *resolvers*) *human-resolvers*)
+  (example2 "query { dog { name owner: wingle { name pets: dogs { name } } } }"))
 
 
