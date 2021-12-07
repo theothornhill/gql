@@ -260,10 +260,9 @@
 (defun resolve-abstract-type (abstract-type object-value)
   ;; TODO: https://spec.graphql.org/draft/#ResolveAbstractType()
   (check-type object-value gql-object)
-  (let* ((type-name (type-name object-value))
-         (object-definition (gethash type-name *all-types*)))
+  (with-slots (type-name) object-value
     (etypecase abstract-type
-      (interface-type-definition object-definition)
+      (interface-type-definition (gethash type-name *all-types*))
       (union-type-definition
        (let ((union-member
                (find type-name (union-members abstract-type) :key #'nameof :test #'string=)))

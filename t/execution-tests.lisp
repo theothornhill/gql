@@ -225,35 +225,8 @@
       ((owner :initarg :owner :accessor owner)
        (nickname :initarg :nickname :accessor nickname)))
 
-    (defclass cat (pet)
-      ((nickname :initarg :nickname :accessor nickname)))
-
-    (defclass sentient (gql-object)
-      ((name :initarg :name :accessor name)))
-
-    (defclass human (sentient)
-      ((pets :initarg :pets :accessor pets)))
-
     (defparameter *doggo*
-      (make-instance
-       'dog
-       :name "Bingo-Bongo"
-       :type-name "Dog"
-       :nickname "Hund!"
-       :owner (make-instance
-               'human
-               :name "Wingle Wangle"
-               :type-name "Human"
-               :pets `(,(make-instance
-                         'dog
-                         :name "Bingo-Bongo"
-                         :nickname "Hund!"
-                         :type-name "Dog")
-                       ,(make-instance
-                         'cat
-                         :name "Bango-Wango"
-                         :nickname "Mjausig"
-                         :type-name "Cat")))))
+      (make-instance 'dog :name "Bingo-Bongo" :type-name "Dog"))
 
     (with-schema (build-schema (asdf:system-relative-pathname 'gql-tests #p"t/test-files/validation-schema.graphql"))
       ;; We want to know if we did get the actual same reference.
