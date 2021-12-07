@@ -262,7 +262,9 @@
   ;; TODO: #29
   (check-type object-value gql-object)
   (etypecase abstract-type
-    (interface-type-definition (gethash (type-name object-value) *all-types*))
+    (interface-type-definition
+     ;; TODO: Should this error handle somehow?
+     (gethash (type-name object-value) *all-types*))
     (union-type-definition nil)))
 
 (defun execute-field (object-type object-value field-type fields variable-values)

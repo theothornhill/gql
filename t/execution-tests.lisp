@@ -215,3 +215,90 @@
                (dog (gethash "dog" data))
                (command (gethash "doesKnowCommand" dog)))
           (ok (string= command "false")))))))
+
+(deftest doggo-test
+  (testing "Doggo-testing"
+    (defclass pet (gql-object)
+      ((name :initarg :name :accessor name)))
+
+    (defclass dog (pet)
+      ((owner :initarg :owner :accessor owner)
+       (nickname :initarg :nickname :accessor nickname)))
+
+    (defclass cat (pet)
+      ((nickname :initarg :nickname :accessor nickname)))
+
+    (defclass sentient (gql-object)
+      ((name :initarg :name :accessor name)))
+
+    (defclass human (sentient)
+      ((pets :initarg :pets :accessor pets)))
+
+    (defparameter *doggo*
+      (make-instance
+       'dog
+       :name "Bingo-Bongo"
+       :type-name "Dog"
+       :nickname "Hund!"
+       :owner (make-instance
+               'human
+               :name "Wingle Wangle"
+               :type-name "Human"
+               :pets `(,(make-instance
+                         'dog
+                         :name "Bingo-Bongo"
+                         :nickname "Hund!"
+                         :type-name "Dog")
+                       ,(make-instance
+                         'cat
+                         :name "Bango-Wango"
+                         :nickname "Mjausig"
+                         :type-name "Cat")))))
+
+    (defparameter *query-resolvers*
+      (let ((ht (make-hash-table :test #'equal)))
+        (setf (gethash "dog" ht)
+              (lambda (arg) (declare (ignorable arg)) *doggo*))
+        ht))
+
+    (defparameter *dog-resolvers*
+      (let ((ht (make-hash-table :test #'equal)))
+        (setf (gethash "name" ht) (lambda (dog) (name dog)))
+        (setf (gethash "nickname" ht) (lambda (dog) (nickname dog)))
+        (setf (gethash "owner" ht) (lambda (dog) (owner dog)))
+        ht))
+
+    (defparameter *cat-resolvers*
+      (let ((ht (make-hash-table :test #'equal)))
+        (setf (gethash "name" ht) (lambda (cat) (name cat)))
+        (setf (gethash "nickname" ht) (lambda (cat) (nickname cat)))
+        (setf (gethash "owner" ht) (lambda (cat) (owner cat)))
+        ht))
+
+    (defparameter *human-resolvers*
+      (let ((ht (make-hash-table :test #'equal)))
+        (setf (gethash "name" ht) (lambda (human) (name human)))
+        (setf (gethash "pets" ht) (lambda (human) (pets human)))
+        ht))
+
+    (flet ((doggo-test (query)
+             (with-schema (build-schema (asdf:system-relative-pathname 'gql-tests #p"t/test-files/validation-schema.graphql"))
+               (let* ((res (gql::execute-request
+                            (build-schema query) nil (make-hash-table :test #'equal) nil)))
+                 (format nil "~a" (cl-json:encode-json-to-string res))))))
+
+      (let ((*resolvers* (make-hash-table :test #'equal)))
+        (setf (gethash "Query" *resolvers*) *query-resolvers*)
+        (setf (gethash "Dog" *resolvers*) *dog-resolvers*)
+        (setf (gethash "Cat" *resolvers*) *cat-resolvers*)
+        (setf (gethash "Human" *resolvers*) *human-resolvers*)
+        (let ((result (doggo-test "query { dog { name owner { name pets { name nickname } } } }")))
+          (ok (string= result "{\"data\":{\"dog\":{\"name\":\"Bingo-Bongo\",\"owner\":{\"name\":\"Wingle Wangle\",\"pets\":[{\"name\":\"Bingo-Bongo\",\"nickname\":\"Hund!\"},{\"name\":\"Bango-Wango\",\"nickname\":\"Mjausig\"}]}}},\"errors\":null}"))))
+
+      (let ((*resolvers* (make-hash-table :test #'equal)))
+        (setf (gethash "Query" *resolvers*) *query-resolvers*)
+        (setf (gethash "Dog" *resolvers*) *dog-resolvers*)
+        (setf (gethash "Cat" *resolvers*) *cat-resolvers*)
+        (setf (gethash "Human" *resolvers*) *human-resolvers*)
+        (let ((result (doggo-test "query { dog: doggo { name: Bingo owner { name: Wingle pets: dogs { name nickname: thisIsFun } } } }")))
+          (ok (string= result "{\"data\":{\"doggo\":{\"Bingo\":\"Bingo-Bongo\",\"owner\":{\"Wingle\":\"Wingle Wangle\",\"dogs\":[{\"name\":\"Bingo-Bongo\",\"thisIsFun\":\"Hund!\"},{\"name\":\"Bango-Wango\",\"thisIsFun\":\"Mjausig\"}]}}},\"errors\":null}")))))))
