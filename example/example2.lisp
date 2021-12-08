@@ -1,7 +1,10 @@
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (ql:quickload '(:gql :cl-json) :silent t))
 
-(in-package #:gql-example)
+(defpackage :gql-example2
+  (:use :cl :gql))
+
+(in-package #:gql-example2)
 
 (defclass pet (gql-object)
   ((name :initarg :name :accessor name)))

@@ -11,10 +11,10 @@ start by adding a couple of quickloads, just for good measure.
 Then, we need to define our package and go inside of it.
 
 ```lisp
-(defpackage :gql-exampleapp
+(defpackage :gql-exampleapp1
   (:use :cl :gql))
 
-(in-package :gql-exampleapp)
+(in-package :gql-exampleapp1)
 ```
 
 
@@ -40,19 +40,21 @@ We define it, along with our variable-values like so:
 
 Great, this is a good start!  The last item on our agenda is resolving
 information.  `gql` provides a dynamic variable, `*resolvers*`, which sole
-purpose is to deal with this.  We need only a simple one here:
+purpose is to deal with this.  We need only simple ones here:
 
 ```lisp
-(setf (gethash "name" *Query*) (lambda () "Bongodor"))
-(setf (gethash "age" *Query*) (lambda () 22))
+(make-resolvers
+  ("name" . (constantly "Theodor Thornhill"))
+  ("age"  . (constantly 31)))
 
-(setf *resolvers* (make-hash-table :test #'equal))
-(setf (gethash "Query" *resolvers*) *Query*)
+(make-resolvers
+  ("Query" . query-resolvers))
+  (setf (gethash "Query" *resolvers*) *Query*)
 ```
 
 The main point here is that we want to mimick the structure from the schema, but
 return functions adhering to the contract defined in the schema.  In this case
-it is easy, we just supply a lambda that returns a value.  These functions are
+it is easy, we just supply a function that returns a value.  These functions are
 then called internally by `gql`.  We could supply arguments and variables here,
 and that would make our functions take an argument, a hash-table of
 param->value.  We don't need that here, so we just supply the functions without
@@ -70,9 +72,18 @@ The last few things is running a server and defining an easy handler:
 (hunchentoot:define-easy-handler (home :uri "/home") (item)
   (setf (hunchentoot:content-type*) "text/plain")
   (when item
-    (with-schema *example-schema*
-      (let ((result (execute-request (query item) nil *variable-values* nil)))
-        (format nil "~a~%" (cl-json:encode-json-to-string result))))))
+    (let* ((query-resolvers
+             (make-resolvers
+               ("name" . (constantly "Theodor Thornhill"))
+               ("age"  . (constantly 31))))
+
+           (*resolvers*
+             (make-resolvers
+               ("Query" . query-resolvers))))
+
+      (with-schema *example-schema*
+        (let ((result (execute-request (query item) nil *variable-values* nil)))
+          (format nil "~a~%" (cl-json:encode-json-to-string result)))))))
 ```
 
 Very nice.  The last thing is now to eval this line in your repl, from inside of
