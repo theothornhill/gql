@@ -24,8 +24,8 @@ ensure we have initialized the schema.")
   "Hash-table containing all types from schema *SCHEMA*.
 Should be bound together with *schema* when needed.")
 
-(defvar *data* nil
-  "Data to be returned to client after validation and execution.")
+(defvar *result* nil
+  "Hash table to contain the results of an execution.")
 
 (defvar *errors* nil
   "Errors to be returned to client after validation and execution.")

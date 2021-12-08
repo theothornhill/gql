@@ -6,9 +6,8 @@
    #:gql
    #:build-schema
    #:generate
-   #:validate
    #:with-schema
-   #:execute-request
+   #:execute
    #:*resolvers*
    #:resolve
    #:bool

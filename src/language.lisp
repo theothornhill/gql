@@ -34,8 +34,7 @@
                  (every-definition-executable-p definitions)
                  (operation-name-unique-p definitions)
                  (single-anonymous-operation-definition-p definitions)
-                 (subscription-operation-valid-p)
-                 (values *data* *errors*)))
+                 (subscription-operation-valid-p)))
   :generator (defgenerator document ()
                "~{~a~%~}" (gather-nodes (definitions node) indent-level)))
 

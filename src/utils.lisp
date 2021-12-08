@@ -66,18 +66,33 @@ documents."
           (setf (gethash (name name) node-table) node))))))
 
 (defclass* errors
-  nodes
-  message)
+  message
+  locations
+  path
+  extensions)
+
+(defclass* error-location
+  line
+  column)
 
 (defun make-error (message nodes)
-  (let ((error-nodes (if (listp nodes) nodes (list nodes))))
-    (push (make-instance 'errors
-                         :message message
-                         :nodes error-nodes)
+  (let ((node-list (if (listp nodes) nodes (list nodes))))
+    (push (make-instance
+           'errors
+           :message message
+           :locations (mapcar
+                       (lambda (node)
+                         (let ((start-token (start-token (location node))))
+                           (make-instance
+                            'error-location
+                            :line (line start-token)
+                            :column (column start-token))))
+                       node-list)
+           :path nil
+           :extensions nil)
           *errors*)))
 
 (defun name-or-alias (field)
-  ;; TODO: This one is probably no good
   (with-slots (alias name) field
     (if alias
         (name alias)

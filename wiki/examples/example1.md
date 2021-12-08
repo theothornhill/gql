@@ -82,7 +82,7 @@ The last few things is running a server and defining an easy handler:
                ("Query" . query-resolvers))))
 
       (with-schema *example-schema*
-        (let ((result (execute-request (query item) nil *variable-values* nil)))
+        (let ((result (execute (query item) nil *variable-values* nil)))
           (format nil "~a~%" (cl-json:encode-json-to-string result)))))))
 ```
 

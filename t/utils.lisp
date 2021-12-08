@@ -33,15 +33,14 @@
 (defun generator-test (input output)
   (ok (string-equal (generate (build-schema input)) output)))
 
-(defun validator-test (input &key no-schema)
+(defun validator-test-helper (input &key no-schema)
   (with-schema (if no-schema
                    (build-schema input)
                    (build-schema (asdf:system-relative-pathname
                                   'gql-tests
                                   #p"t/test-files/validation-schema.graphql")))
-    (setf gql::*errors* nil)
-    (setf gql::*data* nil)
-    (validate (build-schema input))))
+    (let ((gql::*errors* nil))
+      
+      (gql::validate (build-schema input))
+      (cl-json:encode-json-to-string gql::*errors*))))
 
-(defun validator-errors-p (input &key no-schema)
-  (nth-value 1 (validator-test input :no-schema no-schema)))

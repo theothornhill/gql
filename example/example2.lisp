@@ -52,8 +52,7 @@
 
 (defun example2 (query)
   (with-schema (build-schema (asdf:system-relative-pathname 'gql-tests #p"t/test-files/validation-schema.graphql"))
-    (let* ((res (gql::execute-request
-                 (build-schema query) nil (make-hash-table :test #'equal) nil)))
+    (let* ((res (gql::execute (build-schema query) nil (make-hash-table :test #'equal) nil)))
       (format t "~%~a" (cl-json:encode-json-to-string res)))))
 
 (let ((*resolvers*

@@ -45,11 +45,11 @@
         (setf (gethash "name" dog-resolver) (lambda (arg) (declare (ignorable arg))
                                               "Bingo-bongo"))
         (setf (gethash "owner" dog-resolver) (lambda (arg) (declare (ignorable arg)) t))
-        (let* ((res (gql::execute-request (build-schema "query { dog { name } dog { owner { name } } }") nil (make-hash-table) nil))
+        (let* ((res (gql::execute (build-schema "query { dog { name } dog { owner { name } } }") nil (make-hash-table) nil))
                (data (gethash "data" res))
                (dog-res (gethash "dog" data)))
           (ok (typep res 'hash-table))
-          (ok (= (hash-table-count res) 2))
+          (ok (= (hash-table-count res) 1))
           (ok (= (hash-table-count dog-res) 2))
           (ok (gethash "name" dog-res))
           (ok (gethash "owner" dog-res))))))
@@ -68,11 +68,11 @@
         (setf (gethash "name" dog-resolver) (lambda (arg) (declare (ignorable arg))
                                               "Bingo-bongo"))
         (setf (gethash "owner" dog-resolver) (lambda (arg) (declare (ignorable arg)) t))
-        (let* ((res (gql::execute-request (build-schema "query { dog { name owner { name: nameAlias } } }") nil (make-hash-table) nil))
+        (let* ((res (gql::execute (build-schema "query { dog { name owner { name: nameAlias } } }") nil (make-hash-table) nil))
                (data (gethash "data" res))
                (dog-res (gethash "dog" data)))
           (ok (typep res 'hash-table))
-          (ok (= (hash-table-count res) 2))
+          (ok (= (hash-table-count res) 1))
           (ok (= (hash-table-count dog-res) 2))
           (ok (gethash "name" dog-res))
           (ok (gethash "owner" dog-res))))))
@@ -91,7 +91,7 @@
               (lambda (arg args) (declare (ignorable arg))
                 (if (string= (gethash "dogCommand" args) "SIT")
                     'true 'false)))
-        (let* ((res (gql::execute-request
+        (let* ((res (gql::execute
                      (build-schema "query x($sit: String) { dog { doesKnowCommand(dogCommand: $sit) } }")
                      nil
                      variable-values
@@ -140,13 +140,13 @@
               (lambda (arg) (declare (ignorable arg))
                 (make-instance 'dog :name "Bingo-bongo")))
         (setf (gethash "name" dog-resolver) (lambda (dog) (name dog)))
-        (let* ((res (gql::execute-request
+        (let* ((res (gql::execute
                      (build-schema "query { dog { name } }") nil (make-hash-table) nil))
                (data (gethash "data" res))
                (dog (gethash "dog" data))
                (name (gethash "name" dog)))
           (ok (string= name "Bingo-bongo")))
-        (let* ((res (gql::execute-request
+        (let* ((res (gql::execute
                      (build-schema "query { dog { name: bongo } }") nil (make-hash-table) nil))
                (data (gethash "data" res))
                (dog (gethash "dog" data))
@@ -177,7 +177,7 @@
                               :test #'equal)
                       'true 'false))))
 
-        (let* ((res (gql::execute-request
+        (let* ((res (gql::execute
                      (build-schema "query x($sit: String) { dog { doesKnowCommand(dogCommand: $sit) } }")
                      nil
                      variable-values
@@ -187,7 +187,7 @@
                (command (gethash "doesKnowCommand" dog)))
           (ok (string= command "true")))
         (setf (gethash "sit" variable-values) "SITT")
-        (let* ((res (gql::execute-request
+        (let* ((res (gql::execute
                      (build-schema "query x($sit: String) { dog { doesKnowCommand(dogCommand: $sit) } }")
                      nil
                      variable-values
@@ -197,7 +197,7 @@
                (command (gethash "doesKnowCommand" dog)))
           (ok (string= command "false")))
         ;; (setf (gethash "sit" variable-values) "SIT")
-        ;; (let* ((res (gql::execute-request
+        ;; (let* ((res (gql::execute
         ;;              (build-schema "query { dog { doesKnowCommand(dogCommand: \"SIT\") } }")
         ;;              nil
         ;;              variable-values
@@ -206,7 +206,7 @@
         ;;        (dog (gethash "dog" data))
         ;;        (command (gethash "doesKnowCommand" dog)))
         ;;   (ok (string= command "true")))
-        (let* ((res (gql::execute-request
+        (let* ((res (gql::execute
                      (build-schema "query { dog { doesKnowCommand(dogCommand: \"LOL\") } }")
                      nil
                      variable-values
@@ -301,13 +301,13 @@
 
       (flet ((doggo-test (query)
                (with-schema (build-schema (asdf:system-relative-pathname 'gql-tests #p"t/test-files/validation-schema.graphql"))
-                 (let* ((res (gql::execute-request (build-schema query) nil (make-hash-table :test #'equal) nil)))
+                 (let* ((res (gql::execute (build-schema query) nil (make-hash-table :test #'equal) nil)))
                    (format nil "~a" (cl-json:encode-json-to-string res))))))
 
         (ok (string=
              (doggo-test "query { dog { name owner { name pets { name nickname } } } }")
-             "{\"data\":{\"dog\":{\"name\":\"Bingo-Bongo\",\"owner\":{\"name\":\"Wingle Wangle\",\"pets\":[{\"name\":\"Bingo-Bongo\",\"nickname\":\"Hund!\"},{\"name\":\"Bango-Wango\",\"nickname\":\"Mjausig\"}]}}},\"errors\":null}"))
+             "{\"data\":{\"dog\":{\"name\":\"Bingo-Bongo\",\"owner\":{\"name\":\"Wingle Wangle\",\"pets\":[{\"name\":\"Bingo-Bongo\",\"nickname\":\"Hund!\"},{\"name\":\"Bango-Wango\",\"nickname\":\"Mjausig\"}]}}}}"))
 
         (ok (string=
              (doggo-test "query { dog: doggo { name: Bingo owner { name: Wingle pets: dogs { name nickname: thisIsFun } } } }")
-             "{\"data\":{\"doggo\":{\"Bingo\":\"Bingo-Bongo\",\"owner\":{\"Wingle\":\"Wingle Wangle\",\"dogs\":[{\"name\":\"Bingo-Bongo\",\"thisIsFun\":\"Hund!\"},{\"name\":\"Bango-Wango\",\"thisIsFun\":\"Mjausig\"}]}}},\"errors\":null}"))))))
+             "{\"data\":{\"doggo\":{\"Bingo\":\"Bingo-Bongo\",\"owner\":{\"Wingle\":\"Wingle Wangle\",\"dogs\":[{\"name\":\"Bingo-Bongo\",\"thisIsFun\":\"Hund!\"},{\"name\":\"Bango-Wango\",\"thisIsFun\":\"Mjausig\"}]}}}}"))))))

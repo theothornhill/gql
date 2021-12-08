@@ -106,11 +106,13 @@
   (let ((query-type (gethash "Query" *all-types*)))
     (check-type query-type object-type-definition)
     (with-slots (selection-set) query
-      (let ((results (make-hash-table :test #'equal)))
-        (setf (gethash "data" results)
-              (execute-selection-set (selections selection-set) query-type initial-value variable-values))
-        (setf (gethash "errors" results) *errors*)
-        results))))
+      (setf (gethash "data" *result*)
+            (execute-selection-set (selections selection-set) query-type initial-value variable-values))
+      (when *errors*
+        ;; TODO: This might be too strict.  It may be okay to leave some data here.
+        (setf (gethash "data" *result*) nil)
+        (setf (gethash "errors" *result*) *errors*))
+      *result*)))
 
 (declaim (ftype (function (operation-definition hash-table t) hash-table) execute-mutation))
 (defun execute-mutation (mutation variable-values initial-value)
@@ -118,11 +120,13 @@
   (let ((mutation-type (gethash "Mutation" *all-types*)))
     (check-type mutation-type object-type-definition)
     (with-slots (selection-set) mutation
-      (let ((results (make-hash-table :test #'equal)))
-        (setf (gethash "data" results)
-              (execute-selection-set (selections selection-set) mutation-type initial-value variable-values))
-        (setf (gethash "errors" results) *errors*)
-        results))))
+      (setf (gethash "data" *result*)
+            (execute-selection-set (selections selection-set) mutation-type initial-value variable-values))
+      (when *errors*
+        ;; TODO: This might be too strict.  It may be okay to leave some data here.
+        (setf (gethash "data" *result*) nil)
+        (setf (gethash "errors" *result*) *errors*))
+      *result*)))
 
 (defun subscribe (subscription variable-values initial-value)
   ;; TODO: https://spec.graphql.org/draft/#Subscribe()
@@ -307,8 +311,7 @@
 
 (defun execute-request (document operation-name variable-values initial-value)
   ;; https://spec.graphql.org/draft/#sec-Executing-Requests
-  (let* ((*errors* nil)
-         (operation (get-operation document operation-name))
+  (let* ((operation (get-operation document operation-name))
          (coerced-vars (coerce-vars operation variable-values)))
     (string-case (operation-type operation)
       ("Query"        (execute-query operation coerced-vars initial-value))
@@ -346,3 +349,12 @@
             :for selection :in (selections field-selection-set)
             :do (push selection selection-set))
     :finally (return (nreverse selection-set))))
+
+(defun execute (document operation-name variable-values initial-value)
+  (let ((*result* (make-hash-table :test #'equal))
+        (*errors* nil))
+    (validate document)
+    (if *errors*
+        (setf (gethash "errors" *result*) *errors*)
+        (execute-request document operation-name variable-values initial-value))
+    *result*))
