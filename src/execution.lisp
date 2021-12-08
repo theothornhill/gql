@@ -167,6 +167,7 @@
           (cond
             (;; including 'null' as a default value
              (and (null has-value-p) default-value)
+             ;; TODO: Check if we can properly identify 'null here
              (setf (gethash argument-name coerced-values) default-value))
             ((and (eq (kind argument-type) 'non-null-type)
                   (or (null has-value-p)
