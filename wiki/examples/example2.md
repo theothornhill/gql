@@ -61,33 +61,30 @@ Let's see our "database":
                      :type-name "Dog")))))
 ```
 
-Next up are the resolvers.  These are pretty simple to make, but has a bit ugly syntax for now:
+Next up are the resolvers.  These are pretty simple to make, and uses a simple
+helper macro to aid with getting the syntax right.
 
 ```lisp
 (defvar *query-resolvers*
-  (let ((ht (make-hash-table :test #'equal)))
-    (setf (gethash "dog" ht)
-          (lambda (arg) (declare (ignorable arg)) *doggo*))
-    ht))
+  (make-resolvers
+    ("dog" . (constantly *doggo*))))
 
 (defvar *dog-resolvers*
-  (let ((ht (make-hash-table :test #'equal)))
-    (setf (gethash "name" ht) (lambda (dog) (name dog)))
-    (setf (gethash "owner" ht) (lambda (dog) (owner dog)))
-    ht))
+  (make-resolvers
+    ("name"  . 'name)
+    ("owner" . 'owner)))
 
 (defvar *human-resolvers*
-  (let ((ht (make-hash-table :test #'equal)))
-    (setf (gethash "name" ht) (lambda (human) (name human)))
-    (setf (gethash "pets" ht) (lambda (human) (pets human)))
-    ht))
+  (make-resolvers
+    ("name" . 'name)
+    ("pets" . 'pets)))
 ```
 
 `*query-resolvers*` has just a simple function inside, which returns object from
 the "database".  This is typically where the first calls to the database is
-made. `*dog-resolvers*` contains lambdas wrapping getters from the object as
-they are defined through clos.  We wrap it in a lambda so that `gql` can call
-the function for us.  The same is true for `*human-resolvers*`.
+made. `*dog-resolvers*` contains getters from the object as they are defined
+through clos.  `gql` can call the function for us.  The same is true for
+`*human-resolvers*`.
 
 At last, we can do the request.  We need to parse the schema, then make the
 request.  We don't need any variable-values now, because we still keep the
@@ -101,14 +98,16 @@ queries simple.  Our function looks like this:
       (format t "~a" (cl-json:encode-json-to-string res)))))
 ```
 
-Now we just bind the resolvers to the exported `*resolvers*` symbol and run our query:
+Now we just bind the resolvers to the exported `*resolvers*` symbol and run our queries:
 
 ```lisp
-(let ((*resolvers* (make-hash-table :test #'equal)))
-  (setf (gethash "Query" *resolvers*) *query-resolvers*)
-  (setf (gethash "Dog" *resolvers*) *dog-resolvers*)
-  (setf (gethash "Human" *resolvers*) *human-resolvers*)
-  (example2 "query { dog { name owner { name pets { name } } } }"))
+(let ((*resolvers*
+        (make-resolvers
+          ("Query"    . *query-resolvers*)
+          ("Dog"      . *dog-resolvers*)
+          ("Human"    . *human-resolvers*))))
+  (example2 "query { dog { name owner { name pets { name } } } }")
+  (example2 "query { dog { name owner: wingle { name pets: dogs { name } } } }"))
 ```
 
 This yields:
@@ -135,17 +134,7 @@ This yields:
 }
 ```
 
-We can add aliases to our queries, so that we can be super agile(tm) in the front-end:
-
-```lisp
-(let ((*resolvers* (make-hash-table :test #'equal)))
-  (setf (gethash "Query" *resolvers*) *query-resolvers*)
-  (setf (gethash "Dog" *resolvers*) *dog-resolvers*)
-  (setf (gethash "Human" *resolvers*) *human-resolvers*)
-  (example2 "query { dog { name owner: wingle { name pets: dogs { name } } } }"))
-```
-
-Now we get:
+The second query adds a few aliases, so that we can be super agile(tm):
 
 ```json
 {

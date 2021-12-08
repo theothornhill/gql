@@ -14,4 +14,5 @@
    #:bool
    #:true
    #:false
-   #:gql-object))
+   #:gql-object
+   #:make-resolvers))

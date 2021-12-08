@@ -251,59 +251,53 @@
     (defclass human (sentient)
       ((pets :initarg :pets :accessor pets)))
 
-    (defparameter *doggo*
-      (make-instance
-       'dog
-       :name "Bingo-Bongo"
-       :type-name "Dog"
-       :nickname "Hund!"
-       :owner (make-instance
-               'human
-               :name "Wingle Wangle"
-               :type-name "Human"
-               :pets `(,(make-instance
-                         'dog
-                         :name "Bingo-Bongo"
-                         :nickname "Hund!"
-                         :type-name "Dog")
-                       ,(make-instance
-                         'cat
-                         :name "Bango-Wango"
-                         :nickname "Mjausig"
-                         :type-name "Cat")))))
-
-    (let* ((query-resolvers
-             (let ((ht (make-hash-table :test #'equal)))
-               (setf (gethash "dog" ht)
-                     (lambda (arg) (declare (ignorable arg)) *doggo*))
-               ht))
+    (let* ((doggo
+             (make-instance
+              'dog
+              :name "Bingo-Bongo"
+              :type-name "Dog"
+              :nickname "Hund!"
+              :owner (make-instance
+                      'human
+                      :name "Wingle Wangle"
+                      :type-name "Human"
+                      :pets `(,(make-instance
+                                'dog
+                                :name "Bingo-Bongo"
+                                :nickname "Hund!"
+                                :type-name "Dog")
+                              ,(make-instance
+                                'cat
+                                :name "Bango-Wango"
+                                :nickname "Mjausig"
+                                :type-name "Cat")))))
+           (query-resolvers
+             (make-resolvers
+               ("dog"      . (constantly doggo))))
 
            (dog-resolvers
-             (let ((ht (make-hash-table :test #'equal)))
-               (setf (gethash "name" ht) (lambda (dog) (name dog)))
-               (setf (gethash "nickname" ht) (lambda (dog) (nickname dog)))
-               (setf (gethash "owner" ht) (lambda (dog) (owner dog)))
-               ht))
+             (make-resolvers
+               ("name"     . 'name)
+               ("nickname" . 'nickname)
+               ("owner"    . 'owner)))
 
            (cat-resolvers
-             (let ((ht (make-hash-table :test #'equal)))
-               (setf (gethash "name" ht) (lambda (cat) (name cat)))
-               (setf (gethash "nickname" ht) (lambda (cat) (nickname cat)))
-               (setf (gethash "owner" ht) (lambda (cat) (owner cat)))
-               ht))
+             (make-resolvers
+               ("name"     . 'name)
+               ("nickname" . 'nickname)
+               ("owner"    . 'owner)))
 
            (human-resolvers
-             (let ((ht (make-hash-table :test #'equal)))
-               (setf (gethash "name" ht) (lambda (human) (name human)))
-               (setf (gethash "pets" ht) (lambda (human) (pets human)))
-               ht))
+             (make-resolvers
+               ("name"     . 'name)
+               ("pets"     . 'pets)))
+
            (*resolvers*
-             (let ((ht (make-hash-table :test #'equal)))
-               (setf (gethash "Query" ht) query-resolvers)
-               (setf (gethash "Dog" ht) dog-resolvers)
-               (setf (gethash "Cat" ht) cat-resolvers)
-               (setf (gethash "Human" ht) human-resolvers)
-               ht)))
+             (make-resolvers
+               ("Query"    . query-resolvers)
+               ("Dog"      . dog-resolvers)
+               ("Cat"      . cat-resolvers)
+               ("Human"    . human-resolvers))))
 
       (flet ((doggo-test (query)
                (with-schema (build-schema (asdf:system-relative-pathname 'gql-tests #p"t/test-files/validation-schema.graphql"))

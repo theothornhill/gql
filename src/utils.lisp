@@ -97,3 +97,11 @@ documents."
              (fields (gethash (nameof object-type) *all-types*)))))
 
 (defclass* gql-object type-name)
+
+(defmacro make-resolvers (&body body)
+  `(let ((ht (make-hash-table :test #'equal)))
+     ,@(mapcar
+        (lambda (resolver)
+          `(setf (gethash ,(car resolver) ht) ,(cdr resolver)))
+        body)
+     ht))

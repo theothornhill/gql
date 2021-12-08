@@ -34,22 +34,18 @@
                      :type-name "Dog")))))
 
 (defvar *query-resolvers*
-  (let ((ht (make-hash-table :test #'equal)))
-    (setf (gethash "dog" ht)
-          (lambda (arg) (declare (ignorable arg)) *doggo*))
-    ht))
+  (make-resolvers
+    ("dog" . (constantly *doggo*))))
 
 (defvar *dog-resolvers*
-  (let ((ht (make-hash-table :test #'equal)))
-    (setf (gethash "name" ht) (lambda (dog) (name dog)))
-    (setf (gethash "owner" ht) (lambda (dog) (owner dog)))
-    ht))
+  (make-resolvers
+    ("name"  . 'name)
+    ("owner" . 'owner)))
 
 (defvar *human-resolvers*
-  (let ((ht (make-hash-table :test #'equal)))
-    (setf (gethash "name" ht) (lambda (human) (name human)))
-    (setf (gethash "pets" ht) (lambda (human) (pets human)))
-    ht))
+  (make-resolvers
+    ("name" . 'name)
+    ("pets" . 'pets)))
 
 (defun example2 (query)
   (with-schema (build-schema (asdf:system-relative-pathname 'gql-tests #p"t/test-files/validation-schema.graphql"))
@@ -57,16 +53,10 @@
                  (build-schema query) nil (make-hash-table :test #'equal) nil)))
       (format t "~%~a" (cl-json:encode-json-to-string res)))))
 
-(let ((*resolvers* (make-hash-table :test #'equal)))
-  (setf (gethash "Query" *resolvers*) *query-resolvers*)
-  (setf (gethash "Dog" *resolvers*) *dog-resolvers*)
-  (setf (gethash "Human" *resolvers*) *human-resolvers*)
-  (example2 "query { dog { name owner { name pets { name } } } }"))
-
-(let ((*resolvers* (make-hash-table :test #'equal)))
-  (setf (gethash "Query" *resolvers*) *query-resolvers*)
-  (setf (gethash "Dog" *resolvers*) *dog-resolvers*)
-  (setf (gethash "Human" *resolvers*) *human-resolvers*)
+(let ((*resolvers*
+        (make-resolvers
+          ("Query"    . *query-resolvers*)
+          ("Dog"      . *dog-resolvers*)
+          ("Human"    . *human-resolvers*))))
+  (example2 "query { dog { name owner { name pets { name } } } }")
   (example2 "query { dog { name owner: wingle { name pets: dogs { name } } } }"))
-
-
