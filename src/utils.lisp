@@ -111,7 +111,11 @@ documents."
     (find-if (lambda (obj) (string= (nameof obj) field-name))
              (fields (gethash (nameof object-type) *all-types*)))))
 
-(defclass* gql-object type-name)
+(defclass gql-object ()
+  ((type-name
+    :initarg :type-name
+    :accessor type-name
+    :initform (gql-error "Need to supply type name. Consult your schema."))))
 
 (defmacro make-resolvers (&body body)
   `(let ((ht (make-hash-table :test #'equal)))
