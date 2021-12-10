@@ -15,5 +15,6 @@
                  (:file "regression-tests")
                  (:file "type-extension-tests")
                  (:file "validation-tests")
-                 (:file "execution-tests"))))
+                 (:file "execution-tests")
+                 (:file "introspection-tests"))))
   :perform (test-op (o c) (symbol-call :rove '#:run :gql-tests :style :dot)))

@@ -143,10 +143,14 @@
   (let ((results (make-hash-table :test #'equal)))
     (maphash
      (lambda (response-key fields)
-       (with-slots (ty) (get-field-definition (car fields) object-type)
-         (when ty
+       (let* ((field-definition (get-field-definition (car fields) object-type results)))
+         (unless (stringp field-definition)
            (setf (gethash response-key results)
-                 (execute-field object-type object-value ty fields variable-values)))))
+                 (execute-field object-type
+                                object-value
+                                (ty field-definition)
+                                fields
+                                variable-values)))))
      (collect-fields object-type selection-set variable-values))
     results))
 

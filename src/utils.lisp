@@ -106,10 +106,14 @@ documents."
           (*all-types* (all-types)))
      ,@body))
 
-(defun get-field-definition (field object-type)
+(defun get-field-definition (field object-type &optional results)
   (let ((field-name (name-or-alias field)))
-    (find-if (lambda (obj) (string= (nameof obj) field-name))
-             (fields (gethash (nameof object-type) *all-types*)))))
+    (if (string= "__typename" field-name)
+        ;; TODO: Is it enough just to set name here?  Do we get interfaces and
+        ;; such things?
+        (and results (setf (gethash "__typename" results) (nameof object-type)))
+        (find-if (lambda (obj) (string= (nameof obj) field-name))
+                 (fields (gethash (nameof object-type) *all-types*))))))
 
 (defclass gql-object ()
   ((type-name
