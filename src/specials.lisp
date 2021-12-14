@@ -33,6 +33,15 @@ Should be bound together with *schema* when needed.")
 (defvar *resolvers* nil
   "Hash table to store the resolvers corresponding to the schema")
 
+(defclass execution-context ()
+  ((object-type :initarg :object-type :accessor object-type)
+   (object-value :initarg :object-value :accessor object-value)
+   (field-definition :initarg :field-definition :accessor field-definition)
+   (field-name :initarg :field-name :accessor field-name)
+   (arg-values :initarg :arg-values :accessor arg-values)))
+
+(defvar *execution-context* nil)
+
 (defun built-in-scalar-p (scalar)
   (member scalar '("Int" "Float" "String" "Boolean" "ID") :test #'string=))
 

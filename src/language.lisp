@@ -15,7 +15,8 @@
 
 (defclass* ast-node
   kind
-  location)
+  location
+  resolver)
 
 (defgql name
   :node (defnode name name)
@@ -29,12 +30,12 @@
   :node (defnode document definitions)
   :parser (defparser document ()
             (make-node 'document :definitions (many 'sof 'definition 'eof)))
-  :validator (defvalidator document ()
-               (with-slots (definitions) node
-                 (every-definition-executable-p definitions)
-                 (operation-name-unique-p definitions)
-                 (single-anonymous-operation-definition-p definitions)
-                 (subscription-operation-valid-p)))
+  ;; :validator (defvalidator document ()
+  ;;              (with-slots (definitions) node
+  ;;                (every-definition-executable-p definitions)
+  ;;                (operation-name-unique-p definitions)
+  ;;                (single-anonymous-operation-definition-p definitions)
+  ;;                (subscription-operation-valid-p)))
   :generator (defgenerator document ()
                "~{~a~%~}" (gather-nodes (definitions node) indent-level)))
 

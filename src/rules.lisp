@@ -38,7 +38,7 @@
 (defun subscription-operation-valid-p ()
   ;; https://spec.graphql.org/draft/#sec-Subscription-Operation-Definitions
   (loop
-    :for subscription :in (get-subscriptions)
+    :for subscription :in (subscription-type *schema*)
     :for subscription-type = (operation-type subscription)
     :for selection-set = (selection-set subscription)
     :for grouped-field-set = (collect-fields subscription-type

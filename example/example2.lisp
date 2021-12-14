@@ -22,43 +22,60 @@
   (make-instance
    'dog
    :name "Bingo-Bongo"
-   :type-name "Dog"
    :owner (make-instance
            'human
            :name "Wingle Wangle"
-           :type-name "Human"
            :pets `(,(make-instance
                      'dog
-                     :name "Bingo-Bongo"
-                     :type-name "Dog")
+                     :name "Bingo-Bongo")
                    ,(make-instance
                      'dog
-                     :name "Bango-Wango"
-                     :type-name "Dog")))))
+                     :name "Bango-Wango")))))
+(defvar *query*
+  (gql::object :name "Query"
+               :fields `(,(gql::field :name "dog"
+                                      :type (gql::named "Dog")
+                                      :resolver (constantly *doggo*)))))
 
-(defvar *query-resolvers*
-  (make-resolvers
-    ("dog" . (constantly *doggo*))))
+(defvar *dog*
+  (gql::object :name "Dog"
+               :description "A Dog is a dog!"
+               :fields `(,(gql::field :name "name"
+                                      :type (gql::named "String")
+                                      :resolver (lambda () (name (gql::object-value gql::*execution-context*))))
+                         ,(gql::field :name "nickname"
+                                      :type (gql::named "String"))
+                         ,(gql::field :name "barkVolume"
+                                      :type (gql::named "Int"))
+                         ,(gql::field :name "owner"
+                                      :type (gql::named "Human")
+                                      :resolver (lambda () (make-instance 'human
+                                                                     :name "Petter Smart"
+                                                                     :pets '()))))))
 
-(defvar *dog-resolvers*
-  (make-resolvers
-    ("name"  . 'name)
-    ("owner" . 'owner)))
+(defvar *human*
+  (gql::object :name "Human"
+               :description "A Human is a human!"
+               :fields `(,(gql::field :name "name"
+                                      :type (gql::named "String")
+                                      :resolver (lambda () (name (gql::object-value gql::*execution-context*))))
+                         ,(gql::field :name "pets"
+                                      :type (gql::list-type (gql::non-null-type (gql::named "Pet")))))))
 
-(defvar *human-resolvers*
-  (make-resolvers
-    ("name" . 'name)
-    ("pets" . 'pets)))
+
+;; (defun example2 (query)
+;;   (with-schema (build-schema (asdf:system-relative-pathname 'gql-tests #p"t/test-files/validation-schema.graphql"))
+;;     (let* ((res (gql::execute (build-schema query) nil (make-hash-table :test #'equal) nil)))
+;;       (format t "~%~a" (cl-json:encode-json-to-string res)))))
 
 (defun example2 (query)
-  (with-schema (build-schema (asdf:system-relative-pathname 'gql-tests #p"t/test-files/validation-schema.graphql"))
+  (with-schema (gql::make-schema :query *query* :types (list *dog* *human*))
     (let* ((res (gql::execute (build-schema query) nil (make-hash-table :test #'equal) nil)))
       (format t "~%~a" (cl-json:encode-json-to-string res)))))
 
-(let ((*resolvers*
-        (make-resolvers
-          ("Query"    . *query-resolvers*)
-          ("Dog"      . *dog-resolvers*)
-          ("Human"    . *human-resolvers*))))
-  (example2 "query { dog { name owner { name pets { name } } } }")
-  (example2 "query { dog { name owner: wingle { name pets: dogs { name } } } }"))
+;; (example2 "{ __schema { types { name ofType { name } } } }")
+;; (example2 "{ __type(name: \"Dog\") { name fields { name type { name } } } }")
+;; (example2 "query { dog { name owner { name pets { name } } } }")
+(example2 "query { dog { name owner { name } } }")
+;; (example2 "query { dog { name owner: wingle { name pets: dogs { name } } } }")
+

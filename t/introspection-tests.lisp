@@ -38,36 +38,35 @@
                                 :name "Bango-Wango"
                                 :nickname "Mjausig"
                                 :type-name "Cat")))))
-           (query-resolvers
-             (make-resolvers
-               ("dog"      . (constantly doggo))))
-
-           (dog-resolvers
-             (make-resolvers
-               ("name"     . 'name)
-               ("nickname" . 'nickname)
-               ("owner"    . 'owner)))
-
-           (cat-resolvers
-             (make-resolvers
-               ("name"     . 'name)
-               ("nickname" . 'nickname)
-               ("owner"    . 'owner)))
-
-           (human-resolvers
-             (make-resolvers
-               ("name"     . 'name)
-               ("pets"     . 'pets)))
-
-           (*resolvers*
-             (make-resolvers
-               ("Query"    . query-resolvers)
-               ("Dog"      . dog-resolvers)
-               ("Cat"      . cat-resolvers)
-               ("Human"    . human-resolvers))))
+           (query-type
+             (gql::object :name "Query"
+                          :fields `(,(gql::field :name "dog"
+                                                 :type (gql::named "Dog")
+                                                 :resolver (constantly doggo)))))
+           (human-type
+             (gql::object :name "Human"
+                          :description "A Human is a human!"
+                          :fields `(,(gql::field :name "name"
+                                                 :type (gql::named "String")
+                                                 :resolver (lambda () (name (gql::object-value gql::*execution-context*))))
+                                    ,(gql::field :name "pets"
+                                                 :type (gql::list-type (gql::non-null-type (gql::named "Pet")))))))
+           (dog-type
+             (gql::object :name "Dog"
+                          :description "A Dog is a dog!"
+                          :fields `(,(gql::field :name "name"
+                                                 :type (gql::named "String")
+                                                 :resolver (lambda () (name (gql::object-value gql::*execution-context*))))
+                                    ,(gql::field :name "nickname"
+                                                 :type (gql::named "String"))
+                                    ,(gql::field :name "owner"
+                                                 :type (gql::named "Human")
+                                                 :resolver (lambda () (make-instance 'human
+                                                                                :name "Wingle Wangle"
+                                                                                :pets '())))))))
 
       (flet ((doggo-test (query)
-               (with-schema (build-schema (asdf:system-relative-pathname 'gql-tests #p"t/test-files/validation-schema.graphql"))
+               (with-schema (gql::make-schema :query query-type :types (list dog-type human-type))
                  (let* ((res (gql::execute (build-schema query) nil (make-hash-table :test #'equal) nil)))
                    (format nil "~a" (cl-json:encode-json-to-string res))))))
 

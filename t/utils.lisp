@@ -34,13 +34,18 @@
   (ok (string-equal (generate (build-schema input)) output)))
 
 (defun validator-test-helper (input &key no-schema)
-  (with-schema (if no-schema
-                   (build-schema input)
-                   (build-schema (asdf:system-relative-pathname
-                                  'gql-tests
-                                  #p"t/test-files/validation-schema.graphql")))
-    (let ((gql::*errors* nil))
-      
-      (gql::validate (build-schema input))
-      (cl-json:encode-json-to-string gql::*errors*))))
+  (let* ((definitions (gql::definitions (if no-schema
+                                            (build-schema input)
+                                            (build-schema (asdf:system-relative-pathname
+                                                           'gql-tests
+                                                           #p"t/test-files/validation-schema.graphql"))) ))
+         (query-type (find-if (lambda (x) (string= (gql::nameof x) "Query")) definitions))
+         (subscription-type (find-if (lambda (x) (string= (gql::nameof x) "Subscription")) definitions)))
+    (with-schema (gql::make-schema :query query-type
+                                   :subscription subscription-type
+                                   :types definitions) 
+      (let ((gql::*errors* nil))
+          
+        (gql::validate (build-schema input))
+        (cl-json:encode-json-to-string gql::*errors*)))))
 

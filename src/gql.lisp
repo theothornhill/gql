@@ -21,5 +21,19 @@
   (:method ((str string))
     (let ((*parser* (make-parser str)))
       (parse 'document)))
-  (:documentation "Build a GraphQl schema.
+  (:method ((types list))
+    (make-instance 'document :definitions types))
+  (:documentation "Build a GraphQL schema.
+This is a simple helper to create a parsed document."))
+
+(defgeneric build-document (input)
+  (:method ((f pathname))
+    (let ((*parser* (make-parser (slurp f))))
+      (parse 'document)))
+  (:method ((str string))
+    (let ((*parser* (make-parser str)))
+      (parse 'document)))
+  (:method ((types list))
+    (make-instance 'document :definitions types))
+  (:documentation "Build a GraphQL schema.
 This is a simple helper to create a parsed document."))

@@ -1,19 +1,21 @@
 (in-package #:gql)
 
+(declaim (optimize (debug 3)))
+
 (defgeneric resolve (object-type object-value field-name arg-values)
   (:documentation "A function to resolve arbitrary values."))
 
 (defmethod resolve (object-type object-value field-name arg-values)
   ;; TODO: Ok, so now we get the corresponding type in the hash table, then
   ;; funcall the function mapped to by field name.
-  (let ((objtype (gethash (nameof object-type) *resolvers*)))
+  (let ((resolvers (gethash (nameof object-type) *resolvers*)))
     (if (> (hash-table-count arg-values) 0)
-        (funcall (gethash field-name objtype) object-value arg-values)
-        (funcall (gethash field-name objtype) object-value))))
+        (funcall (gethash field-name resolvers) object-value arg-values)
+        (funcall (gethash field-name resolvers) object-value))))
 
 (defun fragment-type-applies-p (object-type fragment-type)
   ;; TODO: https://spec.graphql.org/draft/#DoesFragmentTypeApply()
-  (let ((type-definition (gethash object-type *all-types*)))
+  (let ((type-definition (gethash object-type (type-map *schema*))))
     (typecase type-definition
       (object-type-definition
        (string= (nameof type-definition)
@@ -35,10 +37,10 @@
                          (visited-fragments nil))
   ;; TODO: https://spec.graphql.org/draft/#CollectFields() #10
   (labels ((sethash (item key table)
-               (let ((items (if (listp item) item (list item))))
-                 (setf (gethash key table) (append (gethash key table) items)))))
+             (let ((items (if (listp item) item (list item))))
+               (setf (gethash key table) (append (gethash key table) items)))))
     (loop
-      :with fragments = (get-types 'fragment-definition *schema*)
+      :with fragments = (get-fragments)
       :with grouped-fields = (make-hash-table :test #'equal)
       :for selection :in selection-set
       :do (unless (skippable-field-p (directives selection))
@@ -86,7 +88,7 @@
   ;; TODO: https://spec.graphql.org/draft/#IsInputType()
   (if (typep (kind type) 'wrapper-type)
       (input-type-p (ty type))
-      (let ((possible-type (gethash (nameof type) *all-types*)))
+      (let ((possible-type (gethash (nameof type) (type-map *schema*))))
         (if possible-type
             (typep (kind possible-type) 'input-types)
             (typep (nameof type) 'built-in-scalar)))))
@@ -95,7 +97,7 @@
   ;; TODO: https://spec.graphql.org/draft/#IsOutputType()
   (if (typep (kind type) 'wrapper-type)
       (output-type-p (ty type))
-      (let ((possible-type (gethash (nameof type) *all-types*)))
+      (let ((possible-type (gethash (nameof type) (type-map *schema*))))
         (if possible-type
             (typep (kind possible-type) 'output-types)
             (typep (nameof type) 'built-in-scalar)))))
@@ -103,7 +105,7 @@
 (declaim (ftype (function (operation-definition hash-table t) hash-table) execute-query))
 (defun execute-query (query variable-values initial-value)
   ;; TODO: https://spec.graphql.org/draft/#sec-Query
-  (let ((query-type (gethash "Query" *all-types*)))
+  (let ((query-type (query-type *schema*)))
     (check-type query-type object-type-definition)
     (with-slots (selection-set) query
       (setf (gethash "data" *result*)
@@ -143,12 +145,12 @@
   (let ((results (make-hash-table :test #'equal)))
     (maphash
      (lambda (response-key fields)
-       (let* ((field-definition (get-field-definition (car fields) object-type results)))
+       (let* ((field-definition (get-field-definition (car fields) object-type)))
          (unless (stringp field-definition)
            (setf (gethash response-key results)
                  (execute-field object-type
                                 object-value
-                                (ty field-definition)
+                                field-definition
                                 fields
                                 variable-values)))))
      (collect-fields object-type selection-set variable-values))
@@ -194,16 +196,25 @@
     :finally (return coerced-values)))
 
 
-(defun resolve-field-value (object-type object-value field-name arg-values)
+(defun resolve-field-value ()
   ;; TODO: https://spec.graphql.org/draft/#ResolveFieldValue()
   ;;
   ;; This function should access the hash table *resolvers* created by the
   ;; implementors of the api.  It is good form to make sure that all the fields
   ;; are covered.
-  (resolve object-type object-value field-name arg-values))
+
+  ;; (unless (resolver field-definition)
+  ;;   (gql-error "Woops, we need a resolver for ~a" (nameof field-definition)))
+  (if (resolver (field-definition *execution-context*))
+      ;; (funcall (resolver field-definition) object-value arg-values)
+      (funcall (resolver (field-definition *execution-context*)))
+      ;; (resolve object-type object-value field-name arg-values)
+      ))
+  
 
 (defun complete-value (field-type fields result variable-values)
   ;; TODO: https://spec.graphql.org/draft/#CompleteValue()
+  (declare (optimize (debug 3)))
   (when result
     (typecase field-type
       (non-null-type
@@ -218,31 +229,28 @@
             (lambda (result-item)
               (complete-value (ty field-type) fields result-item variable-values))
             result)))
+      ;; TODO: We don't handle nil/null/'null yet
       (named-type
-       (let ((field-definition (gethash (nameof field-type) *all-types*)))
+       (let ((type-definition (gethash (nameof field-type) (type-map *schema*)))) ;; TODO: #32
          ;; TODO: Maybe check for presentness rather than nil?
          (if (typep (nameof field-type) 'built-in-scalar)
              (coerce-result field-type result)
-             (etypecase field-definition
-               ((or scalar-type-definition
-                    enum-type-definition)
+             (etypecase type-definition
+               ((or scalar-type-definition enum-type-definition)
                 (coerce-result field-type result))
-               ((or object-type-definition
-                    interface-type-definition
-                    union-type-definition)
-                (execute-selection-set
-                 (merge-selection-sets fields)
-                 (if (typep field-definition 'object-type-definition)
-                     field-definition
-                     (resolve-abstract-type field-definition result))
-                 result
-                 variable-values)))))))))
+               ((or object-type-definition interface-type-definition union-type-definition)
+                (execute-selection-set (merge-selection-sets fields)
+                                       (if (typep type-definition 'object-type-definition)
+                                           type-definition
+                                           (resolve-abstract-type type-definition result))
+                                       result
+                                       variable-values)))))))))
 
 (defun coerce-result (leaf-type value)
   ;; TODO: https://spec.graphql.org/draft/#CoerceResult()
   ;; TODO: #28
   (let ((leaf-type-name (if (typep (kind leaf-type) 'wrapper-type)
-                            (nameof (ty leaf-type))
+                            (name (ty leaf-type))
                             (nameof leaf-type))))
     (etypecase value
       ;; TODO: This should report a field error if out of coerce range.
@@ -260,6 +268,20 @@
                     (string= leaf-type-name "ID"))
                 value)
            "Field error for string"))
+      (string-value
+       (or (and (or (string= (name leaf-type-name) "String"))
+                (value value))
+           "Field error for string-value"))
+      (enum-value
+       (or (and (or (string= (name leaf-type-name) "String")
+                    (string= leaf-type-name "String"))
+                (value value))
+           "Field error for enum-value"))
+      (name ;; TODO: Should this be possible??
+       (or (and (string= leaf-type-name "String")
+                (name value))
+           "Field error for name-value"))
+      ;; TODO: Add other clauses for other literal values
       (bool
        (or (and (string= leaf-type-name "Boolean")
                 (if (equal value 'true) "true" "false"))
@@ -271,20 +293,25 @@
   (check-type object-value gql-object)
   (with-slots (type-name) object-value
     (etypecase abstract-type
-      (interface-type-definition (gethash type-name *all-types*))
+      (interface-type-definition (gethash type-name (type-map *schema*)))
       (union-type-definition
        (let ((union-member
                (find type-name (union-members abstract-type) :key #'nameof :test #'string=)))
-         (gethash (nameof union-member) *all-types*))))))
+         (gethash (nameof union-member) (type-map *schema*)))))))
 
-(defun execute-field (object-type object-value field-type fields variable-values)
+(defun execute-field (object-type object-value field-definition fields variable-values)
   ;; TODO: https://spec.graphql.org/draft/#sec-Executing-Fields
   (let* ((field (car fields))
          (field-name (name-or-alias field)) ;; TODO: Is nameof correct here??
          (arg-values (coerce-argument-values object-type field variable-values))
-         (resolved-value
-           (resolve-field-value object-type object-value field-name arg-values)))
-    (complete-value field-type fields resolved-value variable-values)))
+         (*execution-context* (make-instance 'execution-context
+                                             :object-type object-type
+                                             :object-value object-value
+                                             :field-definition field-definition
+                                             :field-name field-name
+                                             :arg-values arg-values))
+         (resolved-value (resolve-field-value)))
+    (complete-value (ty field-definition) fields resolved-value variable-values)))
 
 (declaim (ftype (function (operation-definition hash-table) hash-table) coerce-vars))
 (defun coerce-vars (operation variable-values)
@@ -357,7 +384,8 @@
 (defun execute (document operation-name variable-values initial-value)
   (let ((*result* (make-hash-table :test #'equal))
         (*errors* nil))
-    (validate document)
+    ;; TODO: We can't really validate yet
+    ;; (validate document)
     (if *errors*
         (setf (gethash "errors" *result*) *errors*)
         (execute-request document operation-name variable-values initial-value))

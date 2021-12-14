@@ -14,23 +14,21 @@
                  t)))
         directives))
 
-(defun get-subscriptions ()
-  (remove-if-not
-   (lambda (x)
-     (and (eq (kind x) 'operation-definition)
-          (string= (operation-type x) "Subscription")))
-   (definitions *schema*)))
-
 (declaim (ftype (function (hash-table) boolean) introspection-field-p))
 (defun introspection-field-p (fields)
   (loop
     :for v :being :each :hash-key :of fields
       :thereis (uiop:string-prefix-p "__" v)))
 
+(defun get-fragments ()
+  (let ((table (make-hash-table :test #'equal)))
+    (maphash (lambda (k v)
+               (when (equal (kind v) 'fragment-definition)
+                 (setf (gethash k table) v)))
+             (type-map *schema*))
+    table))
+
 (defun get-types (node document)
-  "Get specific NODE from a DOCUMENT.
-This is not tied to the `*schema*', so that it is usable for other kinds of
-documents."
   (with-slots (definitions) document
     (let ((node-table (make-hash-table :test #'equal))
           (nodes
@@ -102,24 +100,31 @@ documents."
   (name (name type)))
 
 (defmacro with-schema (schema &body body)
-  `(let* ((*schema* ,schema)
-          (*all-types* (all-types)))
+  `(let* ((*schema* ,schema))
      ,@body))
 
-(defun get-field-definition (field object-type &optional results)
+(defun get-field-definition (field object-type)
+  (declare (optimize (debug 3)))
   (let ((field-name (name-or-alias field)))
-    (if (string= "__typename" field-name)
-        ;; TODO: Is it enough just to set name here?  Do we get interfaces and
-        ;; such things?
-        (and results (setf (gethash "__typename" results) (nameof object-type)))
-        (find-if (lambda (obj) (string= (nameof obj) field-name))
-                 (fields (gethash (nameof object-type) *all-types*))))))
+    (cond ((string= "__typename" field-name) *__typename-field-definition*)
+          ((string= "__schema" field-name) *__schema-field-definition*)
+          ((string= "__type" field-name) *__type-field-definition*)
+          (t
+           (find-if (lambda (obj) (string= (nameof obj) field-name))
+                    ;; (fields (gethash (nameof object-type) *all-types*))
+                    (fields (gethash (nameof object-type) (type-map *schema*))))))))
 
 (defclass gql-object ()
   ((type-name
     :initarg :type-name
     :accessor type-name
-    :initform (gql-error "Need to supply type name. Consult your schema."))))
+    :initform nil ;;(gql-error "Need to supply type name. Consult your schema.")
+    )
+   (resolver
+    :initarg :resolver
+    :accessor resolver
+    :initform nil ;;(gql-error "Need to supply resolver for gql types")
+    )))
 
 (defmacro make-resolvers (&body body)
   `(let ((ht (make-hash-table :test #'equal)))
@@ -128,3 +133,70 @@ documents."
           `(setf (gethash ,(car resolver) ht) ,(cdr resolver)))
         body)
      ht))
+
+;;; Type system things
+
+(defun make-name (type)
+  (check-type type string)
+  (make-instance 'name :name type :kind 'name))
+
+(defun named (type)
+  (check-type type string)
+  (make-instance 'named-type
+                 :kind 'named-type
+                 :name (make-name type)))
+
+(defun list-type (type)
+  ;; TODO: Not done.  What type goes here?
+  (make-instance 'list-type
+                 :ty type
+                 :kind 'list-type))
+
+(defun non-null-type (type)
+  (make-instance 'non-null-type
+                 :ty type
+                 :kind 'non-null-type))
+
+(defun field (&key name type resolver description args)
+  (make-instance 'field-definition
+                 :kind 'field-definition
+                 :description description
+                 :args args
+                 :ty type ;; TODO: Make sure we can use type instead of ty
+                 :name (make-name name)
+                 :resolver resolver))
+
+(defun object (&key name fields interfaces description)
+  (make-instance 'object-type-definition
+                 :kind 'object-type-definition
+                 :description description
+                 :name (make-name name)
+                 :fields fields
+                 :interfaces interfaces))
+
+(defun interface (&key name fields directives description)
+  (make-instance 'interface-type-definition
+                 :kind 'interface-type-definition
+                 :description description
+                 :name (make-name name)
+                 :fields fields
+                 :directives directives))
+
+(defun enum (&key name enum-values description)
+  (make-instance 'enum-type-definition
+                 :kind 'enum-type-definition
+                 :enum-values enum-values
+                 :description description
+                 :name (make-name name)))
+
+(defun enum-val (&key value)
+  (make-instance 'enum-value
+                 :kind 'enum-value
+                 :value value))
+
+(defun set-resolver (type-name field-name fn)
+  (declare (optimize (debug 3)))
+  (let ((field-definition
+          (find-if (lambda (f) (string= (nameof f) field-name))
+                   (fields (gethash type-name (type-map *schema*))))))
+    (setf (resolver field-definition) fn)))
