@@ -12,6 +12,14 @@
   (print-unreadable-object (obj stream :type t :identity t)
     (princ (nameof obj) stream)))
 
+(defmethod print-object ((obj enum-type-definition) stream)
+  (print-unreadable-object (obj stream :type t :identity t)
+    (princ (nameof obj) stream)))
+
+(defmethod print-object ((obj interface-type-definition) stream)
+  (print-unreadable-object (obj stream :type t :identity t)
+    (princ (nameof obj) stream)))
+
 (defmethod print-object ((obj named-type) stream)
   (print-unreadable-object (obj stream :type t :identity t)
     (princ (nameof obj) stream)))

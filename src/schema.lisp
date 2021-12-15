@@ -51,14 +51,15 @@
 
     (dolist (type initial-types)
       ;; TODO: Error handling
-      (type-map-reducer schema type-map type))
+      (type-map-reducer schema type-map type)
+      (mapify-type-definitions type))
 
     (setf (type-map schema) type-map)
     schema))
 
 (defun type-map-reducer (schema type-map object-type)
   ;; TODO: Return errors as well?
-  (when (or (null object-type) (equal (name object-type) ""))
+  (when (or (null object-type) (equal (nameof object-type) ""))
     (return-from type-map-reducer type-map))
 
   (typecase object-type
@@ -73,12 +74,39 @@
   ;;   ;; TODO: return an error here because the type already exists?
   ;;   )
 
-  (if (name object-type)
-      (setf (gethash (nameof object-type) type-map) object-type)
-      ;; TODO: Probably an idiotic check. Are we operation-definition for sure
-      ;; here?
-      (setf (gethash (operation-type object-type) type-map) object-type))
+  (setf (gethash (nameof object-type) type-map) object-type)
 
   ;; TODO: Lots more to do here
 
   type-map)
+
+(defun mapify-type-definitions (object-type)
+  (let ((table (make-hash-table :test #'equal)))
+    (typecase object-type
+      ;; TODO: Do we need to map more things here?
+      (object-type-definition
+       (let ((interface-map (make-hash-table :test #'equal)))
+         (when (listp (fields object-type))
+           (dolist (field (fields object-type))
+             (setf (gethash (nameof field) table) field))
+           (setf (fields object-type) table))
+         (when (listp (interfaces object-type))
+           (dolist (interface (interfaces object-type))
+             (setf (gethash (nameof interface) interface-map) interface))
+           (setf (interfaces object-type) interface-map))))
+      (interface-type-definition
+       (when (listp (fields object-type))
+         (dolist (field (fields object-type))
+           (setf (gethash (nameof field) table) field))
+         (setf (fields object-type) table)))
+      (enum-type-definition
+       (when (listp (enum-values object-type))
+         (dolist (enum-val (enum-values object-type))
+           (setf (gethash (enum-value enum-val) table) enum-val))
+         (setf (enum-values object-type) table)))
+      (union-type-definition
+       (when (listp (union-members object-type))
+         (dolist (union-member (union-members object-type))
+           (setf (gethash (nameof union-member) table) union-member))
+         (setf (union-members object-type) table))))
+    object-type))

@@ -3,9 +3,9 @@
 (deftest execution
   (testing "collect-fields returns the correct fields"
     (let* ((definitions (gql::definitions
-                         (build-schema "query { a { subfield1 } ...ExampleFragment } fragment ExampleFragment on Query { a { subfield2 } b }")))
+                         (build-schema "{ a { subfield1 } ...ExampleFragment } fragment ExampleFragment on Query { a { subfield2 } b }")))
            (query-type (gql::object :name "Query")))
-      (with-schema (gql::make-schema :query query-type :types definitions)
+      (with-schema (gql::make-schema :query query-type :types (cdr definitions))
         (let* ((operation (find-if (lambda (x) (string= (gql::operation-type x) "Query")) definitions))
                (operation-type (gql::operation-type operation))
                (selection-set (gql::selection-set operation))

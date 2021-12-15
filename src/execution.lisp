@@ -2,17 +2,6 @@
 
 (declaim (optimize (debug 3)))
 
-(defgeneric resolve (object-type object-value field-name arg-values)
-  (:documentation "A function to resolve arbitrary values."))
-
-(defmethod resolve (object-type object-value field-name arg-values)
-  ;; TODO: Ok, so now we get the corresponding type in the hash table, then
-  ;; funcall the function mapped to by field name.
-  (let ((resolvers (gethash (nameof object-type) *resolvers*)))
-    (if (> (hash-table-count arg-values) 0)
-        (funcall (gethash field-name resolvers) object-value arg-values)
-        (funcall (gethash field-name resolvers) object-value))))
-
 (defun fragment-type-applies-p (object-type fragment-type)
   ;; TODO: https://spec.graphql.org/draft/#DoesFragmentTypeApply()
   (let ((type-definition (gethash object-type (type-map *schema*))))
@@ -295,8 +284,7 @@
     (etypecase abstract-type
       (interface-type-definition (gethash type-name (type-map *schema*)))
       (union-type-definition
-       (let ((union-member
-               (find type-name (union-members abstract-type) :key #'nameof :test #'string=)))
+       (let ((union-member (gethash type-name (union-members abstract-type))))
          (gethash (nameof union-member) (type-map *schema*)))))))
 
 (defun execute-field (object-type object-value field-definition fields variable-values)

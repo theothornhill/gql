@@ -110,9 +110,8 @@
           ((string= "__schema" field-name) *__schema-field-definition*)
           ((string= "__type" field-name) *__type-field-definition*)
           (t
-           (find-if (lambda (obj) (string= (nameof obj) field-name))
-                    ;; (fields (gethash (nameof object-type) *all-types*))
-                    (fields (gethash (nameof object-type) (type-map *schema*))))))))
+           (let ((object (gethash (nameof object-type) (type-map *schema*))))
+             (gethash field-name (fields object)))))))
 
 (defclass gql-object ()
   ((type-name
@@ -197,6 +196,8 @@
 (defun set-resolver (type-name field-name fn)
   (declare (optimize (debug 3)))
   (let ((field-definition
-          (find-if (lambda (f) (string= (nameof f) field-name))
-                   (fields (gethash type-name (type-map *schema*))))))
+          (gethash field-name (fields (gethash type-name (type-map *schema*))))
+          ;; (find-if (lambda (f) (string= (nameof f) field-name))
+          ;; )
+          ))
     (setf (resolver field-definition) fn)))
