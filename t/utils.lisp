@@ -41,9 +41,9 @@
                                                            #p"t/test-files/validation-schema.graphql"))) ))
          (query-type (find-if (lambda (x) (string= (gql::nameof x) "Query")) definitions))
          (subscription-type (find-if (lambda (x) (string= (gql::nameof x) "Subscription")) definitions)))
-    (with-schema (gql::make-schema :query query-type
-                                   :subscription subscription-type
-                                   :types definitions) 
+    (with-context (:schema (gql::make-schema :query query-type
+                                             :subscription subscription-type
+                                             :types definitions)) 
       (let ((gql::*errors* nil))
           
         (gql::validate (build-schema input))

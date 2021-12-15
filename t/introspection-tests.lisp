@@ -48,7 +48,7 @@
                           :description "A Human is a human!"
                           :fields `(,(gql::field :name "name"
                                                  :type (gql::named "String")
-                                                 :resolver (lambda () (name (gql::object-value gql::*execution-context*))))
+                                                 :resolver (lambda () (name (gql::object-value (gql::execution-context gql::*context*)))))
                                     ,(gql::field :name "pets"
                                                  :type (gql::list-type (gql::non-null-type (gql::named "Pet")))))))
            (dog-type
@@ -56,7 +56,7 @@
                           :description "A Dog is a dog!"
                           :fields `(,(gql::field :name "name"
                                                  :type (gql::named "String")
-                                                 :resolver (lambda () (name (gql::object-value gql::*execution-context*))))
+                                                 :resolver (lambda () (name (gql::object-value (gql::execution-context gql::*context*)))))
                                     ,(gql::field :name "nickname"
                                                  :type (gql::named "String"))
                                     ,(gql::field :name "owner"
@@ -66,8 +66,9 @@
                                                                                 :pets '())))))))
 
       (flet ((doggo-test (query)
-               (with-schema (gql::make-schema :query query-type :types (list dog-type human-type))
-                 (let* ((res (gql::execute (build-schema query) nil (make-hash-table :test #'equal) nil)))
+               (gql::with-context (:schema (gql::make-schema :query query-type :types (list dog-type human-type))
+                                   :document (build-schema query))
+                 (let* ((res (gql::execute nil nil)))
                    (format nil "~a" (cl-json:encode-json-to-string res))))))
 
         (ok (string=

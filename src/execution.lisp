@@ -4,7 +4,7 @@
 
 (defun fragment-type-applies-p (object-type fragment-type)
   ;; TODO: https://spec.graphql.org/draft/#DoesFragmentTypeApply()
-  (let ((type-definition (gethash object-type (type-map *schema*))))
+  (let ((type-definition (gethash object-type (type-map (schema *context*)))))
     (typecase type-definition
       (object-type-definition
        (string= (nameof type-definition)
@@ -77,7 +77,7 @@
   ;; TODO: https://spec.graphql.org/draft/#IsInputType()
   (if (typep (kind type) 'wrapper-type)
       (input-type-p (ty type))
-      (let ((possible-type (gethash (nameof type) (type-map *schema*))))
+      (let ((possible-type (gethash (nameof type) (type-map (schema *context*)))))
         (if possible-type
             (typep (kind possible-type) 'input-types)
             (typep (nameof type) 'built-in-scalar)))))
@@ -86,7 +86,7 @@
   ;; TODO: https://spec.graphql.org/draft/#IsOutputType()
   (if (typep (kind type) 'wrapper-type)
       (output-type-p (ty type))
-      (let ((possible-type (gethash (nameof type) (type-map *schema*))))
+      (let ((possible-type (gethash (nameof type) (type-map (schema *context*)))))
         (if possible-type
             (typep (kind possible-type) 'output-types)
             (typep (nameof type) 'built-in-scalar)))))
@@ -94,7 +94,7 @@
 (declaim (ftype (function (operation-definition hash-table t) hash-table) execute-query))
 (defun execute-query (query variable-values initial-value)
   ;; TODO: https://spec.graphql.org/draft/#sec-Query
-  (let ((query-type (query-type *schema*)))
+  (let ((query-type (query-type (schema *context*))))
     (check-type query-type object-type-definition)
     (with-slots (selection-set) query
       (setf (gethash "data" *result*)
@@ -108,7 +108,7 @@
 (declaim (ftype (function (operation-definition hash-table t) hash-table) execute-mutation))
 (defun execute-mutation (mutation variable-values initial-value)
   ;; TODO: https://spec.graphql.org/draft/#ExecuteMutation()
-  (let ((mutation-type (gethash "Mutation" *all-types*)))
+  (let ((mutation-type (mutation-type (schema *context*))))
     (check-type mutation-type object-type-definition)
     (with-slots (selection-set) mutation
       (setf (gethash "data" *result*)
@@ -187,18 +187,10 @@
 
 (defun resolve-field-value ()
   ;; TODO: https://spec.graphql.org/draft/#ResolveFieldValue()
-  ;;
-  ;; This function should access the hash table *resolvers* created by the
-  ;; implementors of the api.  It is good form to make sure that all the fields
-  ;; are covered.
-
-  ;; (unless (resolver field-definition)
-  ;;   (gql-error "Woops, we need a resolver for ~a" (nameof field-definition)))
-  (if (resolver (field-definition *execution-context*))
-      ;; (funcall (resolver field-definition) object-value arg-values)
-      (funcall (resolver (field-definition *execution-context*)))
-      ;; (resolve object-type object-value field-name arg-values)
-      ))
+  (declare (optimize (debug 3)))
+  (let ((c *context*))
+    (when (resolver (field-definition (execution-context c)))
+      (funcall (resolver (field-definition (execution-context *context*)))))))
   
 
 (defun complete-value (field-type fields result variable-values)
@@ -220,7 +212,7 @@
             result)))
       ;; TODO: We don't handle nil/null/'null yet
       (named-type
-       (let ((type-definition (gethash (nameof field-type) (type-map *schema*)))) ;; TODO: #32
+       (let ((type-definition (gethash (nameof field-type) (type-map (schema *context*))))) ;; TODO: #32
          ;; TODO: Maybe check for presentness rather than nil?
          (if (typep (nameof field-type) 'built-in-scalar)
              (coerce-result field-type result)
@@ -282,24 +274,24 @@
   (check-type object-value gql-object)
   (with-slots (type-name) object-value
     (etypecase abstract-type
-      (interface-type-definition (gethash type-name (type-map *schema*)))
+      (interface-type-definition (gethash type-name (type-map (schema *context*))))
       (union-type-definition
        (let ((union-member (gethash type-name (union-members abstract-type))))
-         (gethash (nameof union-member) (type-map *schema*)))))))
+         (gethash (nameof union-member) (type-map (schema *context*))))))))
 
 (defun execute-field (object-type object-value field-definition fields variable-values)
   ;; TODO: https://spec.graphql.org/draft/#sec-Executing-Fields
   (let* ((field (car fields))
          (field-name (name-or-alias field)) ;; TODO: Is nameof correct here??
-         (arg-values (coerce-argument-values object-type field variable-values))
-         (*execution-context* (make-instance 'execution-context
-                                             :object-type object-type
-                                             :object-value object-value
-                                             :field-definition field-definition
-                                             :field-name field-name
-                                             :arg-values arg-values))
-         (resolved-value (resolve-field-value)))
-    (complete-value (ty field-definition) fields resolved-value variable-values)))
+         (arg-values (coerce-argument-values object-type field variable-values)))
+    (setf (execution-context *context*)
+          (make-instance 'execution-context
+                         :object-type object-type
+                         :object-value object-value
+                         :field-definition field-definition
+                         :field-name field-name
+                         :arg-values arg-values))
+    (complete-value (ty field-definition) fields (resolve-field-value) variable-values)))
 
 (declaim (ftype (function (operation-definition hash-table) hash-table) coerce-vars))
 (defun coerce-vars (operation variable-values)
@@ -328,10 +320,10 @@
                              (coerce-result var-type val)))))))
       :finally (return coerced-vars))))
 
-(defun execute-request (document operation-name variable-values initial-value)
+(defun execute-request (operation-name initial-value)
   ;; https://spec.graphql.org/draft/#sec-Executing-Requests
-  (let* ((operation (get-operation document operation-name))
-         (coerced-vars (coerce-vars operation variable-values)))
+  (let* ((operation (get-operation (document *context*) operation-name))
+         (coerced-vars (coerce-vars operation (variables *context*))))
     (string-case (operation-type operation)
       ("Query"        (execute-query operation coerced-vars initial-value))
       ("Mutation"     (execute-mutation operation coerced-vars initial-value))
@@ -369,12 +361,14 @@
             :do (push selection selection-set))
     :finally (return (nreverse selection-set))))
 
-(defun execute (document operation-name variable-values initial-value)
+(defun execute (&optional operation-name initial-value)
   (let ((*result* (make-hash-table :test #'equal))
         (*errors* nil))
     ;; TODO: We can't really validate yet
     ;; (validate document)
+    (unless (document *context*)
+      (gql-error "We need a document to execute"))
     (if *errors*
         (setf (gethash "errors" *result*) *errors*)
-        (execute-request document operation-name variable-values initial-value))
+        (execute-request operation-name initial-value))
     *result*))

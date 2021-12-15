@@ -20,18 +20,20 @@ being set to an instance of GQL:TOKEN.")
 Note: This is probably not a really good way to do things, as we need to
 ensure we have initialized the schema.")
 
-(defvar *all-types* nil
-  "Hash-table containing all types from schema *SCHEMA*.
-Should be bound together with *schema* when needed.")
-
 (defvar *result* nil
   "Hash table to contain the results of an execution.")
 
 (defvar *errors* nil
   "Errors to be returned to client after validation and execution.")
 
-(defvar *resolvers* nil
+(defvar *context* nil
   "Hash table to store the resolvers corresponding to the schema")
+
+(defclass context ()
+  ((schema :initarg :schema :accessor schema)
+   (document :initarg :document :accessor document)
+   (variables :initarg :variables :accessor variables)
+   (execution-context :initarg :execution-context :accessor execution-context)))
 
 (defclass execution-context ()
   ((object-type :initarg :object-type :accessor object-type)

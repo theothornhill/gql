@@ -5,7 +5,7 @@
     (let* ((definitions (gql::definitions
                          (build-schema "{ a { subfield1 } ...ExampleFragment } fragment ExampleFragment on Query { a { subfield2 } b }")))
            (query-type (gql::object :name "Query")))
-      (with-schema (gql::make-schema :query query-type :types (cdr definitions))
+      (gql::with-context (:schema (gql::make-schema :query query-type :types (cdr definitions)))
         (let* ((operation (find-if (lambda (x) (string= (gql::operation-type x) "Query")) definitions))
                (operation-type (gql::operation-type operation))
                (selection-set (gql::selection-set operation))
@@ -30,12 +30,13 @@
   (testing "merge-selection-sets should merge multiple fields"
     (let* ((definitions (gql::definitions (build-schema (asdf:system-relative-pathname 'gql-tests #p"t/test-files/validation-schema.graphql"))))
            (query-type (find-if (lambda (x) (string= (gql::nameof x) "Query")) definitions)))
-      (with-schema (gql::make-schema :query query-type :types definitions)
+      (gql::with-context (:schema (gql::make-schema :query query-type :types definitions)
+                          :document (build-schema "query { dog { name } dog { owner { name } } }"))
         (gql::set-resolver "Human" "name" (lambda () "Bingo-bongo-pappa"))
         (gql::set-resolver "Dog" "name" (lambda () "Bingo-bongo"))
         (gql::set-resolver "Dog" "owner" (lambda () t))
         (gql::set-resolver "Query" "dog" (lambda () t))
-        (let* ((res (gql::execute (build-schema "query { dog { name } dog { owner { name } } }") nil (make-hash-table) nil))
+        (let* ((res (gql::execute nil nil))
                (data (gethash "data" res))
                (dog-res (gethash "dog" data)))
           (ok (typep res 'hash-table))
@@ -46,12 +47,13 @@
   (testing "A query should handle alias"
     (let* ((definitions (gql::definitions (build-schema (asdf:system-relative-pathname 'gql-tests #p"t/test-files/validation-schema.graphql"))))
            (query-type (find-if (lambda (x) (string= (gql::nameof x) "Query")) definitions)))
-      (with-schema (gql::make-schema :query query-type :types definitions)
+      (gql::with-context (:schema (gql::make-schema :query query-type :types definitions)
+                          :document (build-schema "query { dog { name owner { name: nameAlias } } }"))
         (gql::set-resolver "Human" "name" (lambda () "Bingo-bongo-pappa"))
         (gql::set-resolver "Dog" "name" (lambda () "Bingo-bongo"))
         (gql::set-resolver "Dog" "owner" (lambda () t))
         (gql::set-resolver "Query" "dog" (lambda () t))
-        (let* ((res (gql::execute (build-schema "query { dog { name owner { name: nameAlias } } }") nil (make-hash-table) nil))
+        (let* ((res (gql::execute nil nil))
                (data (gethash "data" res))
                (dog-res (gethash "dog" data)))
           (ok (typep res 'hash-table))
@@ -62,24 +64,20 @@
   (testing "A query should handle variables and arguments"
     (let* ((definitions (gql::definitions (build-schema (asdf:system-relative-pathname 'gql-tests #p"t/test-files/validation-schema.graphql"))))
            (query-type (find-if (lambda (x) (string= (gql::nameof x) "Query")) definitions)))
-      (with-schema (gql::make-schema :query query-type :types definitions)
-        (let ((variable-values (make-hash-table :test #'equal)))
-          (setf (gethash "sit" variable-values) "SIT")
-          (gql::set-resolver "Dog" "name" (lambda () "Bingo-bongo"))
-          (gql::set-resolver "Dog" "doesKnowCommand"
-                             (lambda ()
-                               (if (string= (gethash "dogCommand" (gql::arg-values gql::*execution-context* )) "SIT")
-                                   'true 'false)))
-          (gql::set-resolver "Query" "dog" (lambda () t))
-          (let* ((res (gql::execute
-                       (build-schema "query x($sit: String) { dog { doesKnowCommand(dogCommand: $sit) } }")
-                       nil
-                       variable-values
-                       nil))
-                 (data (gethash "data" res))
-                 (dog (gethash "dog" data))
-                 (command (gethash "doesKnowCommand" dog)))
-            (ok (string= command "true")))))))
+      (gql::with-context (:schema (gql::make-schema :query query-type :types definitions)
+                          :document (build-schema "query x($sit: String) { dog { doesKnowCommand(dogCommand: $sit) } }"))
+        (setf (gethash "sit" (gql::variables gql::*context*)) "SIT")
+        (gql::set-resolver "Dog" "name" (lambda () "Bingo-bongo"))
+        (gql::set-resolver "Dog" "doesKnowCommand"
+                           (lambda ()
+                             (if (string= (gethash "dogCommand" (gql::arg-values (gql::execution-context gql::*context*) )) "SIT")
+                                 'true 'false)))
+        (gql::set-resolver "Query" "dog" (lambda () t))
+        (let* ((res (gql::execute nil nil))
+               (data (gethash "data" res))
+               (dog (gethash "dog" data))
+               (command (gethash "doesKnowCommand" dog)))
+          (ok (string= command "true"))))))
   (testing "Result coercing"
     (flet ((named-type (name)
              (make-instance 'gql::named-type
@@ -111,20 +109,21 @@
   (testing "Using resolvers that access the object from the 'db'"
     (let* ((definitions (gql::definitions (build-schema (asdf:system-relative-pathname 'gql-tests #p"t/test-files/validation-schema.graphql"))))
            (query-type (find-if (lambda (x) (string= (gql::nameof x) "Query")) definitions)))
-      (with-schema (gql::make-schema :query query-type :types definitions)
+      (gql::with-context (:schema (gql::make-schema :query query-type :types definitions)
+                          :document (build-schema "query { dog { name } }"))
         (gql::defclass* dog name owner)
         (gql::set-resolver "Dog" "name"
-                           (lambda () (name (gql::object-value gql::*execution-context*))))
+                           (lambda () (name (gql::object-value (gql::execution-context gql::*context*)))))
         (gql::set-resolver "Dog" "owner" (lambda () t))
         (gql::set-resolver "Query" "dog" (lambda () (make-instance 'dog :name "Bingo-bongo")))
-        (let* ((res (gql::execute
-                     (build-schema "query { dog { name } }") nil (make-hash-table) nil))
+        (let* ((res (gql::execute nil nil))
                (data (gethash "data" res))
                (dog (gethash "dog" data))
                (name (gethash "name" dog)))
           (ok (string= name "Bingo-bongo")))
-        (let* ((res (gql::execute
-                     (build-schema "query { dog { name: bongo } }") nil (make-hash-table) nil))
+        (setf (gql::document gql::*context*)
+              (build-schema "query { dog { name: bongo } }"))
+        (let* ((res (gql::execute nil nil))
                (data (gethash "data" res))
                (dog (gethash "dog" data))
                (name (gethash "bongo" dog)))
@@ -132,60 +131,50 @@
   (testing "A query should handle variables and arguments"
     (let*  ((definitions (gql::definitions (build-schema (asdf:system-relative-pathname 'gql-tests #p"t/test-files/validation-schema.graphql"))))
             (query-type (find-if (lambda (x) (string= (gql::nameof x) "Query")) definitions)))
-      (with-schema (gql::make-schema :query query-type :types definitions)
-        (let ((variable-values (make-hash-table :test #'equal)))
-          (gql::defclass* dog name does-know-command)
-          (setf (gethash "sit" variable-values) "SIT")
+      (gql::with-context (:schema (gql::make-schema :query query-type :types definitions))
+        (gql::defclass* dog name does-know-command)
+        (setf (gethash "sit" (gql::variables gql::*context*)) "SIT")
 
-          (gql::set-resolver "Dog" "name"
-                             (lambda () (name (gql::object-value gql::*execution-context*))))
-          (gql::set-resolver "Dog" "doesKnowCommand"
-                             (lambda ()
-                               (with-slots (does-know-command) (gql::object-value gql::*execution-context*)
-                                 (if (member (gethash "dogCommand" (gql::arg-values gql::*execution-context*)) does-know-command
-                                             :test #'equal)
-                                     'true 'false))))
-          (gql::set-resolver "Query" "dog" (lambda () (make-instance 'dog
-                                                                :name "Bingo-bongo"
-                                                                :does-know-command '("SIT" "DOWN" "HEEL"))))
-          (let* ((res (gql::execute
-                       (build-schema "query x($sit: String) { dog { doesKnowCommand(dogCommand: $sit) } }")
-                       nil
-                       variable-values
-                       nil))
-                 (data (gethash "data" res))
-                 (dog (gethash "dog" data))
-                 (command (gethash "doesKnowCommand" dog)))
-            (ok (string= command "true")))
-          (setf (gethash "sit" variable-values) "SITT")
-          (let* ((res (gql::execute
-                       (build-schema "query x($sit: String) { dog { doesKnowCommand(dogCommand: $sit) } }")
-                       nil
-                       variable-values
-                       nil))
-                 (data (gethash "data" res))
-                 (dog (gethash "dog" data))
-                 (command (gethash "doesKnowCommand" dog)))
-            (ok (string= command "false")))
-          ;; (setf (gethash "sit" variable-values) "SIT")
-          ;; (let* ((res (gql::execute
-          ;;              (build-schema "query { dog { doesKnowCommand(dogCommand: \"SIT\") } }")
-          ;;              nil
-          ;;              variable-values
-          ;;              nil))
-          ;;        (data (gethash "data" res))
-          ;;        (dog (gethash "dog" data))
-          ;;        (command (gethash "doesKnowCommand" dog)))
-          ;;   (ok (string= command "true")))
-          (let* ((res (gql::execute
-                       (build-schema "query { dog { doesKnowCommand(dogCommand: \"LOL\") } }")
-                       nil
-                       variable-values
-                       nil))
-                 (data (gethash "data" res))
-                 (dog (gethash "dog" data))
-                 (command (gethash "doesKnowCommand" dog)))
-            (ok (string= command "false"))))))))
+        (gql::set-resolver "Dog" "name"
+                           (lambda () (name (gql::object-value gql::*execution-context*))))
+        (gql::set-resolver "Dog" "doesKnowCommand"
+                           (lambda ()
+                             (with-slots (does-know-command) (gql::object-value (gql::execution-context gql::*context*))
+                               (if (member (gethash "dogCommand" (gql::arg-values (gql::execution-context gql::*context*))) does-know-command
+                                           :test #'equal)
+                                   'true 'false))))
+        (gql::set-resolver "Query" "dog" (lambda () (make-instance 'dog
+                                                              :name "Bingo-bongo"
+                                                              :does-know-command '("SIT" "DOWN" "HEEL"))))
+        (setf (gql::document gql::*context*) (build-schema "query x($sit: String) { dog { doesKnowCommand(dogCommand: $sit) } }"))
+        (let* ((res (gql::execute nil nil))
+               (data (gethash "data" res))
+               (dog (gethash "dog" data))
+               (command (gethash "doesKnowCommand" dog)))
+          (ok (string= command "true")))
+        (setf (gethash "sit" (gql::variables gql::*context*)) "SITT")
+        (setf (gql::document gql::*context*) (build-schema "query x($sit: String) { dog { doesKnowCommand(dogCommand: $sit) } }"))
+        (let* ((res (gql::execute nil nil))
+               (data (gethash "data" res))
+               (dog (gethash "dog" data))
+               (command (gethash "doesKnowCommand" dog)))
+          (ok (string= command "false")))
+        ;; (setf (gethash "sit" variable-values) "SIT")
+        ;; (let* ((res (gql::execute
+        ;;              (build-schema "query { dog { doesKnowCommand(dogCommand: \"SIT\") } }")
+        ;;              nil
+        ;;              variable-values
+        ;;              nil))
+        ;;        (data (gethash "data" res))
+        ;;        (dog (gethash "dog" data))
+        ;;        (command (gethash "doesKnowCommand" dog)))
+        ;;   (ok (string= command "true")))
+        (setf (gql::document gql::*context*) (build-schema "query { dog { doesKnowCommand(dogCommand: \"LOL\") } }"))
+        (let* ((res (gql::execute nil nil))
+               (data (gethash "data" res))
+               (dog (gethash "dog" data))
+               (command (gethash "doesKnowCommand" dog)))
+          (ok (string= command "false")))))))
 
 (deftest abstract-type-resolvers
   (testing "Getting object-type-definition from union or interface"
@@ -199,12 +188,12 @@
     (let* ((doggo (make-instance 'dog :name "Bingo-Bongo" :type-name "Dog"))
            (definitions (gql::definitions (build-schema (asdf:system-relative-pathname 'gql-tests #p"t/test-files/validation-schema.graphql"))))
            (query-type (find-if (lambda (x) (string= (gql::nameof x) "Query")) definitions)))
-      (with-schema (gql::make-schema :query query-type :types definitions)
+      (gql::with-context (:schema (gql::make-schema :query query-type :types definitions))
         ;; We want to know if we did get the actual same reference.
-        (ok (eq (gql::resolve-abstract-type (gethash "CatOrDog" (gql::type-map gql::*schema*)) doggo)
-                (gethash "Dog" (gql::type-map gql::*schema*))))
-        (ok (eq (gql::resolve-abstract-type (gethash "Pet" (gql::type-map gql::*schema*)) doggo)
-                (gethash "Dog" (gql::type-map gql::*schema*))))))))
+        (ok (eq (gql::resolve-abstract-type (gethash "CatOrDog" (gql::type-map (gql::schema gql::*context*))) doggo)
+                (gethash "Dog" (gql::type-map (gql::schema gql::*context*)))))
+        (ok (eq (gql::resolve-abstract-type (gethash "Pet" (gql::type-map (gql::schema gql::*context*))) doggo)
+                (gethash "Dog" (gql::type-map (gql::schema gql::*context*)))))))))
 
 (deftest doggo-test
   (testing "Doggo-testing"
@@ -257,25 +246,25 @@
                              :description "A Pet is a pet!"
                              :fields `(,(gql::field :name "name"
                                                     :type (gql::named "String")
-                                                    :resolver (lambda () (name (gql::object-value gql::*execution-context*)))))))
+                                                    :resolver (lambda () (name (gql::object-value (gql::execution-context gql::*context*))))))))
            (human-type
              (gql::object :name "Human"
                           :description "A Human is a human!"
                           :fields `(,(gql::field :name "name"
                                                  :type (gql::named "String")
-                                                 :resolver (lambda () (name (gql::object-value gql::*execution-context*))))
+                                                 :resolver (lambda () (name (gql::object-value (gql::execution-context gql::*context*)))))
                                     ,(gql::field :name "pets"
                                                  :type (gql::list-type (gql::non-null-type (gql::named "Pet")))
-                                                 :resolver (lambda () (pets (gql::object-value gql::*execution-context*)))))))
+                                                 :resolver (lambda () (pets (gql::object-value (gql::execution-context gql::*context*))))))))
            (dog-type
              (gql::object :name "Dog"
                           :description "A Dog is a dog!"
                           :fields `(,(gql::field :name "name"
                                                  :type (gql::named "String")
-                                                 :resolver (lambda () (name (gql::object-value gql::*execution-context*))))
+                                                 :resolver (lambda () (name (gql::object-value (gql::execution-context gql::*context*)))))
                                     ,(gql::field :name "nickname"
                                                  :type (gql::named "String")
-                                                 :resolver (lambda () (nickname (gql::object-value gql::*execution-context*))))
+                                                 :resolver (lambda () (nickname (gql::object-value (gql::execution-context gql::*context*)))))
                                     ,(gql::field :name "owner"
                                                  :type (gql::named "Human")
                                                  :resolver (lambda () human)))))
@@ -284,14 +273,15 @@
                           :description "A Cat is a cat!"
                           :fields `(,(gql::field :name "name"
                                                  :type (gql::named "String")
-                                                 :resolver (lambda () (name (gql::object-value gql::*execution-context*))))
+                                                 :resolver (lambda () (name (gql::object-value (gql::execution-context gql::*context*)))))
                                     ,(gql::field :name "nickname"
                                                  :type (gql::named "String")
-                                                 :resolver (lambda () (nickname (gql::object-value gql::*execution-context*))))))))
+                                                 :resolver (lambda () (nickname (gql::object-value (gql::execution-context gql::*context*)))))))))
 
       (flet ((doggo-test (query)
-               (with-schema (gql::make-schema :query query-type :types (list dog-type human-type cat-type pet-interface))
-                 (let* ((res (gql::execute (build-schema query) nil (make-hash-table :test #'equal) nil)))
+               (gql::with-context (:schema (gql::make-schema :query query-type :types (list dog-type human-type cat-type pet-interface))
+                                   :document (build-schema query))
+                 (let* ((res (gql::execute nil nil)))
                    (format nil "~a" (cl-json:encode-json-to-string res))))))
 
         (ok (string=

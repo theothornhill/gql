@@ -5,10 +5,10 @@
   (:export
    #:gql
    #:build-schema
+   #:build-document
    #:generate
-   #:with-schema
+   #:with-context
    #:execute
-   #:*resolvers*
    #:resolve
    #:bool
    #:true

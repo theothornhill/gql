@@ -25,7 +25,7 @@
     (maphash (lambda (k v)
                (when (equal (kind v) 'fragment-definition)
                  (setf (gethash k table) v)))
-             (type-map *schema*))
+             (type-map (schema *context*)))
     table))
 
 (defun get-types (node document)
@@ -40,28 +40,6 @@
             (setf (gethash (nameof node) node-table) node)
             ;; TODO: In this case we are probably an anonymous operation-definition
             (setf (gethash (operation-type node) node-table) node))))))
-
-(defun all-types ()
-  "Get all user defined types within a schema."
-  (unless *schema*
-    (gql-error "Schema not bound, cannot get all-types.  Consider your options."))
-  (with-slots (definitions) *schema*
-    (let ((node-table (make-hash-table :test #'equal))
-          (nodes
-            (remove-if-not
-             (lambda (x)
-               (let ((kind (kind x)))
-                 (or
-                  (eq kind 'scalar-type-definition)
-                  (eq kind 'object-type-definition)
-                  (eq kind 'interface-type-definition)
-                  (eq kind 'union-type-definition)
-                  (eq kind 'enum-type-definition)
-                  (eq kind 'input-object-type-definition))))
-             definitions)))
-      (dolist (node nodes node-table)
-        (with-slots (name) node
-          (setf (gethash (name name) node-table) node))))))
 
 (defclass* errors
   message
@@ -99,9 +77,31 @@
 (defun nameof (type)
   (name (name type)))
 
+(defun make-context (&key schema document execution-context)
+  (make-instance 'context
+                 :schema schema
+                 :document document
+                 :execution-context execution-context))
+
 (defmacro with-schema (schema &body body)
-  `(let* ((*schema* ,schema))
+  `(let ((*schema* ,schema))
      ,@body))
+
+(defmacro with-context ((&key schema document variables execution-context) &body body)
+  (let ((s (gensym))
+        (d (gensym))
+        (v (gensym))
+        (e (gensym)))
+    `(let* ((,s ,schema)
+            (,d ,document)
+            (,v (or ,variables ,(make-hash-table :test #'equal)))
+            (,e ,execution-context)
+            (*context* (make-instance 'context
+                                      :schema ,s
+                                      :document ,d
+                                      :variables ,v
+                                      :execution-context ,e)))
+       ,@body)))
 
 (defun get-field-definition (field object-type)
   (declare (optimize (debug 3)))
@@ -110,7 +110,7 @@
           ((string= "__schema" field-name) *__schema-field-definition*)
           ((string= "__type" field-name) *__type-field-definition*)
           (t
-           (let ((object (gethash (nameof object-type) (type-map *schema*))))
+           (let ((object (gethash (nameof object-type) (type-map (schema *context*)))))
              (gethash field-name (fields object)))))))
 
 (defclass gql-object ()
@@ -188,16 +188,13 @@
                  :description description
                  :name (make-name name)))
 
-(defun enum-val (&key value)
-  (make-instance 'enum-value
+(defun enum-val (&key enum-value)
+  (make-instance 'enum-value-definition
                  :kind 'enum-value
-                 :value value))
+                 :enum-value enum-value))
 
 (defun set-resolver (type-name field-name fn)
   (declare (optimize (debug 3)))
   (let ((field-definition
-          (gethash field-name (fields (gethash type-name (type-map *schema*))))
-          ;; (find-if (lambda (f) (string= (nameof f) field-name))
-          ;; )
-          ))
+          (gethash field-name (fields (gethash type-name (type-map (schema *context*)))))))
     (setf (resolver field-definition) fn)))

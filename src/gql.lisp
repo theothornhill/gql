@@ -35,5 +35,5 @@ This is a simple helper to create a parsed document."))
       (parse 'document)))
   (:method ((types list))
     (make-instance 'document :definitions types))
-  (:documentation "Build a GraphQL schema.
+  (:documentation "Build a GraphQL document.
 This is a simple helper to create a parsed document."))
