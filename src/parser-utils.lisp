@@ -29,9 +29,6 @@ i.e. for file streams etc."))
             :collect `(,slot :initarg ,initarg :initform nil :accessor ,slot))))
 
 (defmacro defparser (node keys &body body)
-  "Convenience macro to define new parser methods.
-Specializes on the NODE, so if more granular control is needed, either expand
-this macro or just use a normal DEFMETHOD."
   `(defmethod parse ((node (eql ',node)) &key (constp nil) ,@keys &allow-other-keys)
      (declare (ignorable constp))
      (with-token
@@ -39,11 +36,6 @@ this macro or just use a normal DEFMETHOD."
        ,@body)))
 
 (defmacro defgenerator (node keys &body body)
-  "Convenience macro to define new generator methods.
-Specializes on the NODE, so if more granular control is needed, either expand
-this macro or just use a normal DEFMETHOD.  FULL is a magic symbol to force the
-possibility to avoid the syntax sugar in the usual form. This is a hack and
-should be avoided somethime down the line."
   (if (member 'full keys) ;; TODO: Avoid having to do this check
       `(defmethod generate
            ((node ,node) &key (indent-level 0) (stream nil) ,@keys &allow-other-keys)
@@ -58,9 +50,6 @@ should be avoided somethime down the line."
   (:documentation "TODO"))
 
 (defmacro defvalidator (node keys &body body)
-  "Convenience macro to define new validator methods.
-Specializes on the NODE-TYPE, so if more granular control is needed, either
-expand this macro or just use a normal DEFMETHOD."
   `(defmethod validate ((node ,node) &key ,@keys &allow-other-keys)
      ,@body))
 
@@ -79,7 +68,7 @@ expand this macro or just use a normal DEFMETHOD."
   `(progn
      ,node
      ,parser
-     ,validator
+     ,validator ;; TODO: enforce this?
      ,generator))
 
 (defun add-indent (level)
