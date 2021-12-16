@@ -66,10 +66,10 @@
                                                                                 :pets '())))))))
 
       (flet ((doggo-test (query)
-               (gql::with-context (:schema (gql::make-schema :query query-type :types (list dog-type human-type))
-                                   :document (build-schema query))
-                 (let* ((res (gql::execute nil nil)))
-                   (format nil "~a" (cl-json:encode-json-to-string res))))))
+               (with-context
+                   (:schema (gql::make-schema :query query-type :types (list dog-type human-type))
+                    :document (build-schema query))
+                 (format nil "~a" (cl-json:encode-json-to-string (gql::execute nil nil))))))
 
         (ok (string=
              (doggo-test "query { dog { __typename name owner { name } } }")

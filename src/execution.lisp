@@ -360,13 +360,13 @@
     :finally (return (nreverse selection-set))))
 
 (defun execute (&optional operation-name initial-value)
-  (let ((*result* (make-hash-table :test #'equal))
-        (*errors* nil))
-    ;; TODO: We can't really validate yet
-    ;; (validate document)
-    (unless (document *context*)
-      (gql-error "We need a document to execute"))
-    (if *errors*
-        (setf (gethash "errors" *result*) *errors*)
-        (execute-request operation-name initial-value))
-    *result*))
+  (unless *context*
+    (gql-error "No context is set.  This is really bad."))
+  (unless (document *context*)
+    (gql-error "We need a document to execute"))
+  ;; TODO: We can't really validate yet
+  ;; (validate document)
+  (if *errors*
+      (setf (gethash "errors" *result*) *errors*)
+      (execute-request operation-name initial-value))
+  *result*)

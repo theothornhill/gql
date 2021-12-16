@@ -51,22 +51,24 @@
   line
   column)
 
-(defun make-error (message nodes)
-  (let ((node-list (if (listp nodes) nodes (list nodes))))
-    (push (make-instance
-           'errors
-           :message message
-           :locations (mapcar
-                       (lambda (node)
-                         (with-slots (line column) (start-token (location node))
-                           (make-instance
-                            'error-location
-                            :line line
-                            :column column)))
-                       node-list)
-           :path nil
-           :extensions nil)
-          *errors*)))
+(defun location-errors (nodes)
+  (mapcar
+   (lambda (node)
+     (with-slots (line column) (start-token (location node))
+       (make-instance
+        'error-location
+        :line line
+        :column column)))
+   nodes))
+
+(defun push-error (message nodes)
+  (push (make-instance
+         'errors
+         :message message
+         :locations (location-errors (if (listp nodes) nodes (list nodes)))
+         :path nil ;; TODO: We need the path
+         :extensions nil) ;; TODO: Do we need extensions?
+        *errors*))
 
 (defun name-or-alias (field)
   (with-slots (alias name) field
@@ -96,6 +98,8 @@
             (,d ,document)
             (,v (or ,variables ,(make-hash-table :test #'equal)))
             (,e ,execution-context)
+            (*result* (make-hash-table :test #'equal))
+            (*errors* nil)
             (*context* (make-instance 'context
                                       :schema ,s
                                       :document ,d

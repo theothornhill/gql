@@ -6,7 +6,7 @@
     :for definition :in definitions
     :unless (or (eq (kind definition) 'operation-definition)
                 (eq (kind definition) 'fragment-definition))
-      :do (make-error "Each definition must be executable." definition)))
+      :do (push-error "Each definition must be executable." definition)))
 
 (defun operation-name-unique-p (definitions)
   ;; https://spec.graphql.org/draft/#sec-Operation-Name-Uniqueness
@@ -21,7 +21,7 @@
        (loop
          :for v :being :each :hash-value :of operations
          :when (> (length v) 1)
-           :do (make-error "Each operation must have a unique name." v))))
+           :do (push-error "Each operation must have a unique name." v))))
 
 (defun single-anonymous-operation-definition-p (definitions)
   ;; https://spec.graphql.org/draft/#sec-Anonymous-Operation-Definitions
@@ -32,7 +32,7 @@
     :when (null name-node)
       :do (push definition anonymous)
           (when (and (> (length definitions) 1) anonymous)
-            (make-error "An anonymous definition must be alone." definition)
+            (push-error "An anonymous definition must be alone." definition)
             (return))))
 
 (defun subscription-operation-valid-p ()
@@ -46,6 +46,6 @@
                                              (make-hash-table)
                                              nil)
     :unless (= (hash-table-count grouped-field-set) 1)
-      :do (make-error "A subscription must have exactly one entry." subscription)
+      :do (push-error "A subscription must have exactly one entry." subscription)
     :when (introspection-field-p grouped-field-set)
-      :do (make-error "Root field must not begin with \"__\"  which is reserved by GraphQL introspection." subscription)))
+      :do (push-error "Root field must not begin with \"__\"  which is reserved by GraphQL introspection." subscription)))
