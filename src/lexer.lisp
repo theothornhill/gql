@@ -51,11 +51,6 @@ literals."
    :prev prev
    :value value))
 
-
-(defmethod print-object ((token token) stream)
-  (format stream "<TOKEN: kind = ~a line = ~a column = ~a"
-          (kind token) (line token) (column token)))
-
 (defclass* source
   body
   name

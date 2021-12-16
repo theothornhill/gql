@@ -2,7 +2,7 @@
 
 (deftest parser
   (testing "Detects EOF"
-    (signals-with-check "{" gql::gql-simple-error "Expected NAME, found EOF"))
+    (signals-with-check "{" gql::gql-simple-error "Expected NAME, found EOF at line: 1, column: 2"))
   (testing "Returns OK"
     (ok (gql "query withFragments {
   user(id: 4) {
@@ -120,7 +120,7 @@ fragment friendFields on User {
   (testing "Schema"
     (ok (gql (asdf:system-relative-pathname 'gql-tests #p"t/test-files/example-schema.txt")))
     (signals-with-check (gql (asdf:system-relative-pathname 'gql-tests #p"t/test-files/empty-object.txt"))
-                        gql::gql-simple-error "Expected NAME, found BRACE-R")
+                        gql::gql-simple-error "Expected NAME, found BRACE-R at line: 1, column: 1")
     (ok (gql "
 \"\"\" 
 Some description at the start

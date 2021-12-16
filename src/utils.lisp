@@ -58,11 +58,11 @@
            :message message
            :locations (mapcar
                        (lambda (node)
-                         (let ((start-token (start-token (location node))))
+                         (with-slots (line column) (start-token (location node))
                            (make-instance
                             'error-location
-                            :line (line start-token)
-                            :column (column start-token))))
+                            :line line
+                            :column column)))
                        node-list)
            :path nil
            :extensions nil)

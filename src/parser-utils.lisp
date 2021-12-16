@@ -170,7 +170,9 @@ all nodes."
   (with-token
     (if (peek kind)
         (progn (advance-one-token) *token*)
-        (gql-error "Expected ~a, found ~a" kind (kind *token*)))))
+        (with-slots (line column) *token*
+          (gql-error "Expected ~a, found ~a at line: ~a, column: ~a"
+                     kind (kind *token*) line column)))))
 
 (defun expect-optional-token (kind)
   (with-token
@@ -181,7 +183,9 @@ all nodes."
   (with-token
     (if (and (peek 'name) (equalp (value *token*) value))
         (advance-one-token)
-        (gql-error "Expected ~a, found ~a" value (value *token*)))))
+        (with-slots (line column) *token*
+          (gql-error "Expected ~a, found ~a at line: ~a, column: ~a"
+                     value (value *token*) line column)))))
 
 (defun expect-optional-keyword (value)
   (with-token
@@ -191,7 +195,8 @@ all nodes."
 
 (defun unexpected (&optional token)
   (let ((token (if token token *token*)))
-    (gql-error "Unexpected token: ~a" token)))
+    (with-slots (line column) token
+      (gql-error "Unexpected token: ~a at line: ~a, column: ~a" token line column))))
 
 (defun any (open-kind parse-kind close-kind &key (constp nil))
   (expect-token open-kind)
