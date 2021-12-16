@@ -52,14 +52,16 @@
   column)
 
 (defun location-errors (nodes)
-  (mapcar
-   (lambda (node)
-     (with-slots (line column) (start-token (location node))
-       (make-instance
-        'error-location
-        :line line
-        :column column)))
-   nodes))
+  (remove nil
+          (mapcar
+           (lambda (node)
+             (when (location node)
+               (with-slots (line column) (start-token (location node))
+                 (make-instance
+                  'error-location
+                  :line line
+                  :column column))))
+           nodes)))
 
 (defun push-error (message nodes)
   (push (make-instance

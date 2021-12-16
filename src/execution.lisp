@@ -229,43 +229,54 @@
   ;; TODO: https://spec.graphql.org/draft/#CoerceResult()
   ;; TODO: #28
   (let ((leaf-type-name (if (typep (kind leaf-type) 'wrapper-type)
-                            (name (ty leaf-type))
+                            (nameof (ty leaf-type))
                             (nameof leaf-type))))
     (etypecase value
       ;; TODO: This should report a field error if out of coerce range.
       (integer
-       (or (and (string= leaf-type-name "Int") (coerce value '(signed-byte 32)))
-           "Field error for int"))
+       (if (string= leaf-type-name "Int")
+           (coerce value '(signed-byte 32))
+           (push-error (format nil "Cannot coerce result into Int for value: ~a when value should be: ~a"
+                                 value leaf-type-name)
+                       leaf-type)))
       ;; TODO: This should report a field error if non-finite internal values (NaN
       ;; and Infinity.
       ((or single-float double-float)
-       (or (and (string= leaf-type-name "Float") (coerce value 'double-float))
-           "Field error for float"))
-      ;; TODO: We may return "true" for t and "1" for integer 1.
-      (string
-       (or (and (or (string= leaf-type-name "String")
-                    (string= leaf-type-name "ID"))
-                value)
-           "Field error for string"))
+       (if (string= leaf-type-name "Float")
+           (coerce value 'double-float)
+           (push-error (format nil "Cannot coerce result into Float for value: ~a when value should be: ~a"
+                               value leaf-type-name)
+                       leaf-type)))
       (string-value
-       (or (and (or (string= (name leaf-type-name) "String"))
-                (value value))
-           "Field error for string-value"))
+       (value value))
       (enum-value
-       (or (and (or (string= (name leaf-type-name) "String")
-                    (string= leaf-type-name "String"))
-                (value value))
-           "Field error for enum-value"))
+       (if (or (string= (name leaf-type-name) "String") (string= leaf-type-name "String"))
+           (value value)
+           (push-error (format nil "Cannot coerce result into Enum value for value: ~a when value should be: ~a"
+                               value leaf-type-name)
+                       leaf-type)))
       (name ;; TODO: Should this be possible??
-       (or (and (string= leaf-type-name "String")
-                (name value))
-           "Field error for name-value"))
+       (if (string= leaf-type-name "String")
+           (name value)
+           (push-error (format nil "Cannot coerce result into String for value: ~a when value should be: ~a"
+                               value leaf-type-name)
+                       leaf-type)))
       ;; TODO: Add other clauses for other literal values
-      (bool
-       (or (and (string= leaf-type-name "Boolean")
-                (if (equal value 'true) "true" "false"))
-           "Field error for boolean"))
-      (t "We really screwed up result coercing here!"))))
+      (bool ;; TODO: Make sure we get the correct bool/nil/t/true/false
+       (if (string= leaf-type-name "Boolean")
+           (if (equal value 'true) "true" "false")
+           (push-error (format nil "Cannot coerce result into Boolean for value: ~a when type should be: ~a"
+                               value leaf-type-name )
+                       leaf-type)))
+      (string
+       (if (or (string= leaf-type-name "String") (string= leaf-type-name "ID"))
+           value
+           (push-error (format nil "Cannot coerce result into String or ID for value: ~a when type should be: ~a"
+                               value leaf-type-name)
+                       leaf-type)))
+      (t (push-error (format nil "Cannot coerce result for value: ~a when value should be: ~a "
+                               value leaf-type-name)
+                     leaf-type)))))
 
 (defun resolve-abstract-type (abstract-type object-value)
   ;; TODO: https://spec.graphql.org/draft/#ResolveAbstractType()

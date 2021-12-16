@@ -13,6 +13,7 @@
           (ok (= (hash-table-count result) 2))
           (ok (= (length (gethash "a" result)) 2))
           (ok (= (length (gethash "b" result)) 1))))))
+
   (testing "get-operation should return the correct operation"
     (let ((doc (gql::build-document "{ a { subfield1 } } ")))
       (ok (gql::get-operation doc "Query")))
@@ -27,6 +28,7 @@
       (ok (gql::get-operation doc)))
     (let ((doc (build-schema "mutation { a { subfield1 } } ")))
       (ok (gql::get-operation doc))))
+
   (testing "merge-selection-sets should merge multiple fields"
     (let* ((definitions (gql::definitions (build-schema (asdf:system-relative-pathname 'gql-tests #p"t/test-files/validation-schema.graphql"))))
            (query-type (find-if (lambda (x) (string= (gql::nameof x) "Query")) definitions)))
@@ -44,6 +46,7 @@
           (ok (= (hash-table-count dog-res) 2))
           (ok (gethash "name" dog-res))
           (ok (gethash "owner" dog-res))))))
+
   (testing "A query should handle alias"
     (let* ((definitions (gql::definitions (build-schema (asdf:system-relative-pathname 'gql-tests #p"t/test-files/validation-schema.graphql"))))
            (query-type (find-if (lambda (x) (string= (gql::nameof x) "Query")) definitions)))
@@ -61,51 +64,37 @@
           (ok (= (hash-table-count dog-res) 2))
           (ok (gethash "name" dog-res))
           (ok (gethash "owner" dog-res))))))
-  (testing "A query should handle variables and arguments"
-    (let* ((definitions (gql::definitions (build-schema (asdf:system-relative-pathname 'gql-tests #p"t/test-files/validation-schema.graphql"))))
-           (query-type (find-if (lambda (x) (string= (gql::nameof x) "Query")) definitions)))
-      (with-context (:schema (gql::make-schema :query query-type :types definitions)
-                     :document (build-schema "query x($sit: String) { dog { doesKnowCommand(dogCommand: $sit) } }"))
-        (setf (gethash "sit" (gql::variables gql::*context*)) "SIT")
-        (gql::set-resolver "Dog" "name" (lambda () "Bingo-bongo"))
-        (gql::set-resolver "Dog" "doesKnowCommand"
-                           (lambda ()
-                             (if (string= (gethash "dogCommand" (gql::arg-values (gql::execution-context gql::*context*) )) "SIT")
-                                 'true 'false)))
-        (gql::set-resolver "Query" "dog" (lambda () t))
-        (let* ((res (gql::execute nil nil))
-               (data (gethash "data" res))
-               (dog (gethash "dog" data))
-               (command (gethash "doesKnowCommand" dog)))
-          (ok (string= command "true"))))))
+
   (testing "Result coercing"
-    (flet ((named-type (name)
-             (make-instance 'gql::named-type
-                            :name (make-instance 'gql::name :name name))))
-      (flet ((test (name value ty &optional return-val)
-               (let ((res (gql::coerce-result (named-type name) value)))
-                 (and (typep res ty)
-                      (equalp res (or return-val value))))))
-        (ok (test "Int" 3 'integer))
-        (ok (test "Int" -3 'integer))
-        (ng (test "String" -3 'integer "Field error for int"))
-        (ng (test "Boolean" -3 'integer "Field error for int"))
+    (flet ((test (name value ty &optional return-val)
+             (let* ((gql::*errors* nil)
+                    (res (gql::coerce-result (named name) value)))
+               (and (typep res ty) (equalp res (or return-val value)))))
+           (test-error (name value error-message)
+             (let* ((gql::*errors* nil)
+                    (res (gql::coerce-result (named name) value)))
+               (ok (string= error-message (gql::message (car res)))))))
+      (ok (test "Int" 3 'integer))
+      (ok (test "Int" -3 'integer))
+      (test-error "String" -3 "Cannot coerce result into Int for value: -3 when value should be: String")
+      (test-error "Boolean" -3 "Cannot coerce result into Int for value: -3 when value should be: Boolean")
 
-        (ok (test "Float" -3.9 'double-float))
-        (ok (test "Float" 3.9 'double-float))
-        (ok (test "Float" 3342.91231236 'double-float))
-        (ng (test "Int" 3342.91231236 'double-float))
-        (ng (test "String" 3342.91231236 'double-float))
-        (ng (test "Boolean" 3342.91231236 'double-float))
+      (ok (test "Float" -3.9 'double-float))
+      (ok (test "Float" 3.9 'double-float))
+      (ok (test "Float" 3342.91231236 'double-float))
+      (ng (test "Int" 3342.91231236 'double-float))
+      (ng (test "String" 3342.91231236 'double-float))
+      (ng (test "Boolean" 3342.91231236 'double-float))
 
-        (ok (test "String" "Look at this string!" 'string "Look at this string!"))
-        (ok (test "ID" "Look at this string!" 'string))
-        (ok (test "Boolean" "Look at this string!" 'string "Field error for string"))
-        (ok (test "Int" "Look at this string!" 'string "Field error for string"))
-        (ok (test "" "Look at this string!" 'string "Field error for string"))
+      (ok (test "String" "Look at this string!" 'string "Look at this string!"))
+      (ok (test "ID" "Look at this string!" 'string))
+      (test-error "Boolean" "Look at this string!" "Cannot coerce result into String or ID for value: Look at this string! when type should be: Boolean")
+      (test-error "Int" "Look at this string!" "Cannot coerce result into String or ID for value: Look at this string! when type should be: Int")
+      (test-error "" "Look at this string!" "Cannot coerce result into String or ID for value: Look at this string! when type should be: ")
 
-        (ok (test "Boolean" 'true 'string "true"))
-        (ok (test "Boolean" 'false 'string "false")))))
+      (ok (test "Boolean" 'true 'string "true"))
+      (ok (test "Boolean" 'false 'string "false"))))
+
   (testing "Using resolvers that access the object from the 'db'"
     (let* ((definitions (gql::definitions (build-schema (asdf:system-relative-pathname 'gql-tests #p"t/test-files/validation-schema.graphql"))))
            (query-type (find-if (lambda (x) (string= (gql::nameof x) "Query")) definitions)))
@@ -128,6 +117,7 @@
                (dog (gethash "dog" data))
                (name (gethash "bongo" dog)))
           (ok (string= name "Bingo-bongo"))))))
+
   (testing "A query should handle variables and arguments"
     (let*  ((definitions (gql::definitions (build-schema (asdf:system-relative-pathname 'gql-tests #p"t/test-files/validation-schema.graphql"))))
             (query-type (find-if (lambda (x) (string= (gql::nameof x) "Query")) definitions)))
@@ -159,16 +149,6 @@
                (dog (gethash "dog" data))
                (command (gethash "doesKnowCommand" dog)))
           (ok (string= command "false")))
-        ;; (setf (gethash "sit" variable-values) "SIT")
-        ;; (let* ((res (gql::execute
-        ;;              (build-schema "query { dog { doesKnowCommand(dogCommand: \"SIT\") } }")
-        ;;              nil
-        ;;              variable-values
-        ;;              nil))
-        ;;        (data (gethash "data" res))
-        ;;        (dog (gethash "dog" data))
-        ;;        (command (gethash "doesKnowCommand" dog)))
-        ;;   (ok (string= command "true")))
         (setf (gql::document gql::*context*) (build-schema "query { dog { doesKnowCommand(dogCommand: \"LOL\") } }"))
         (let* ((res (gql::execute nil nil))
                (data (gethash "data" res))
