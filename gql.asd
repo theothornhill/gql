@@ -13,6 +13,7 @@
                  (:file "utils")
                  (:file "lexer")
                  (:file "language")
+                 (:file "types")
                  (:file "schema")
                  (:file "introspection")
                  (:file "conditions")

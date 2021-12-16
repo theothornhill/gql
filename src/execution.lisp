@@ -59,19 +59,17 @@
 
 (defun get-operation (document &optional operation-name)
   ;; TODO: https://spec.graphql.org/draft/#GetOperation()
-  (cond
-    ((null operation-name)
-     (let ((operation
-             (remove-if-not (lambda (x) (typep x 'operation-definition))
-                            (definitions document))))
-       (if (= 1 (length operation))
-           (car operation)
-           (gql-error "Need to raise a request error: https://spec.graphql.org/draft/#GetOperation()"))))
-    (t
-     (let ((operation
-             (gethash operation-name (get-types 'operation-definition document))))
-       (if operation operation
-           (gql-error "Need to raise a request error: https://spec.graphql.org/draft/#GetOperation()"))))))
+  (if (null operation-name)
+      (let ((operation
+              (remove-if-not (lambda (x) (typep x 'operation-definition))
+                             (definitions document))))
+        (if (= 1 (length operation))
+            (car operation)
+            (gql-error "Need to raise a request error: https://spec.graphql.org/draft/#GetOperation()")))
+      (let ((operation
+              (gethash operation-name (get-types 'operation-definition document))))
+        (if operation operation
+            (gql-error "Need to raise a request error: https://spec.graphql.org/draft/#GetOperation()")))))
 
 (defun input-type-p (type)
   ;; TODO: https://spec.graphql.org/draft/#IsInputType()

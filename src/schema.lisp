@@ -102,7 +102,7 @@
       (enum-type-definition
        (when (listp (enum-values object-type))
          (dolist (enum-val (enum-values object-type))
-           (setf (gethash (enum-value enum-val) table) enum-val))
+           (setf (gethash (name (enum-value enum-val)) table) enum-val))
          (setf (enum-values object-type) table)))
       (union-type-definition
        (when (listp (union-members object-type))

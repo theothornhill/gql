@@ -6,6 +6,7 @@
    #:gql
    #:build-schema
    #:build-document
+   #:make-schema
    #:generate
    #:with-context
    #:execute
@@ -14,4 +15,23 @@
    #:true
    #:false
    #:gql-object
-   #:make-resolvers))
+   #:make-name
+   #:named
+   #:list-type
+   #:non-null-type
+   #:field
+   #:object
+   #:interface
+   #:enum
+   #:enum-val
+   #:set-resolver
+
+   #:*int*
+   #:*float*
+   #:*string*
+   #:*boolean*
+   #:*id*
+   #:!
+   #:[]
+   #:[!]
+   #:[!]!))

@@ -43,29 +43,3 @@ ensure we have initialized the schema.")
    (arg-values :initarg :arg-values :accessor arg-values)))
 
 (defvar *execution-context* nil)
-
-(defun built-in-scalar-p (scalar)
-  (member scalar '("Int" "Float" "String" "Boolean" "ID") :test #'string=))
-
-(deftype built-in-scalar ()
-  '(and string (satisfies built-in-scalar-p)))
-
-(deftype wrapper-type ()
-  '(member non-null-type list-type))
-
-(deftype input-types ()
-  '(member
-    scalar-type-definition
-    input-object-type-definition
-    enum-type-definition))
-
-(deftype output-types ()
-  '(member
-    scalar-type-definition
-    object-type-definition
-    enum-type-definition
-    interface-type-definition
-    union-type-definition))
-
-(deftype bool ()
-  '(member true false))

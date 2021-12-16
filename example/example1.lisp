@@ -8,30 +8,29 @@
 
 (defparameter *fields*
   (list
-   (gql::field :name "name"
-               :type (make-instance 'gql::named-type :name (make-instance 'gql::name :name "String"))
+   (field :name "name"
+               :type *string*
                :resolver (constantly "Theodor Thornhill"))
-   (gql::field :name "age"
-               :type (make-instance 'gql::named-type :name (make-instance 'gql::name :name "Int"))
+   (field :name "age"
+               :type *int*
                :resolver (constantly 31))))
 
+(defparameter *query*
+  (gql::object :name "Query" :fields *fields*))
+
+
 (defvar *example-schema*
-  (build-schema `(,(gql::object :name "Query" :fields *fields*))))
+  (make-schema :query *query*))
 
 (defvar *variable-values* (make-hash-table :test #'equal))
 
 (hunchentoot:define-easy-handler (home :uri "/home") (item)
   (setf (hunchentoot:content-type*) "text/plain")
   (when item
-    (with-schema *example-schema*
-      (let ((result (execute (build-schema (format nil "{ __type(name: Query) { name } }"))
-                             nil
-                             *variable-values* nil)))
-        (format nil "~a~%" (cl-json:encode-json-to-string result))))))
+    (with-context (:schema *example-schema*
+                   :document (build-document "{ __type(name: Query) { name } }"))
+      (format nil "~a~%" (cl-json:encode-json-to-string (execute))))))
 
 (defvar *server* (make-instance 'hunchentoot:easy-acceptor :port 3000))
-
-(defun query (item)
-  (build-schema (format nil "query { __type(name: Query) { name } }" item)))
 
 ;; Eval this when you want to run the app (hunchentoot:start *server*)

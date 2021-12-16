@@ -63,11 +63,6 @@
                                       :type (gql::list-type (gql::non-null-type (gql::named "Pet")))))))
 
 
-;; (defun example2 (query)
-;;   (with-schema (build-schema (asdf:system-relative-pathname 'gql-tests #p"t/test-files/validation-schema.graphql"))
-;;     (let* ((res (gql::execute (build-schema query) nil (make-hash-table :test #'equal) nil)))
-;;       (format t "~%~a" (cl-json:encode-json-to-string res)))))
-
 (defun example2 (query)
   (with-context (:schema (gql::make-schema :query *query* :types (list *dog* *human*))
                  :document (build-document query))
@@ -75,7 +70,8 @@
       (format t "~%~a" (cl-json:encode-json-to-string res)))))
 
 ;; (example2 "{ __schema { types { name ofType { name } } } }")
-(example2 "{ __type(name: \"Dog\") { name fields { name type { name } } } }")
+(example2 "{ __schema { queryType { name } } }")
+;; (example2 "{ __type(name: \"Dog\") { name fields { name type { name } } } }")
 ;; (example2 "query { dog { name owner { name pets { name } } } }")
 ;; (example2 "query { dog { name owner { name } } }")
 ;; (example2 "query { dog { name owner: wingle { name pets: dogs { name } } } }")
