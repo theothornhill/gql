@@ -28,7 +28,8 @@
   (setf (hunchentoot:content-type*) "text/plain")
   (when item
     (with-context (:schema *example-schema*
-                   :document (build-document "{ __type(name: Query) { name } }"))
+                   :document (build-document
+                              (format nil "{ ~a }" item)))
       (format nil "~a~%" (cl-json:encode-json-to-string (execute))))))
 
 (defvar *server* (make-instance 'hunchentoot:easy-acceptor :port 3000))

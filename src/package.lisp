@@ -34,4 +34,15 @@
    #:!
    #:[]
    #:[!]
-   #:[!]!))
+   #:[!]!
+
+   #:object-type
+   #:object-value
+   #:field-definition
+   #:field-name
+   #:arg-values
+   #:schema
+   #:document
+   #:variables
+   #:execution-context
+   #:*context*))
