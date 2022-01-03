@@ -2,7 +2,7 @@
   :description "Describe gql here"
   :author "Theodor Thornhill <theo@thornhill.no>"
   :license  "AGPLv3"
-  :version "0.5.0"
+  :version "0.6.0"
   :serial t
   :depends-on (:cl-ppcre)
   :components ((:module "src"

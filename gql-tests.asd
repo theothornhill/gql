@@ -2,7 +2,7 @@
   :description "Tests for gql"
   :author "Theodor Thornhill <theo@thornhill.no>"
   :license "AGPLv3"
-  :version "0.5.0"
+  :version "0.6.0"
   :depends-on (:rove :gql :cl-json)
   :components ((:module "t"
                 :components
