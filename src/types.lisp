@@ -99,10 +99,18 @@
                  :description description
                  :name (make-name name)))
 
-(defun enum-val (&key enum-value)
+(defun enum-val (&key enum-value description)
   (make-instance 'enum-value-definition
                  :kind 'enum-value
+                 :description description
                  :enum-value enum-value))
+
+(defun arg (&key name description type)
+  (make-instance 'input-value-definition
+                 :kind 'input-value-definition
+                 :name (make-name name)
+                 :description description
+                 :ty type))
 
 (defun set-resolver (type-name field-name fn)
   (let ((field-definition

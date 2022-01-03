@@ -164,10 +164,7 @@
 (defvar *__type-field-definition*
   (field :description "Request the type information of a single type."
          :name "__type"
-         :args `(,(make-instance 'input-value-definition
-                                 :name (make-name "name")
-                                 :description nil
-                                 :ty (! "String")))
+         :args `(,(arg :name "name" :ty (! *string*)))
          :type (named "__Type")
          :resolver (lambda ()
                      (with-slots (schema execution-context) *context*

@@ -16,5 +16,8 @@
                  (:file "type-extension-tests")
                  (:file "validation-tests")
                  (:file "execution-tests")
-                 (:file "introspection-tests"))))
+                 (:file "introspection-tests")))
+               (:module "t/starwars"
+                :components
+                ((:file "starwars-data"))))
   :perform (test-op (o c) (symbol-call :rove '#:run :gql-tests :style :dot)))
