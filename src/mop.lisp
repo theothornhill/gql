@@ -62,8 +62,14 @@
   (defun find-items (names)
     (mapcar #'find-item names))
 
-  (defun clear-items ()
-    (clrhash items))
+  (defun clear-items (&optional (truly-clear nil))
+    (if truly-clear (clrhash items)
+        (maphash
+         (lambda (k _) (declare (ignore _))
+           (unless (uiop:string-prefix-p "__" k)
+             ;; Don't remove the introspection types by default
+             (remhash k items)))
+         items)))
 
   (defun (setf find-item) (new-value name)
     (setf (gethash name items) new-value)))

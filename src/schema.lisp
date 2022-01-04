@@ -29,22 +29,15 @@
     (when (subscription-type schema)
       (push (subscription-type schema) initial-types))
 
-    (when (find-item "__Schema")
-      (push (find-item "__Schema") initial-types))
-    (when (find-item "__Type")
-      (push (find-item "__Type") initial-types))
-    (when (find-item "__TypeKind")
-      (push (find-item "__TypeKind") initial-types))
-    (when (find-item "__Field")
-      (push (find-item "__Field") initial-types))
-    (when (find-item "__InputValue")
-      (push (find-item "__InputValue") initial-types))
-    (when (find-item "__EnumValue")
-      (push (find-item "__EnumValue") initial-types))
-    (when (find-item "__Directive")
-      (push (find-item "__Directive") initial-types))
-    (when (find-item "__DirectiveLocation")
-      (push (find-item "__DirectiveLocation") initial-types))
+    (dolist (item (find-items '("__Schema"
+                                "__Type"
+                                "__TypeKind"
+                                "__Field"
+                                "__InputValue"
+                                "__EnumValue"
+                                "__Directive"
+                                "__DirectiveLocation")))
+      (push item initial-types))
 
     (dolist (type types)
       (push type initial-types))
@@ -94,16 +87,19 @@
            (dolist (interface (interfaces object-type))
              (setf (gethash (nameof interface) interface-map) interface))
            (setf (interfaces object-type) interface-map))))
+
       (interface-type-definition
        (when (listp (fields object-type))
          (dolist (field (fields object-type))
            (setf (gethash (nameof field) table) field))
          (setf (fields object-type) table)))
+
       (enum-type-definition
        (when (listp (enum-values object-type))
          (dolist (enum-val (enum-values object-type))
            (setf (gethash (name (enum-value enum-val)) table) enum-val))
          (setf (enum-values object-type) table)))
+
       (union-type-definition
        (when (listp (union-members object-type))
          (dolist (union-member (union-members object-type))
