@@ -46,4 +46,8 @@
    #:variables
    #:execution-context
    #:*context*
-   #:arg))
+   #:arg
+   #:defobject
+   #:definterface
+   #:find-items
+   #:defenum))

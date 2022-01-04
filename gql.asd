@@ -14,6 +14,7 @@
                  (:file "lexer")
                  (:file "language")
                  (:file "types")
+                 (:file "mop")
                  (:file "schema")
                  (:file "introspection")
                  (:file "conditions")

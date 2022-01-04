@@ -29,22 +29,22 @@
     (when (subscription-type schema)
       (push (subscription-type schema) initial-types))
 
-    (when *__schema*
-      (push *__schema* initial-types))
-    (when *__type*
-      (push *__type* initial-types))
-    (when *__type-kind*
-      (push *__type-kind* initial-types))
-    (when *__field*
-      (push *__field* initial-types))
-    (when *__input-value*
-      (push *__input-value* initial-types))
-    (when *__enum-value*
-      (push *__enum-value* initial-types))
-    (when *__directive*
-      (push *__directive* initial-types))
-    (when *__directive-location*
-      (push *__directive-location* initial-types))
+    (when (find-item "__Schema")
+      (push (find-item "__Schema") initial-types))
+    (when (find-item "__Type")
+      (push (find-item "__Type") initial-types))
+    (when (find-item "__TypeKind")
+      (push (find-item "__TypeKind") initial-types))
+    (when (find-item "__Field")
+      (push (find-item "__Field") initial-types))
+    (when (find-item "__InputValue")
+      (push (find-item "__InputValue") initial-types))
+    (when (find-item "__EnumValue")
+      (push (find-item "__EnumValue") initial-types))
+    (when (find-item "__Directive")
+      (push (find-item "__Directive") initial-types))
+    (when (find-item "__DirectiveLocation")
+      (push (find-item "__DirectiveLocation") initial-types))
 
     (dolist (type types)
       (push type initial-types))
