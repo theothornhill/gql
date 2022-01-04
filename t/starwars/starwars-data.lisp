@@ -174,30 +174,30 @@
   (with-context (:schema *schema*
                  :document (build-document
                             "query {
-                             hero(episode: \"NEWHOPE\") {
-                               id
-                               primaryFunction
-                               friends {
+                               hero(episode: \"NEWHOPE\") {
                                  id
-                                 name
+                                 primaryFunction
+                                 friends {
+                                   id
+                                   name
+                                 }
                                }
-                             }
-                             human(id: \"1002\") {
-                               id
-                               friends {
-                                 name
-                               }
-                             }
-                             droid(id: \"2000\") {
-                               id
-                               friends {
-                                 name
+                               human(id: \"1002\") {
+                                 id
                                  friends {
                                    name
                                  }
                                }
-                             }
-                           }"))
+                               droid(id: \"2000\") {
+                                 id
+                                 friends {
+                                   name
+                                   friends {
+                                     name
+                                   }
+                                 }
+                               }
+                             }"))
     (let* ((res (gql::execute)))
       (format t "~%~a" (cl-json:encode-json-to-string res)))))
 
