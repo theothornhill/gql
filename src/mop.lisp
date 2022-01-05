@@ -5,52 +5,35 @@
   (check-type description string)
   (check-type fields list)
   (check-type interfaces list)
-  `(ensure-object ,name
+  `(ensure-item ,name 'object-type-definition
      :description ,description
      :fields ,(canonicalize-fields fields)
      :interfaces ,(canonicalize-interfaces interfaces)))
-
-(defun ensure-object (name &rest all-keys)
-  (let ((object (apply #'make-instance
-                       'object-type-definition
-                       :kind 'object-type-definition
-                       :name (make-name name) all-keys)))
-    (setf (find-item name) object)
-    object))
 
 (defmacro definterface (name description fields &optional directives)
   (check-type name string)
   (check-type description string)
   (check-type fields list)
   (check-type directives list)
-  `(ensure-interface ,name
+  `(ensure-item ,name 'interface-type-definition
      :description ,description
      :fields ,(canonicalize-fields fields)
      :directives ,directives))
-
-(defun ensure-interface (name &rest all-keys)
-  (let ((object (apply #'make-instance
-                       'interface-type-definition
-                       :kind 'interface-type-definition
-                       :name (make-name name) all-keys)))
-    (setf (find-item name) object)
-    object))
 
 (defmacro defenum (name description enum-values)
   (check-type name string)
   (check-type description string)
   (check-type enum-values list)
-  `(ensure-enum ,name
+  `(ensure-item ,name 'enum-type-definition
      :description ,description
      :enum-values ,(canonicalize-enum-values enum-values)))
 
-(defun ensure-enum (name &rest all-keys)
-  (let ((object (apply #'make-instance
-                       'enum-type-definition
-                       :kind 'enum-type-definition
+(defun ensure-item (name item &rest all-keys)
+  (let ((item (apply #'make-instance item
+                       :kind item
                        :name (make-name name) all-keys)))
-    (setf (find-item name) object)
-    object))
+    (setf (find-item name) item)
+    item))
 
 (let ((items (make-hash-table :test #'equal)))
   (defun find-item (symbol &optional (errorp t))
