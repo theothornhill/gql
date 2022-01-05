@@ -74,10 +74,10 @@
 
 (defobject "__InputValue"
   "A GraphQL input value"
-    (("name" :type (! *string*))
-     ("description" :type *string*)
-     ("type" :type (! "Type"))
-     ("defaultValue" :type *string*)))
+  (("name" :type (! *string*))
+   ("description" :type *string*)
+   ("type" :type (! "Type"))
+   ("defaultValue" :type *string*)))
 
 (defobject "__EnumValue"
   "A GraphQL enum value"
