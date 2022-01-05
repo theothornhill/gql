@@ -31,53 +31,37 @@
                    ,(make-instance
                      'dog
                      :name "Bango-Wango")))))
-(defvar *query*
-  (gql::object
-   :name "Query"
-   :fields `(,(gql::field
-               :name "dog"
-               :type (gql::named "Dog")
-               :resolver (constantly *doggo*)))))
+(defobject "Query"
+  "Query object"
+  (("dog" :type (gql::named "Dog") :resolver (constantly *doggo*))))
 
-(defvar *dog*
-  (gql::object
-   :name "Dog"
-   :description "A Dog is a dog!"
-   :fields `(,(gql::field
-               :name "name"
-               :type *string*
-               :resolver (lambda ()
-                           (with-slots (object-value) (execution-context *context*)
-                             (name object-value))))
-             ,(gql::field
-               :name "nickname"
-               :type *string*)
-             ,(gql::field
-               :name "barkVolume"
-               :type *int*)
-             ,(gql::field
-               :name "owner"
-               :type (gql::named "Human")
-               :resolver (lambda () (make-instance 'human :name "Petter Smart" :pets '()))))))
+(defobject "Dog"
+  "A Dog is a dog!"
+  (("name" :type *string*
+           :resolver (lambda ()
+                       (with-slots (object-value) (execution-context *context*)
+                         (name object-value))))
+   ("nickname" :type *string*)
+   ("barkVolume" :type *int*)
+   ("owner" :type (gql::named "Human")
+            :resolver (lambda () (make-instance 'human :name "Petter Smart" :pets '())))))
 
-(defvar *human*
-  (gql::object
-   :name "Human"
-   :description "A Human is a human!"
-   :fields `(,(gql::field
-               :name "name"
-               :type *string*
-               :resolver (lambda ()
-                           (with-slots (object-value) (execution-context *context*)
-                             (name object-value))))
-             ,(gql::field
-               :name "pets"
-               :type ([!] "Pet")))))
+(defobject "Human"
+  "A Human is a human!"
+  (("name" :type *string*
+           :resolver (lambda ()
+                       (with-slots (object-value) (execution-context *context*)
+                         (name object-value))))
+   ("pets" :type ([!] "Pet"))))
 
+
+(defschema
+    (:query (gql::find-item "Query")
+     :types (gql::find-items '("Dog" "Human")))
+  ())
 
 (defun example2 (query)
-  (with-context (:schema (gql::make-schema :query *query* :types (list *dog* *human*))
-                 :document (build-document query))
+  (with-context (:document (build-document query))
     (let* ((res (gql::execute)))
       (format t "~%~a" (cl-json:encode-json-to-string res)))))
 

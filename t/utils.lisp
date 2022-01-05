@@ -38,12 +38,13 @@
                                             (build-schema input)
                                             (build-schema (asdf:system-relative-pathname
                                                            'gql-tests
-                                                           #p"t/test-files/validation-schema.graphql"))) ))
-         (query-type (find-if (lambda (x) (string= (gql::nameof x) "Query")) definitions))
-         (subscription-type (find-if (lambda (x) (string= (gql::nameof x) "Subscription")) definitions)))
-    (with-context (:schema (gql::make-schema :query query-type
-                                             :subscription subscription-type
-                                             :types definitions)) 
+                                                           #p"t/test-files/validation-schema.graphql"))))))
+
+    (defschema (:query (find-if (lambda (x) (string= (gql::nameof x) "Query")) definitions) 
+                :types definitions)
+      (:subscription (find-if (lambda (x) (string= (gql::nameof x) "Subscription")) definitions)))
+
+    (with-context ()
       (let ((gql::*errors* nil))
           
         (gql::validate (build-schema input))

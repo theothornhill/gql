@@ -6,7 +6,6 @@
    #:gql
    #:build-schema
    #:build-document
-   #:make-schema
    #:generate
    #:with-context
    #:execute
@@ -49,5 +48,7 @@
    #:arg
    #:defobject
    #:definterface
+   #:find-item
    #:find-items
-   #:defenum))
+   #:defenum
+   #:defschema))

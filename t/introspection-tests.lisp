@@ -37,38 +37,31 @@
                                 'cat
                                 :name "Bango-Wango"
                                 :nickname "Mjausig"
-                                :type-name "Cat")))))
-           (query-type
-             (gql::object :name "Query"
-                          :fields `(,(gql::field :name "dog"
-                                                 :type (gql::named "Dog")
-                                                 :resolver (constantly doggo)))))
-           (human-type
-             (gql::object :name "Human"
-                          :description "A Human is a human!"
-                          :fields `(,(gql::field :name "name"
-                                                 :type (gql::named "String")
-                                                 :resolver (lambda () (name (gql::object-value (gql::execution-context gql::*context*)))))
-                                    ,(gql::field :name "pets"
-                                                 :type (gql::list-type (gql::non-null-type (gql::named "Pet")))))))
-           (dog-type
-             (gql::object :name "Dog"
-                          :description "A Dog is a dog!"
-                          :fields `(,(gql::field :name "name"
-                                                 :type (gql::named "String")
-                                                 :resolver (lambda () (name (gql::object-value (gql::execution-context gql::*context*)))))
-                                    ,(gql::field :name "nickname"
-                                                 :type (gql::named "String"))
-                                    ,(gql::field :name "owner"
-                                                 :type (gql::named "Human")
-                                                 :resolver (lambda () (make-instance 'human
-                                                                                :name "Wingle Wangle"
-                                                                                :pets '())))))))
+                                :type-name "Cat"))))))
+
+      (defobject "Query" "Query"
+        (("dog" :type (gql::named "Dog") :resolver (constantly doggo))))
+
+      (defobject "Human" "A Human is a human!"
+        (("name"
+          :type (gql::named "String")
+          :resolver (lambda () (name (gql::object-value (gql::execution-context gql::*context*)))))
+         ("pets" :type (gql::list-type (gql::non-null-type (gql::named "Pet"))))))
+
+      (defobject "Dog" "A Dog is a dog!"
+        (("name" :type (gql::named "String")
+                 :resolver (lambda () (name (gql::object-value (gql::execution-context gql::*context*)))))
+         ("nickname" :type (gql::named "String"))
+         ("owner" :type (gql::named "Human")
+                  :resolver (lambda () (make-instance 'human
+                                                 :name "Wingle Wangle"
+                                                 :pets '())))))
+
+      (defschema (:query (find-item "Query") :types (find-items '("Dog" "Human")))
+        ())
 
       (flet ((doggo-test (query)
-               (with-context
-                   (:schema (gql::make-schema :query query-type :types (list dog-type human-type))
-                    :document (build-schema query))
+               (with-context (:document (build-schema query))
                  (format nil "~a" (cl-json:encode-json-to-string (gql::execute nil nil))))))
 
         (ok (string=

@@ -18,17 +18,14 @@
 (defparameter *query*
   (gql::object :name "Query" :fields *fields*))
 
-
-(defvar *example-schema*
-  (make-schema :query *query*))
+(gql:defschema *query*)
 
 (defvar *variable-values* (make-hash-table :test #'equal))
 
 (hunchentoot:define-easy-handler (home :uri "/home") (item)
   (setf (hunchentoot:content-type*) "text/plain")
   (when item
-    (with-context (:schema *example-schema*
-                   :document (build-document
+    (with-context (:document (build-document
                               (format nil "{ ~a }" item)))
       (format nil "~a~%" (cl-json:encode-json-to-string (execute))))))
 

@@ -134,43 +134,10 @@
                 (with-slots (arg-values) (execution-context *context*)
                   (get-droid (gethash "id" arg-values)))))))
 
-(defparameter *schema*
-  (make-schema :query (gql::find-item "Query")
-               :types (find-items '("Character" "Human" "Droid" "Episode"))))
-
-(defmacro comment (&body body)
-  (declare (ignore body)))
-
-(comment
-  (with-context (:schema *schema*
-                 :document (build-document
-                            "query {
-                               hero(episode: \"NEWHOPE\") {
-                                 id
-                                 primaryFunction
-                                 friends {
-                                   id
-                                   name
-                                 }
-                               }
-                               human(id: \"1002\") {
-                                 id
-                                 friends {
-                                   name
-                                 }
-                               }
-                               droid(id: \"2000\") {
-                                 id
-                                 friends {
-                                   name
-                                   friends {
-                                     name
-                                   }
-                                 }
-                               }
-                             }"))
-    (let* ((res (gql::execute)))
-      (format t "~%~a" (cl-json:encode-json-to-string res)))))
+(defschema
+    (:query (gql::find-item "Query")
+     :types (find-items '("Character" "Human" "Droid" "Episode")))
+  ())
 
 
 ;; This defines a basic set of data for our Star Wars Schema.
@@ -277,3 +244,36 @@
 
 (defun get-droid (id)
   (gethash id *droid-data*))
+
+(defmacro comment (&body body)
+  (declare (ignore body)))
+
+(comment
+  (with-context (:document (build-document
+                            "query {
+                               hero(episode: \"NEWHOPE\") {
+                                 id
+                                 primaryFunction
+                                 friends {
+                                   id
+                                   name
+                                 }
+                               }
+                               human(id: \"1002\") {
+                                 id
+                                 friends {
+                                   name
+                                 }
+                               }
+                               droid(id: \"2000\") {
+                                 id
+                                 friends {
+                                   name
+                                   friends {
+                                     name
+                                   }
+                                 }
+                               }
+                             }"))
+    (let* ((res (gql::execute)))
+      (format t "~%~a" (cl-json:encode-json-to-string res)))))

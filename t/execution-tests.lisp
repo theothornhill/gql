@@ -3,9 +3,13 @@
 (deftest execution
   (testing "collect-fields returns the correct fields"
     (let* ((definitions (gql::definitions
-                         (build-schema "{ a { subfield1 } ...ExampleFragment } fragment ExampleFragment on Query { a { subfield2 } b }")))
-           (query-type (gql::object :name "Query")))
-      (with-context (:schema (gql::make-schema :query query-type :types (cdr definitions)))
+                         (build-schema "{ a { subfield1 } ...ExampleFragment } fragment ExampleFragment on Query { a { subfield2 } b }"))))
+
+      (defschema (:query (gql::object :name "Query")
+                  :types (cdr definitions))
+        ())
+
+      (with-context ()
         (let* ((operation (find-if (lambda (x) (string= (gql::operation-type x) "Query")) definitions))
                (operation-type (gql::operation-type operation))
                (selection-set (gql::selection-set operation))
@@ -30,10 +34,13 @@
       (ok (gql::get-operation doc))))
 
   (testing "merge-selection-sets should merge multiple fields"
-    (let* ((definitions (gql::definitions (build-schema (asdf:system-relative-pathname 'gql-tests #p"t/test-files/validation-schema.graphql"))))
-           (query-type (find-if (lambda (x) (string= (gql::nameof x) "Query")) definitions)))
-      (with-context (:schema (gql::make-schema :query query-type :types definitions)
-                     :document (build-schema "query { dog { name } dog { owner { name } } }"))
+    (let* ((definitions (gql::definitions (build-schema (asdf:system-relative-pathname 'gql-tests #p"t/test-files/validation-schema.graphql")))))
+
+      (defschema (:query (find-if (lambda (x) (string= (gql::nameof x) "Query")) definitions)
+                  :types (cdr definitions))
+        ())
+
+      (with-context (:document (build-schema "query { dog { name } dog { owner { name } } }"))
         (gql::set-resolver "Human" "name" (lambda () "Bingo-bongo-pappa"))
         (gql::set-resolver "Dog" "name" (lambda () "Bingo-bongo"))
         (gql::set-resolver "Dog" "owner" (lambda () t))
@@ -48,10 +55,13 @@
           (ok (gethash "owner" dog-res))))))
 
   (testing "A query should handle alias"
-    (let* ((definitions (gql::definitions (build-schema (asdf:system-relative-pathname 'gql-tests #p"t/test-files/validation-schema.graphql"))))
-           (query-type (find-if (lambda (x) (string= (gql::nameof x) "Query")) definitions)))
-      (with-context (:schema (gql::make-schema :query query-type :types definitions)
-                     :document (build-schema "query { dog { name owner { name: nameAlias } } }"))
+    (let* ((definitions (gql::definitions (build-schema (asdf:system-relative-pathname 'gql-tests #p"t/test-files/validation-schema.graphql")))))
+
+      (defschema (:query (find-if (lambda (x) (string= (gql::nameof x) "Query")) definitions)
+                  :types (cdr definitions))
+        ())
+
+      (with-context (:document (build-schema "query { dog { name owner { name: nameAlias } } }"))
         (gql::set-resolver "Human" "name" (lambda () "Bingo-bongo-pappa"))
         (gql::set-resolver "Dog" "name" (lambda () "Bingo-bongo"))
         (gql::set-resolver "Dog" "owner" (lambda () t))
@@ -96,10 +106,13 @@
       (ok (test "Boolean" 'false 'string "false"))))
 
   (testing "Using resolvers that access the object from the 'db'"
-    (let* ((definitions (gql::definitions (build-schema (asdf:system-relative-pathname 'gql-tests #p"t/test-files/validation-schema.graphql"))))
-           (query-type (find-if (lambda (x) (string= (gql::nameof x) "Query")) definitions)))
-      (with-context (:schema (gql::make-schema :query query-type :types definitions)
-                     :document (build-schema "query { dog { name } }"))
+    (let* ((definitions (gql::definitions (build-schema (asdf:system-relative-pathname 'gql-tests #p"t/test-files/validation-schema.graphql")))))
+
+      (defschema (:query (find-if (lambda (x) (string= (gql::nameof x) "Query")) definitions)
+                  :types (cdr definitions))
+        ())
+
+      (with-context (:document (build-schema "query { dog { name } }"))
         (gql::defclass* dog name owner)
         (gql::set-resolver "Dog" "name"
                            (lambda () (name (gql::object-value (gql::execution-context gql::*context*)))))
@@ -119,9 +132,13 @@
           (ok (string= name "Bingo-bongo"))))))
 
   (testing "A query should handle variables and arguments"
-    (let*  ((definitions (gql::definitions (build-schema (asdf:system-relative-pathname 'gql-tests #p"t/test-files/validation-schema.graphql"))))
-            (query-type (find-if (lambda (x) (string= (gql::nameof x) "Query")) definitions)))
-      (with-context (:schema (gql::make-schema :query query-type :types definitions))
+    (let*  ((definitions (gql::definitions (build-schema (asdf:system-relative-pathname 'gql-tests #p"t/test-files/validation-schema.graphql")))))
+
+      (defschema (:query (find-if (lambda (x) (string= (gql::nameof x) "Query")) definitions)
+                  :types (cdr definitions))
+        ())
+
+      (with-context ()
         (gql::defclass* dog name does-know-command)
         (setf (gethash "sit" (gql::variables gql::*context*)) "SIT")
 
@@ -166,9 +183,13 @@
        (nickname :initarg :nickname :accessor nickname)))
 
     (let* ((doggo (make-instance 'dog :name "Bingo-Bongo" :type-name "Dog"))
-           (definitions (gql::definitions (build-schema (asdf:system-relative-pathname 'gql-tests #p"t/test-files/validation-schema.graphql"))))
-           (query-type (find-if (lambda (x) (string= (gql::nameof x) "Query")) definitions)))
-      (with-context (:schema (gql::make-schema :query query-type :types definitions))
+           (definitions (gql::definitions (build-schema (asdf:system-relative-pathname 'gql-tests #p"t/test-files/validation-schema.graphql")))))
+
+      (defschema (:query (find-if (lambda (x) (string= (gql::nameof x) "Query")) definitions)
+                  :types (cdr definitions))
+        ())
+
+      (with-context ()
         ;; We want to know if we did get the actual same reference.
         (ok (eq (gql::resolve-abstract-type (gethash "CatOrDog" (gql::type-map (gql::schema gql::*context*))) doggo)
                 (gethash "Dog" (gql::type-map (gql::schema gql::*context*)))))
@@ -215,52 +236,41 @@
               :owner (make-instance
                       'human
                       :name "Wingle Wangle"
-                      :pets pets)))
-           (query-type
-             (gql::object :name "Query"
-                          :fields `(,(gql::field :name "dog"
-                                                 :type (gql::named "Dog")
-                                                 :resolver (constantly doggo)))))
-           (pet-interface
-             (gql::interface :name "Pet"
-                             :description "A Pet is a pet!"
-                             :fields `(,(gql::field :name "name"
-                                                    :type (gql::named "String")
-                                                    :resolver (lambda () (name (gql::object-value (gql::execution-context gql::*context*))))))))
-           (human-type
-             (gql::object :name "Human"
-                          :description "A Human is a human!"
-                          :fields `(,(gql::field :name "name"
-                                                 :type (gql::named "String")
-                                                 :resolver (lambda () (name (gql::object-value (gql::execution-context gql::*context*)))))
-                                    ,(gql::field :name "pets"
-                                                 :type (gql::list-type (gql::non-null-type (gql::named "Pet")))
-                                                 :resolver (lambda () (pets (gql::object-value (gql::execution-context gql::*context*))))))))
-           (dog-type
-             (gql::object :name "Dog"
-                          :description "A Dog is a dog!"
-                          :fields `(,(gql::field :name "name"
-                                                 :type (gql::named "String")
-                                                 :resolver (lambda () (name (gql::object-value (gql::execution-context gql::*context*)))))
-                                    ,(gql::field :name "nickname"
-                                                 :type (gql::named "String")
-                                                 :resolver (lambda () (nickname (gql::object-value (gql::execution-context gql::*context*)))))
-                                    ,(gql::field :name "owner"
-                                                 :type (gql::named "Human")
-                                                 :resolver (lambda () human)))))
-           (cat-type
-             (gql::object :name "Cat"
-                          :description "A Cat is a cat!"
-                          :fields `(,(gql::field :name "name"
-                                                 :type (gql::named "String")
-                                                 :resolver (lambda () (name (gql::object-value (gql::execution-context gql::*context*)))))
-                                    ,(gql::field :name "nickname"
-                                                 :type (gql::named "String")
-                                                 :resolver (lambda () (nickname (gql::object-value (gql::execution-context gql::*context*)))))))))
+                      :pets pets))))
+
+      (defobject "Query" "Query"
+        (("dog" :type (gql::named "Dog") :resolver (constantly doggo))))
+
+      (definterface "Pet" "A Pet is a pet!"
+        (("name" :type (gql::named "String")
+                 :resolver (lambda () (name (gql::object-value (gql::execution-context gql::*context*)))))))
+
+      (defobject "Human" "A Human is a human!"
+        (("name" :type (gql::named "String")
+                 :resolver (lambda () (name (gql::object-value (gql::execution-context gql::*context*)))))
+         ("pets" :type (gql::list-type (gql::non-null-type (gql::named "Pet")))
+                 :resolver (lambda () (pets (gql::object-value (gql::execution-context gql::*context*)))))))
+
+      (defobject "Dog" "A Dog is a dog!"
+        (("name" :type (gql::named "String")
+                 :resolver (lambda () (name (gql::object-value (gql::execution-context gql::*context*)))))
+         ("nickname" :type (gql::named "String")
+                     :resolver (lambda () (nickname (gql::object-value (gql::execution-context gql::*context*)))))
+         ("owner" :type (gql::named "Human")
+                  :resolver (lambda () human))))
+
+      (defobject "Cat" "A Cat is a cat!"
+        (("name" :type (gql::named "String")
+                 :resolver (lambda () (name (gql::object-value (gql::execution-context gql::*context*)))))
+         ("nickname" :type (gql::named "String")
+                     :resolver (lambda () (nickname (gql::object-value (gql::execution-context gql::*context*)))))))
+
+      (defschema (:query (find-item "Query")
+                  :types (find-items '("Pet" "Human" "Dog" "Cat")))
+        ())
 
       (flet ((doggo-test (query)
-               (with-context (:schema (gql::make-schema :query query-type :types (list dog-type human-type cat-type pet-interface))
-                              :document (build-schema query))
+               (with-context (:document (build-schema query))
                  (let* ((res (gql::execute nil nil)))
                    (format nil "~a" (cl-json:encode-json-to-string res))))))
 
