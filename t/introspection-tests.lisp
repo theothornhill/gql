@@ -39,25 +39,25 @@
                                 :nickname "Mjausig"
                                 :type-name "Cat"))))))
 
-      (defobject "Query" "Query"
-        (("dog" :type (gql::named "Dog") :resolver (constantly doggo))))
+      (defobject |Query| "Query"
+        ((|dog| :type (gql::named "Dog") :resolver (constantly doggo))))
 
-      (defobject "Human" "A Human is a human!"
-        (("name"
+      (defobject |Human| "A Human is a human!"
+        ((|name|
           :type (gql::named "String")
           :resolver (lambda () (name (gql::object-value (gql::execution-context gql::*context*)))))
-         ("pets" :type (gql::list-type (gql::non-null-type (gql::named "Pet"))))))
+         (|pets| :type (gql::list-type (gql::non-null-type (gql::named "Pet"))))))
 
-      (defobject "Dog" "A Dog is a dog!"
-        (("name" :type (gql::named "String")
+      (defobject |Dog| "A Dog is a dog!"
+        ((|name| :type (gql::named "String")
                  :resolver (lambda () (name (gql::object-value (gql::execution-context gql::*context*)))))
-         ("nickname" :type (gql::named "String"))
-         ("owner" :type (gql::named "Human")
+         (|nickname| :type (gql::named "String"))
+         (|owner| :type (gql::named "Human")
                   :resolver (lambda () (make-instance 'human
                                                  :name "Wingle Wangle"
                                                  :pets '())))))
 
-      (defschema (:query (find-item "Query") :types (find-items '("Dog" "Human")))
+      (defschema (:query (find-item '|Query|) :types (find-items '(|Dog| |Human|)))
         ())
 
       (flet ((doggo-test (query)

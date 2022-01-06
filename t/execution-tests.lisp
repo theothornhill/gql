@@ -238,35 +238,35 @@
                       :name "Wingle Wangle"
                       :pets pets))))
 
-      (defobject "Query" "Query"
-        (("dog" :type (gql::named "Dog") :resolver (constantly doggo))))
+      (defobject |Query| "Query"
+        ((|dog| :type (gql::named "Dog") :resolver (constantly doggo))))
 
-      (definterface "Pet" "A Pet is a pet!"
-        (("name" :type (gql::named "String")
+      (definterface |Pet| "A Pet is a pet!"
+        ((|name| :type (gql::named "String")
                  :resolver (lambda () (name (gql::object-value (gql::execution-context gql::*context*)))))))
 
-      (defobject "Human" "A Human is a human!"
-        (("name" :type (gql::named "String")
+      (defobject |Human| "A Human is a human!"
+        ((|name| :type (gql::named "String")
                  :resolver (lambda () (name (gql::object-value (gql::execution-context gql::*context*)))))
          ("pets" :type (gql::list-type (gql::non-null-type (gql::named "Pet")))
                  :resolver (lambda () (pets (gql::object-value (gql::execution-context gql::*context*)))))))
 
-      (defobject "Dog" "A Dog is a dog!"
-        (("name" :type (gql::named "String")
+      (defobject |Dog| "A Dog is a dog!"
+        ((|name| :type (gql::named "String")
                  :resolver (lambda () (name (gql::object-value (gql::execution-context gql::*context*)))))
-         ("nickname" :type (gql::named "String")
+         (|nickname| :type (gql::named "String")
                      :resolver (lambda () (nickname (gql::object-value (gql::execution-context gql::*context*)))))
-         ("owner" :type (gql::named "Human")
+         (|owner| :type (gql::named "Human")
                   :resolver (lambda () human))))
 
-      (defobject "Cat" "A Cat is a cat!"
-        (("name" :type (gql::named "String")
+      (defobject |Cat| "A Cat is a cat!"
+        ((|name| :type (gql::named "String")
                  :resolver (lambda () (name (gql::object-value (gql::execution-context gql::*context*)))))
-         ("nickname" :type (gql::named "String")
+         (|nickname| :type (gql::named "String")
                      :resolver (lambda () (nickname (gql::object-value (gql::execution-context gql::*context*)))))))
 
-      (defschema (:query (find-item "Query")
-                  :types (find-items '("Pet" "Human" "Dog" "Cat")))
+      (defschema (:query (find-item '|Query|)
+                  :types (find-items '(|Pet| |Human| |Dog| |Cat|)))
         ())
 
       (flet ((doggo-test (query)

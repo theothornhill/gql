@@ -32,14 +32,14 @@
     (when (subscription-type schema)
       (push (subscription-type schema) initial-types))
 
-    (dolist (item (find-items '("__Schema"
-                                "__Type"
-                                "__TypeKind"
-                                "__Field"
-                                "__InputValue"
-                                "__EnumValue"
-                                "__Directive"
-                                "__DirectiveLocation")))
+    (dolist (item (find-items '(|__Schema|
+                                |__Type|
+                                |__TypeKind|
+                                |__Field|
+                                |__InputValue|
+                                |__EnumValue|
+                                |__Directive|
+                                |__DirectiveLocation|)))
       (push item initial-types))
 
     (dolist (type types)
@@ -51,7 +51,7 @@
       (mapify-type-definitions type))
 
     (setf (type-map schema) type-map)
-    (setf (find-item "Schema") schema)
+    (setf (find-item '|Schema|) schema)
     schema))
 
 (defun type-map-reducer (schema type-map object-type)
@@ -112,30 +112,30 @@
     object-type))
 
 (defmacro defobject (name description fields &optional interfaces)
-  (check-type name string)
+  (check-type name symbol)
   (check-type description string)
   (check-type fields list)
   (check-type interfaces list)
-  `(ensure-item ,name 'object-type-definition
+  `(ensure-item ',name 'object-type-definition
      :description ,description
      :fields ,(canonicalize-fields fields)
      :interfaces ,(canonicalize-interfaces interfaces)))
 
 (defmacro definterface (name description fields &optional directives)
-  (check-type name string)
+  (check-type name symbol)
   (check-type description string)
   (check-type fields list)
   (check-type directives list)
-  `(ensure-item ,name 'interface-type-definition
+  `(ensure-item ',name 'interface-type-definition
      :description ,description
      :fields ,(canonicalize-fields fields)
      :directives ,directives))
 
 (defmacro defenum (name description enum-values)
-  (check-type name string)
+  (check-type name symbol)
   (check-type description string)
   (check-type enum-values list)
-  `(ensure-item ,name 'enum-type-definition
+  `(ensure-item ',name 'enum-type-definition
      :description ,description
      :enum-values ,(canonicalize-enum-values enum-values)))
 
@@ -169,7 +169,7 @@
     (setf (gethash name items) new-value)))
 
 (defun canonicalize-field (field)
-  `(field :name ,(car field) ,@(cdr field)))
+  `(field :name ',(car field) ,@(cdr field)))
 
 (defun canonicalize-fields (fields)
   `(list ,@(mapcar #'canonicalize-field fields)))
@@ -178,7 +178,7 @@
   interfaces)
 
 (defun canonicalize-enum-value (enum-value)
-  `(enum-val :enum-value (make-name ,enum-value)))
+  `(enum-val :enum-value (make-name ',enum-value)))
 
 (defun canonicalize-enum-values (enum-values)
   `(list ,@(mapcar #'canonicalize-enum-value enum-values)))

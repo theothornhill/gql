@@ -1,11 +1,11 @@
 (in-package :gql)
 
-(defobject "__Schema"
+(defobject |__Schema|
   "A GraphQL Schema defines the capabilities of a GraphQL server."
-  (("description" :description "A description of the current schema."
+  ((|description| :description "A description of the current schema."
                   :type *string*
                   :resolver (lambda () (description (schema *context*))))
-   ("types" :description "A list of all types supported by this server."
+   (|types| :description "A list of all types supported by this server."
             :type ([!]! "__Type")
             :resolver (lambda ()
                         (let ((types nil))
@@ -15,24 +15,24 @@
                                          (push v types)))
                                      type-map))
                           types)))
-   ("queryType" :description "The type that query operations will be rooted at."
+   (|queryType| :description "The type that query operations will be rooted at."
                 :type (! "__Type")
                 :resolver (lambda () (query-type (schema *context*))))
-   ("mutationType" :description "If this server supports mutation, the type that mutation operations will be rooted at."
+   (|mutationType| :description "If this server supports mutation, the type that mutation operations will be rooted at."
                    :type (named "__Type")
                    :resolver (lambda () (mutation-type (schema *context*))))
-   ("subscriptionType" :description "If this server supports subscription, the type that subscription operations will be rooted at."
+   (|subscriptionType| :description "If this server supports subscription, the type that subscription operations will be rooted at."
                        :type (named "__Type")
                        :resolver (lambda () (subscription-type (schema *context*))))
-   ("directives" :type ([!]! "__Directive") :resolver (lambda () (directives (schema *context*))))))
+   (|directives| :type ([!]! "__Directive") :resolver (lambda () (directives (schema *context*))))))
 
-(defobject "__Type"
+(defobject |__Type|
   "A GraphQL Type"
-  (("kind" :type (non-null-type "__TypeKind"))
-   ("name" :type *string* :resolver (lambda () (name (object-value (execution-context *context*)))))
-   ("description" :type *string*
+  ((|kind| :type (non-null-type "__TypeKind"))
+   (|name| :type *string* :resolver (lambda () (name (object-value (execution-context *context*)))))
+   (|description| :type *string*
                   :resolver (lambda () (description (object-value (execution-context *context*)))))
-   ("fields" :type ([!] "__Field")
+   (|fields| :type ([!] "__Field")
              :resolver (lambda ()
                          (with-slots (fields) (object-value (execution-context *context*))
                            (let ((result nil))
@@ -40,79 +40,79 @@
                                         (push v fields))
                                       fields)
                              result))))
-   ("interfaces" :type ([!] "__Type"))
-   ("possibleTypes" :type ([!] "__Type"))
-   ("enumValues" :type ([!] "__EnumValue"))
-   ("inputFields" :type ([!] "__InputValue"))
-   ("ofType" :type (named "__Type") :resolver (lambda () (find-item "__Type")))
-   ("specifiedByUrl" :type *string* :resolver (lambda () "Hello"))))
+   (|interfaces| :type ([!] "__Type"))
+   (|possibleTypes| :type ([!] "__Type"))
+   (|enumValues| :type ([!] "__EnumValue"))
+   (|inputFields| :type ([!] "__InputValue"))
+   (|ofType| :type (named "__Type") :resolver (lambda () (find-item "__Type")))
+   (|specifiedByUrl| :type *string* :resolver (lambda () "Hello"))))
 
-(defenum "__TypeKind"
+(defenum |__TypeKind|
   "An enum describing what kind of type a given `__Type` is"
-  ("SCALAR"
-   "OBJECT"
-   "INTERFACE"
-   "UNION"
-   "ENUM"
-   "INPUT_OBJECT"
-   "LIST"
-   "NON_NULL"))
+  (scalar
+   object
+   interface
+   union
+   enum
+   input_object
+   list
+   non_null))
 
-(defobject "__Field"
+(defobject |__Field|
   "Object and Interface types are described by a list of Fields, each of which has a name, potentially a list of arguments, and a return type."
-  (("name"
+  ((|name|
     :type (! *string*)
     :resolver (lambda () (name (object-value (execution-context *context*)))))
-   ("description" :type *string*)
-   ("args" :type ([!]! "__InputValue"))
-   ("type" :type (! "__Type")
+   (|description| :type *string*)
+   (|args| :type ([!]! "__InputValue"))
+   (|type| :type (! "__Type")
            :resolver (lambda ()
                        (with-slots (object-value) (execution-context *context*)
                          (ty object-value))))
-   ("isDeprecated" :type (! *boolean*))
-   ("deprecationReason" :type *string*)))
+   (|isDeprecated| :type (! *boolean*))
+   (|deprecationReason| :type *string*)))
 
-(defobject "__InputValue"
+(defobject |__InputValue|
   "A GraphQL input value"
-  (("name" :type (! *string*))
-   ("description" :type *string*)
-   ("type" :type (! "Type"))
-   ("defaultValue" :type *string*)))
+  ((|name| :type (! *string*))
+   (|description| :type *string*)
+   (|type| :type (! "Type"))
+   (|defaultValue| :type *string*)))
 
-(defobject "__EnumValue"
+(defobject |__EnumValue|
   "A GraphQL enum value"
-  (("name" :type (! *string*))
-   ("description" :type *string*)
-   ("isDeprecated" :type (! *boolean*))
-   ("deprecationReason" :type *string*)))
+  ((|name| :type (! *string*))
+   (|description| :type *string*)
+   (|isDeprecated| :type (! *boolean*))
+   (|deprecationReason| :type *string*)))
 
-(defobject "__Directive"
+(defobject |__Directive|
   "A GraphQL directive value"
-  (("name" :type (! *string*))
-   ("description" :type *string*)
-   ("location" :type ([!]! "__DirectiveLocation"))
-   ("args" :type (! *boolean*))))
+  ((|name| :type (! *string*))
+   (|description| :type *string*)
+   (|location| :type ([!]! "__DirectiveLocation"))
+   (|args| :type (! *boolean*))))
 
-(defenum "__DirectiveLocation"
+(defenum |__DirectiveLocation|
   "Enum enumerating Directive Location"
-  ("QUERY"
-   "MUTATION"
-   "SUBSCRIPTION"
-   "FIELD"
-   "FRAGMENT_DEFINITION"
-   "FRAGMENT_SPREAD"
-   "INLINE_FRAGMENT"
-   "SCHEMA"
-   "SCALAR"
-   "OBJECT"
-   "FIELD_DEFINITION"
-   "ARGUMENT_DEFINITION"
-   "INTERFACE"
-   "UNION"
-   "ENUM"
-   "ENUM_VALUE"
-   "INPUT_OBJECT"
-   "INPUT_FIELD_DEFINITION"))
+  (query
+   mutation
+   subscription
+   field
+   fragment_definition
+   fragment_spread
+   inline_fragment
+   schema
+   scalar
+   object
+   field_definition
+   argument_definition
+   interface
+   union
+   enum
+   enum_value
+   input_object
+   input_field_definition))
 
 (defvar *__schema-field-definition*
   (field :description "Request the schema information."

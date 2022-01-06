@@ -27,8 +27,9 @@
   '(member true false))
 
 (defun make-name (type)
-  (check-type type string)
-  (make-instance 'name :name type :kind 'name))
+  (make-instance 'name
+                 :name (if (stringp type) type (symbol-name type))
+                 :kind 'name))
 
 (defun named (type)
   (check-type type string)

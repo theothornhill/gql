@@ -16,97 +16,95 @@
 (defclass droid (swcharacter)
   ((primary-function :initarg :primary-function :accessor primary-function)))
 
-(defenum "Episode"
+(defenum |Episode|
   "One of the films in the Star Wars Trilogy"
-  ("NEWHOPE"
-   "EMPIRE"
-   "JEDI"))
+  (newhope empire jedi))
 
-(definterface "Character"
+(definterface |Character|
     "A character in the Star Wars Trilogy"
-  (("id"
+  ((|id|
     :type (! *string*)
     :description "The id of the character.")
-   ("name"
+   (|name|
     :type *string*
     :description "The name of the character.")
-   ("friends"
+   (|friends|
     :type ([] (named "Character"))
     :description "The friends of the character, or an empty list if they have none.")
-   ("appearsIn"
+   (|appearsIn|
     :type ([] (named "Episode"))
     :description "Which movies they appear in.")))
 
-(defobject "Human"
+(defobject |Human|
   "A humanoid creature in the Star Wars universe."
-  (("id"
+  ((|id|
     :type (! *string*)
     :description "The id of the human."
     :resolver (lambda ()
                 (with-slots (object-value) (execution-context *context*)
                   (id object-value))))
-   ("name"
+   (|name|
     :type *string*
     :description "The name of the human."
     :resolver (lambda ()
                 (with-slots (object-value) (execution-context *context*)
                   (name object-value))))
-   ("friends"
+   (|friends|
     :type ([] "Character")
     :description "The friends of the human, or an empty list if they have none."
     :resolver (lambda ()
                 (with-slots (object-value) (execution-context *context*)
                   (get-friends object-value))))
-   ("appearsIn"
+   (|appearsIn|
     :type ([] "Episode")
     :description "Which movies they appear in."
     :resolver (lambda ()
                 (with-slots (object-value) (execution-context *context*)
                   (appears-in object-value))))
-   ("homePlanet"
+   (|homePlanet|
     :type *string*
     :description "Which movies they appear in."
     :resolver (lambda ()
                 (with-slots (object-value) (execution-context *context*)
                   (home-planet object-value)))))
-  `(,(gql::find-item "Character")))
+  `(,(gql::find-item '|Character|)))
 
-(defobject "Droid"
+(defobject |Droid|
   "A mechanical creature in the Star Wars universe."
-  (("id"
+  ((|id|
     :type (! *string*)
     :description "The id of the droid."
     :resolver (lambda ()
                 (with-slots (object-value) (execution-context *context*)
                   (id object-value))))
-   ("name"
+   (|name|
     :type *string*
     :description "The name of the droid."
     :resolver (lambda ()
                 (with-slots (object-value) (execution-context *context*)
                   (name object-value))))
-   ("friends"
+   (|friends|
     :type ([] "Character")
     :description "The friends of the droid, or an empty list if they have none."
     :resolver (lambda ()
                 (with-slots (object-value) (execution-context *context*)
                   (get-friends object-value))))
-   ("appearsIn"
+   (|appearsIn|
     :type ([] "Episode")
     :description "Which movies they appear in."
     :resolver (lambda ()
                 (with-slots (object-value) (execution-context *context*)
                   (appears-in object-value))))
-   ("primaryFunction"
+   (|primaryFunction|
     :type *string*
     :description "The primary function of the droid."
     :resolver (lambda ()
                 (with-slots (object-value) (execution-context *context*)
                   (primary-function object-value))))))
 
-(defobject "Query"
+(defobject |Query|
   "The root query"
-  (("hero"
+  ((|hero|
     :type (named "Character")
     :args `(,(arg
               :name "episode"
@@ -115,7 +113,7 @@
     :resolver (lambda ()
                 (with-slots (arg-values) (execution-context *context*)
                   (get-hero (gethash "episode" arg-values)))))
-   ("human"
+   (|human|
     :type (named "Human")
     :args `(,(arg
               :name "id"
@@ -124,7 +122,7 @@
     :resolver (lambda ()
                 (with-slots (arg-values) (execution-context *context*)
                   (get-human (gethash "id" arg-values)))))
-   ("droid"
+   (|droid|
     :type (named "Droid")
     :args `(,(arg
               :name "id"
@@ -135,8 +133,8 @@
                   (get-droid (gethash "id" arg-values)))))))
 
 (defschema
-    (:query (gql::find-item "Query")
-     :types (find-items '("Character" "Human" "Droid" "Episode")))
+    (:query (gql::find-item '|Query|)
+     :types (find-items '(|Character| |Human| |Droid| |Episode|)))
   ())
 
 

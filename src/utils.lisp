@@ -96,7 +96,7 @@
         (d (gensym))
         (v (gensym))
         (e (gensym)))
-    `(let* ((,s (find-item "Schema"))
+    `(let* ((,s (find-item '|Schema|))
             (,d ,document)
             (,v (or ,variables ,(make-hash-table :test #'equal)))
             (,e ,execution-context)
