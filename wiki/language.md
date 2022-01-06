@@ -48,36 +48,6 @@ capturing if using this.
     :selection-set (parse 'selection-set)))
 ```
 
-## `defgenerator`
-You guessed it, the `defgenerator` works in the same way, by using it inside of
-the `:generator` section of `defgql`.
-
-```lisp
-(defgenerator directive-definition ()
-    (cat "~@[~a~%~]"
-         "directive @~a"
-         "~@[~a~]"
-         "~@[ on~%~{  | ~a~^~%~}~]")
-    (when (description node)
-      (generate (description node) :indent-level indent-level :stream stream))
-    (generate (name node) :indent-level indent-level :stream stream)
-    (gather-nodes (args node) indent-level)
-    (gather-nodes (locations node) indent-level))
-```
-
-What's different with `defgenerator` from the others is that you can optionally
-add a symbol `full` to the definition, thus enabling inserting a full body,
-instead of the convenience wrapper of `(format stream ,@body)` usually used.  In
-addition it works the same way as `defparser`, which can also introduce
-variables to the body.
-
-An example of this is
-```lisp
-(defgenerator string-value (full) ;; This keyword is significant...
-  (if (blockp node)
-      (format stream "~@[\"\"\"~a\"\"\"~]" (value node))
-      (format stream "~@[\"~a\"~]" (value node))))
-```
 
 ## The resulting macro
 
@@ -89,24 +59,8 @@ An example of this is
               :description (parse 'description)
               :name (expect-then-parse '("directive" at) 'name)
               :args (parse 'argument-definitions)
-              :locations (expect-then-parse "on" 'directive-locations)))
-  :generator (defgenerator directive-definition ()
-               (cat "~@[~a~%~]"
-                    "directive @~a"
-                    "~@[~a~]"
-                    "~@[ on~%~{  | ~a~^~%~}~]")
-               (when (description node)
-                 (generate (description node) :indent-level indent-level :stream stream))
-               (generate (name node) :indent-level indent-level :stream stream)
-               (gather-nodes (args node) indent-level)
-               (gather-nodes (locations node) indent-level)))
+              :locations (expect-then-parse "on" 'directive-locations))))
 ```
-
-# Code generation
-Gql can generate valid GraphQL code from initialized ast objects.  It pretty
-prints by default, so it can be used to produce actual, human readable content.
-Some time down the line I'll add a lisp dsl to aid with code generation, like
-done in `sxql`.
 
 ## Example
 

@@ -35,41 +35,21 @@ i.e. for file streams etc."))
        (declare (ignorable *token*))
        ,@body)))
 
-(defmacro defgenerator (node keys &body body)
-  (if (member 'full keys) ;; TODO: Avoid having to do this check
-      `(defmethod generate
-           ((node ,node) &key (indent-level 0) (stream nil) ,@keys &allow-other-keys)
-         (declare (ignorable full indent-level stream))
-         ,@body)
-      `(defmethod generate
-           ((node ,node) &key (indent-level 0) (stream nil) ,@keys &allow-other-keys)
-         (declare (ignorable indent-level stream))
-         (format stream ,@body))))
-
 (defgeneric validate (node &key &allow-other-keys)
   (:documentation "TODO"))
-
-(defmacro defvalidator (node keys &body body)
-  `(defmethod validate ((node ,node) &key ,@keys &allow-other-keys)
-     ,@body))
 
 (defmacro defgql (node-type &key
                               (node nil node?)
                               (parser nil parser?)
-                              (validator nil)
-                              (generator nil generator?))
+                              (validator nil))
   (declare (ignorable node-type))
   (unless node?
     (gql-error "defgql requires a body for its node definition"))
   (unless parser?
     (gql-error "defgql requires a body for its parser definition"))
-  (unless generator?
-    (gql-error "defgql requires a body for its generator definition"))
   `(progn
      ,node
-     ,parser
-     ,validator ;; TODO: enforce this?
-     ,generator))
+     ,parser))
 
 (defun add-indent (level)
   "Add indentation for pretty printing.

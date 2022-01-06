@@ -30,9 +30,6 @@
   `(handler-case (gql ,string)
      (,condition-type (c) (ok (string= (format nil "~a" c) ,expected)))))
 
-(defun generator-test (input output)
-  (ok (string-equal (generate (build-schema input)) output)))
-
 (defun validator-test-helper (input &key no-schema)
   (let* ((definitions (gql::definitions (if no-schema
                                             (build-schema input)
