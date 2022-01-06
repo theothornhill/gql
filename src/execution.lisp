@@ -186,9 +186,9 @@
 (defun resolve-field-value ()
   ;; TODO: https://spec.graphql.org/draft/#ResolveFieldValue()
   (declare (optimize (debug 3)))
-  (let ((c *context*))
-    (when (resolver (field-definition (execution-context c)))
-      (funcall (resolver (field-definition (execution-context *context*)))))))
+  (with-slots (resolver) (field-definition (execution-context *context*))
+    (when resolver
+      (funcall resolver))))
   
 
 (defun complete-value (field-type fields result variable-values)
