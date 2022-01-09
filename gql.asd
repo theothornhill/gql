@@ -19,7 +19,5 @@
                  (:file "conditions")
                  (:file "rules")
                  (:file "execution")
-                 (:file "response")
                  (:file "gql")
-                 (:file "request")
                  (:file "debugger-utils")))))
