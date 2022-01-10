@@ -168,9 +168,9 @@
             (make-node 'boolean-value :value value)))
 
 (defgql non-null-type
-  :node (defnode non-null-type ty)
-  :parser (defparser non-null-type (ty)
-            (make-node 'non-null-type :ty ty)))
+  :node (defnode non-null-type gql-type)
+  :parser (defparser non-null-type (gql-type)
+            (make-node 'non-null-type :gql-type gql-type)))
 
 (defgql null-value
   :node (defnode null-value value)
@@ -226,11 +226,11 @@
             (make-node 'named-type :name (parse 'name))))
 
 (defgql list-type
-  :node (defnode list-type ty)
+  :node (defnode list-type gql-type)
   :parser (defparser list-type ()
             (make-node 'list-type
-              :ty (prog1 (parse 'type-reference)
-                    (expect-token 'bracket-r)))))
+              :gql-type (prog1 (parse 'type-reference)
+                          (expect-token 'bracket-r)))))
 
 ;; Type system
 
@@ -268,22 +268,22 @@
               :fields (parse 'fields-definition))))
 
 (defgql field-definition
-  :node (defnode field-definition description name args ty directives)
+  :node (defnode field-definition description name args gql-type directives)
   :parser (defparser field-definition ()
             (make-node 'field-definition
               :description (parse 'description)
               :name (parse 'name)
               :args (parse 'argument-definitions)
-              :ty (expect-then-parse 'colon 'type-reference)
+              :gql-type (expect-then-parse 'colon 'type-reference)
               :directives (parse 'directives :constp t))))
 
 (defgql input-value-definition
-  :node (defnode input-value-definition description name ty default-value directives)
+  :node (defnode input-value-definition description name gql-type default-value directives)
   :parser (defparser input-value-definition ()
             (make-node 'input-value-definition
               :description (parse 'description)
               :name (parse 'name)
-              :ty (expect-then-parse 'colon 'type-reference)
+              :gql-type (expect-then-parse 'colon 'type-reference)
               :default-value (parse 'default-value :constp t)
               :directives (parse 'directives :constp t))))
 
@@ -501,7 +501,7 @@
                 (parse 'list-type)
                 (parse 'named-type))))
     (if (expect-optional-token 'bang)
-        (parse 'non-null-type :ty ty)
+        (parse 'non-null-type :gql-type ty)
         ty)))
 
 (defparser description ()

@@ -74,7 +74,7 @@
 (defun input-type-p (type)
   ;; TODO: https://spec.graphql.org/draft/#IsInputType()
   (if (typep (kind type) 'wrapper-type)
-      (input-type-p (ty type))
+      (input-type-p (gql-type type))
       (let ((possible-type (gethash (nameof type) (type-map (schema *context*)))))
         (if possible-type
             (typep (kind possible-type) 'input-types)
@@ -83,7 +83,7 @@
 (defun output-type-p (type)
   ;; TODO: https://spec.graphql.org/draft/#IsOutputType()
   (if (typep (kind type) 'wrapper-type)
-      (output-type-p (ty type))
+      (output-type-p (gql-type type))
       (let ((possible-type (gethash (nameof type) (type-map (schema *context*)))))
         (if possible-type
             (typep (kind possible-type) 'output-types)
@@ -150,7 +150,7 @@
     :for argument-values = (arguments field)
     :for argument-definition :in (args (get-field-definition field object-type))
     :do (let* ((argument-name (nameof argument-definition))
-               (argument-type (ty argument-definition))
+               (argument-type (gql-type argument-definition))
                (default-value (default-value argument-definition))
                (argument (find-if (lambda (obj) (string= (nameof obj) argument-name)) argument-values))
                (has-value-p (and argument t))
@@ -198,7 +198,7 @@
     (typecase field-type
       (non-null-type
        (let ((completed-result
-               (complete-value (ty field-type) fields result variable-values)))
+               (complete-value (gql-type field-type) fields result variable-values)))
          (if completed-result completed-result
              (gql-error "Need to raise a field error here"))))
       (list-type
@@ -206,7 +206,7 @@
            (gql-error "Need to raise a field error here")
            (mapcar
             (lambda (result-item)
-              (complete-value (ty field-type) fields result-item variable-values))
+              (complete-value (gql-type field-type) fields result-item variable-values))
             result)))
       ;; TODO: We don't handle nil/null/'null yet
       (named-type
@@ -229,7 +229,7 @@
   ;; TODO: https://spec.graphql.org/draft/#CoerceResult()
   ;; TODO: #28
   (let ((leaf-type-name (if (typep (kind leaf-type) 'wrapper-type)
-                            (nameof (ty leaf-type))
+                            (nameof (gql-type leaf-type))
                             (nameof leaf-type))))
     (etypecase value
       ;; TODO: This should report a field error if out of coerce range.
@@ -300,7 +300,7 @@
                          :field-definition field-definition
                          :field-name field-name
                          :arg-values arg-values))
-    (complete-value (ty field-definition) fields (resolve-field-value) variable-values)))
+    (complete-value (gql-type field-definition) fields (resolve-field-value) variable-values)))
 
 (declaim (ftype (function (operation-definition hash-table) hash-table) coerce-vars))
 (defun coerce-vars (operation variable-values)

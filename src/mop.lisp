@@ -61,11 +61,11 @@
 
   (typecase object-type
     (list-type
-     (when (ty object-type)
-       (type-map-reducer schema type-map (ty object-type))))
+     (when (gql-type object-type)
+       (type-map-reducer schema type-map (gql-type object-type))))
     (non-null-type
-     (when (ty object-type)
-       (type-map-reducer schema type-map (ty object-type)))))
+     (when (gql-type object-type)
+       (type-map-reducer schema type-map (gql-type object-type)))))
 
   ;; (when (gethash (nameof object-type) type-map)
   ;;   ;; TODO: return an error here because the type already exists?

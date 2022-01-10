@@ -3,10 +3,10 @@
 (defobject |__Schema|
   "A GraphQL Schema defines the capabilities of a GraphQL server."
   ((|description| :description "A description of the current schema."
-                  :type *string*
+                  :gql-type *string*
                   :resolver (lambda () (description (schema *context*))))
    (|types| :description "A list of all types supported by this server."
-            :type ([!]! "__Type")
+            :gql-type ([!]! "__Type")
             :resolver (lambda ()
                         (let ((types nil))
                           (with-slots (type-map) (schema *context*)
@@ -16,23 +16,23 @@
                                      type-map))
                           types)))
    (|queryType| :description "The type that query operations will be rooted at."
-                :type (! "__Type")
+                :gql-type (! "__Type")
                 :resolver (lambda () (query-type (schema *context*))))
    (|mutationType| :description "If this server supports mutation, the type that mutation operations will be rooted at."
-                   :type (named "__Type")
+                   :gql-type (named "__Type")
                    :resolver (lambda () (mutation-type (schema *context*))))
    (|subscriptionType| :description "If this server supports subscription, the type that subscription operations will be rooted at."
-                       :type (named "__Type")
+                       :gql-type (named "__Type")
                        :resolver (lambda () (subscription-type (schema *context*))))
-   (|directives| :type ([!]! "__Directive") :resolver (lambda () (directives (schema *context*))))))
+   (|directives| :gql-type ([!]! "__Directive") :resolver (lambda () (directives (schema *context*))))))
 
 (defobject |__Type|
   "A GraphQL Type"
-  ((|kind| :type (non-null-type "__TypeKind"))
-   (|name| :type *string* :resolver (lambda () (name (object-value (execution-context *context*)))))
-   (|description| :type *string*
+  ((|kind| :gql-type (non-null-type "__TypeKind"))
+   (|name| :gql-type *string* :resolver (lambda () (name (object-value (execution-context *context*)))))
+   (|description| :gql-type *string*
                   :resolver (lambda () (description (object-value (execution-context *context*)))))
-   (|fields| :type ([!] "__Field")
+   (|fields| :gql-type ([!] "__Field")
              :resolver (lambda ()
                          (with-slots (fields) (object-value (execution-context *context*))
                            (let ((result nil))
@@ -40,12 +40,12 @@
                                         (push v fields))
                                       fields)
                              result))))
-   (|interfaces| :type ([!] "__Type"))
-   (|possibleTypes| :type ([!] "__Type"))
-   (|enumValues| :type ([!] "__EnumValue"))
-   (|inputFields| :type ([!] "__InputValue"))
-   (|ofType| :type (named "__Type") :resolver (lambda () (find-item "__Type")))
-   (|specifiedByUrl| :type *string* :resolver (lambda () "Hello"))))
+   (|interfaces| :gql-type ([!] "__Type"))
+   (|possibleTypes| :gql-type ([!] "__Type"))
+   (|enumValues| :gql-type ([!] "__EnumValue"))
+   (|inputFields| :gql-type ([!] "__InputValue"))
+   (|ofType| :gql-type (named "__Type") :resolver (lambda () (find-item "__Type")))
+   (|specifiedByUrl| :gql-type *string* :resolver (lambda () "Hello"))))
 
 (defenum |__TypeKind|
   "An enum describing what kind of type a given `__Type` is"
@@ -61,37 +61,37 @@
 (defobject |__Field|
   "Object and Interface types are described by a list of Fields, each of which has a name, potentially a list of arguments, and a return type."
   ((|name|
-    :type (! *string*)
+    :gql-type (! *string*)
     :resolver (lambda () (name (object-value (execution-context *context*)))))
-   (|description| :type *string*)
-   (|args| :type ([!]! "__InputValue"))
-   (|type| :type (! "__Type")
+   (|description| :gql-type *string*)
+   (|args| :gql-type ([!]! "__InputValue"))
+   (|type| :gql-type (! "__Type")
            :resolver (lambda ()
                        (with-slots (object-value) (execution-context *context*)
-                         (ty object-value))))
-   (|isDeprecated| :type (! *boolean*))
-   (|deprecationReason| :type *string*)))
+                         (gql-type object-value))))
+   (|isDeprecated| :gql-type (! *boolean*))
+   (|deprecationReason| :gql-type *string*)))
 
 (defobject |__InputValue|
   "A GraphQL input value"
-  ((|name| :type (! *string*))
-   (|description| :type *string*)
-   (|type| :type (! "Type"))
-   (|defaultValue| :type *string*)))
+  ((|name| :gql-type (! *string*))
+   (|description| :gql-type *string*)
+   (|type| :gql-type (! "Type"))
+   (|defaultValue| :gql-type *string*)))
 
 (defobject |__EnumValue|
   "A GraphQL enum value"
-  ((|name| :type (! *string*))
-   (|description| :type *string*)
-   (|isDeprecated| :type (! *boolean*))
-   (|deprecationReason| :type *string*)))
+  ((|name| :gql-type (! *string*))
+   (|description| :gql-type *string*)
+   (|isDeprecated| :gql-type (! *boolean*))
+   (|deprecationReason| :gql-type *string*)))
 
 (defobject |__Directive|
   "A GraphQL directive value"
-  ((|name| :type (! *string*))
-   (|description| :type *string*)
-   (|location| :type ([!]! "__DirectiveLocation"))
-   (|args| :type (! *boolean*))))
+  ((|name| :gql-type (! *string*))
+   (|description| :gql-type *string*)
+   (|location| :gql-type ([!]! "__DirectiveLocation"))
+   (|args| :gql-type (! *boolean*))))
 
 (defenum |__DirectiveLocation|
   "Enum enumerating Directive Location"
@@ -115,25 +115,31 @@
    input_field_definition))
 
 (defvar *__schema-field-definition*
-  (field :description "Request the schema information."
-         :name "__schema"
-         :args nil
-         :type (! "__Schema")
-         :resolver (lambda () (schema *context*))))
+  (make-instance 'field-definition
+                 :kind 'field-definition
+                 :description "Request the schema information."
+                 :name (make-name "__schema")
+                 :args nil
+                 :gql-type (! "__Schema")
+                 :resolver (lambda () (schema *context*))))
 
 (defvar *__type-field-definition*
-  (field :description "Request the type information of a single type."
-         :name "__type"
-         :args `(,(arg :name "name" :type (! *string*)))
-         :type (named "__Type")
-         :resolver (lambda ()
-                     (with-slots (schema execution-context) *context*
-                       (let* ((name (gethash "name" (arg-values execution-context))))
-                         (gethash name (type-map schema)))))))
+  (make-instance 'field-definition
+                 :kind 'field-definition
+                 :description "Request the type information of a single type."
+                 :name (make-name "__type")
+                 :args `(,(arg :name "name" :gql-type (! *string*)))
+                 :gql-type (named "__Type")
+                 :resolver (lambda ()
+                             (with-slots (schema execution-context) *context*
+                               (let* ((name (gethash "name" (arg-values execution-context))))
+                                 (gethash name (type-map schema)))))))
 
 (defvar *__typename-field-definition*
-  (field :description "The name of the current Object type at runtime."
-         :name "__typename"
-         :args nil
-         :type (! "String")
-         :resolver (lambda () (name (object-type (execution-context *context*))))))
+  (make-instance 'field-definition
+                 :kind 'field-definition
+                 :description "The name of the current Object type at runtime."
+                 :name (make-name "__typename")
+                 :args nil
+                 :gql-type (! "String")
+                 :resolver (lambda () (name (object-type (execution-context *context*))))))

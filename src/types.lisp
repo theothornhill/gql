@@ -39,12 +39,12 @@
 
 (defun list-type (type)
   (make-instance 'list-type
-                 :ty type
+                 :gql-type type
                  :kind 'list-type))
 
 (defun non-null-type (type)
   (make-instance 'non-null-type
-                 :ty type
+                 :gql-type type
                  :kind 'non-null-type))
 
 (defun maybe-named (type)
@@ -68,37 +68,14 @@
 (defvar *boolean* (named "Boolean"))
 (defvar *id*      (named "ID"))
 
-(defun field (&key name type resolver description args)
+(defun field (&key name gql-type resolver description args)
   (make-instance 'field-definition
                  :kind 'field-definition
                  :description description
                  :args args
-                 :ty type ;; TODO: Make sure we can use type instead of ty
+                 :gql-type gql-type
                  :name (make-name name)
                  :resolver resolver))
-
-(defun object (&key name fields interfaces description)
-  (make-instance 'object-type-definition
-                 :kind 'object-type-definition
-                 :description description
-                 :name (make-name name)
-                 :fields fields
-                 :interfaces interfaces))
-
-(defun interface (&key name fields directives description)
-  (make-instance 'interface-type-definition
-                 :kind 'interface-type-definition
-                 :description description
-                 :name (make-name name)
-                 :fields fields
-                 :directives directives))
-
-(defun enum (&key name enum-values description)
-  (make-instance 'enum-type-definition
-                 :kind 'enum-type-definition
-                 :enum-values enum-values
-                 :description description
-                 :name (make-name name)))
 
 (defun enum-val (&key enum-value description)
   (make-instance 'enum-value-definition
@@ -106,12 +83,12 @@
                  :description description
                  :enum-value enum-value))
 
-(defun arg (&key name description type)
+(defun arg (&key name description gql-type)
   (make-instance 'input-value-definition
                  :kind 'input-value-definition
                  :name (make-name name)
                  :description description
-                 :ty type))
+                 :gql-type gql-type))
 
 (defun set-resolver (type-name field-name fn)
   (let ((field-definition
