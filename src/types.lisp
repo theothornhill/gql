@@ -92,6 +92,6 @@
 
 (defun set-resolver (type-name field-name fn)
   (let ((field-definition
-          (with-slots (type-map) (schema *context*)
-            (gethash field-name (fields (gethash type-name type-map ))))))
+          (with-slots (%type-map) (schema *context*)
+            (gethash field-name (fields (gethash type-name %type-map))))))
     (setf (resolver field-definition) fn)))

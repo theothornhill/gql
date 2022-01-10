@@ -147,8 +147,9 @@
                            (lambda () (name (gql::object-value gql::*execution-context*))))
         (gql::set-resolver "Dog" "doesKnowCommand"
                            (lambda ()
-                             (with-slots (does-know-command) (gql::object-value (gql::execution-context gql::*context*))
-                               (if (member (gethash "dogCommand" (gql::arg-values (gql::execution-context gql::*context*))) does-know-command
+                             (with-slots (%does-know-command) (gql::object-value (gql::execution-context gql::*context*))
+                               (if (member (gethash "dogCommand" (gql::arg-values (gql::execution-context gql::*context*)))
+                                           %does-know-command
                                            :test #'equal)
                                    'true 'false))))
         (gql::set-resolver "Query" "dog" (lambda () (make-instance 'dog

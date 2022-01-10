@@ -19,14 +19,16 @@ i.e. for file streams etc."))
 (defmacro defclass* (name &body slots)
   `(defclass ,name ()
      ,(loop :for slot :in slots
+            :for percent-slot = (intern (format nil "%~a" (symbol-name slot)))
             :for initarg = (intern (symbol-name slot) :keyword)
-            :collect `(,slot :initarg ,initarg :initform nil :accessor ,slot))))
+            :collect `(,percent-slot :initarg ,initarg :initform nil :accessor ,slot))))
 
 (defmacro defnode (name &body slots)
   `(defclass ,name (ast-node)
      ,(loop :for slot :in slots
+            :for percent-slot = (intern (format nil "%~a" (symbol-name slot)))
             :for initarg = (intern (symbol-name slot) :keyword)
-            :collect `(,slot :initarg ,initarg :initform nil :accessor ,slot))))
+            :collect `(,percent-slot :initarg ,initarg :initform nil :accessor ,slot))))
 
 (defmacro defparser (node keys &body body)
   `(defmethod parse ((node (eql ',node)) &key (constp nil) ,@keys &allow-other-keys)
@@ -40,8 +42,7 @@ i.e. for file streams etc."))
 
 (defmacro defgql (node-type &key
                               (node nil node?)
-                              (parser nil parser?)
-                              (validator nil))
+                              (parser nil parser?))
   (declare (ignorable node-type))
   (unless node?
     (gql-error "defgql requires a body for its node definition"))
