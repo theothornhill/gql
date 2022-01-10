@@ -9,7 +9,7 @@
             :gql-type ([!]! "__Type")
             :resolver (lambda ()
                         (let ((types nil))
-                          (with-slots (type-map) (schema *context*)
+                          (with-accessors ((type-map type-map)) (schema *context*)
                             (maphash (lambda (k v)
                                        (unless (uiop:string-prefix-p "__" k)
                                          (push v types)))
@@ -34,7 +34,7 @@
                   :resolver (lambda () (description (object-value (execution-context *context*)))))
    (|fields| :gql-type ([!] "__Field")
              :resolver (lambda ()
-                         (with-slots (fields) (object-value (execution-context *context*))
+                         (with-accessors ((fields fields)) (object-value (execution-context *context*))
                            (let ((result nil))
                              (maphash (lambda (k v) (declare (ignore k))
                                         (push v fields))
@@ -67,7 +67,7 @@
    (|args| :gql-type ([!]! "__InputValue"))
    (|type| :gql-type (! "__Type")
            :resolver (lambda ()
-                       (with-slots (object-value) (execution-context *context*)
+                       (with-accessors ((object-value object-value)) (execution-context *context*)
                          (gql-type object-value))))
    (|isDeprecated| :gql-type (! *boolean*))
    (|deprecationReason| :gql-type *string*)))
@@ -131,7 +131,9 @@
                  :args `(,(arg :name "name" :gql-type (! *string*)))
                  :gql-type (named "__Type")
                  :resolver (lambda ()
-                             (with-slots (schema execution-context) *context*
+                             (with-accessors ((schema schema)
+                                              (execution-context execution-context))
+                                 *context*
                                (let* ((name (gethash "name" (arg-values execution-context))))
                                  (gethash name (type-map schema)))))))
 

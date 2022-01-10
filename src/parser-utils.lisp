@@ -4,7 +4,7 @@
   (:method :before (node-type &key &allow-other-keys)
     (when *debug-print*
       (with-token
-        (with-slots (value kind) *token*
+        (with-accessors ((value value) (kind kind)) *token*
           (format t "; value: ~Vakind: ~Vanode-type: ~Va~%" 10 value 10 kind 10 node-type)))))
   (:documentation "Parse node of NODE-TYPE with parser PARSER."))
 
@@ -136,7 +136,7 @@ all nodes."
        (make-instance ,n-type ,@keys :kind ,n-type :location (loc *parser* *token*)))))
 
 (defun loc (parser start-token)
-  (with-slots (last-token) (lexer parser)
+  (with-accessors ((last-token last-token)) (lexer parser)
     (make-instance 'location
                    :start (start start-token)
                    :end (end last-token)
@@ -151,7 +151,7 @@ all nodes."
   (with-token
     (if (peek kind)
         (progn (advance-one-token) *token*)
-        (with-slots (line column) *token*
+        (with-accessors ((line line) (column column)) *token*
           (gql-error "Expected ~a, found ~a at line: ~a, column: ~a"
                      kind (kind *token*) line column)))))
 
@@ -164,7 +164,7 @@ all nodes."
   (with-token
     (if (and (peek 'name) (equalp (value *token*) value))
         (advance-one-token)
-        (with-slots (line column) *token*
+        (with-accessors ((line line) (column column)) *token*
           (gql-error "Expected ~a, found ~a at line: ~a, column: ~a"
                      value (value *token*) line column)))))
 
@@ -176,7 +176,7 @@ all nodes."
 
 (defun unexpected (&optional token)
   (let ((token (if token token *token*)))
-    (with-slots (line column) token
+    (with-accessors ((line line) (column column)) token
       (gql-error "Unexpected token: ~a at line: ~a, column: ~a" token line column))))
 
 (defun any (open-kind parse-kind close-kind &key (constp nil))

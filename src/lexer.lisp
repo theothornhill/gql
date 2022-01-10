@@ -59,7 +59,7 @@ literals."
 ;;; Lexer api
 
 (defun advance (lexer)
-  (with-slots (token last-token) lexer
+  (with-accessors ((token token) (last-token last-token)) lexer
     (setf last-token token)
     (setf token (lookahead lexer))))
 
@@ -67,7 +67,7 @@ literals."
   (loop
     :with token = (token lexer)
     :until (eq (kind token) 'eof)
-    :do (with-slots (next) token
+    :do (with-accessors ((next next)) token
           (setf token (if next next (setf next (read-token lexer token))))
           (unless (eq (kind next) 'comment)
             (return token)))))
@@ -214,7 +214,7 @@ literals."
     :finally (return pos)))
 
 (defun read-number (source start first-code line col prev)
-  (with-slots (body) source
+  (with-accessors ((body body)) source
     (let ((code first-code)
           (pos start)
           float?)

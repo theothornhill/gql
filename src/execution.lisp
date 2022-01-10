@@ -14,7 +14,7 @@
        (string= (nameof type-definition)
                 (nameof fragment-type)))
       (union-type-definition
-       (with-slots (union-members) type-definition
+       (with-accessors ((union-members union-members)) type-definition
          (let ((members (mapcar (lambda (x) (nameof x)) union-members)))
            (member (nameof fragment-type) members :test #'string=))))
       (t nil))))
@@ -33,26 +33,26 @@
       :with grouped-fields = (make-hash-table :test #'equal)
       :for selection :in selection-set
       :do (unless (skippable-field-p (directives selection))
-            (with-slots (kind name) selection
+            (with-accessors ((kind kind) (name name)) selection
               (ecase kind
                 (field (sethash selection (nameof selection) grouped-fields))
                 (fragment-spread
-                 (with-slots (fragment-name) selection
-                   (with-slots (name) fragment-name
+                 (with-accessors ((fragment-name fragment-name)) selection
+                   (with-accessors ((name name)) fragment-name
                      (unless (member name visited-fragments :test #'equal)
                        (push name visited-fragments)
                        (let ((fragment (gethash name fragments)))
                          (when fragment
-                           (with-slots (type-condition) fragment
+                           (with-accessors ((type-condition type-condition)) fragment
                              (when (fragment-type-applies-p object-type type-condition)
-                               (with-slots (selection-set) fragment
+                               (with-accessors ((selection-set selection-set)) fragment
                                  (maphash (lambda (key value) (sethash value key grouped-fields))
                                           (collect-fields object-type (selections selection-set) variable-values visited-fragments)))))))))))
                 (inline-fragment
-                 (with-slots (type-condition) selection
+                 (with-accessors ((type-condition type-condition)) selection
                    (unless (and (not (null type-condition))
                                 (not (fragment-type-applies-p object-type type-condition)))
-                     (with-slots (selection-set) selection
+                     (with-accessors ((selection-set selection-set)) selection
                        (maphash (lambda (key value) (sethash value key grouped-fields))
                                 (collect-fields object-type (selections selection-set) variable-values visited-fragments)))))))))
       :finally (return grouped-fields))))
@@ -94,7 +94,7 @@
   ;; TODO: https://spec.graphql.org/draft/#sec-Query
   (let ((query-type (query-type (schema *context*))))
     (check-type query-type object-type-definition)
-    (with-slots (selection-set) query
+    (with-accessors ((selection-set selection-set)) query
       (setf (gethash "data" *result*)
             (execute-selection-set (selections selection-set) query-type initial-value variable-values))
       (when *errors*
@@ -108,7 +108,7 @@
   ;; TODO: https://spec.graphql.org/draft/#ExecuteMutation()
   (let ((mutation-type (mutation-type (schema *context*))))
     (check-type mutation-type object-type-definition)
-    (with-slots (selection-set) mutation
+    (with-accessors ((selection-set selection-set)) mutation
       (setf (gethash "data" *result*)
             (execute-selection-set (selections selection-set) mutation-type initial-value variable-values))
       (when *errors*
@@ -186,10 +186,8 @@
 (defun resolve-field-value ()
   ;; TODO: https://spec.graphql.org/draft/#ResolveFieldValue()
   (declare (optimize (debug 3)))
-  (with-slots (resolver) (field-definition (execution-context *context*))
-    (when resolver
-      (funcall resolver))))
-  
+  (with-accessors ((resolver resolver)) (field-definition (execution-context *context*))
+    (when resolver (funcall resolver))))
 
 (defun complete-value (field-type fields result variable-values)
   ;; TODO: https://spec.graphql.org/draft/#CompleteValue()
@@ -281,7 +279,7 @@
 (defun resolve-abstract-type (abstract-type object-value)
   ;; TODO: https://spec.graphql.org/draft/#ResolveAbstractType()
   (check-type object-value gql-object)
-  (with-slots (type-name) object-value
+  (with-accessors ((type-name type-name)) object-value
     (etypecase abstract-type
       (interface-type-definition (gethash type-name (type-map (schema *context*))))
       (union-type-definition
@@ -305,14 +303,14 @@
 (declaim (ftype (function (operation-definition hash-table) hash-table) coerce-vars))
 (defun coerce-vars (operation variable-values)
   ;; TODO: https://spec.graphql.org/draft/#CoerceVariableValues()
-  (with-slots (variable-definitions) operation
+  (with-accessors ((variable-definitions variable-definitions)) operation
     (loop
       :with coerced-vars = (make-hash-table :test #'equal)
       :for variable :in variable-definitions
       :for var-name = (nameof (var variable))
       :for var-type = (var-type variable)
       :when (input-type-p var-type)
-        :do (with-slots (default-value) variable
+        :do (with-accessors ((default-value default-value)) variable
               (multiple-value-bind (val val-p) (gethash var-name variable-values)
                 (cond
                   ((and (null val-p) default-value)

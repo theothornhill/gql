@@ -5,7 +5,7 @@
 
 (defun skippable-field-p (directives)
   (some (lambda (directive)
-          (with-slots (name arguments) directive
+          (with-accessors ((name name) (arguments arguments)) directive
             (and (or (string= (name name) "skip")
                      (string= (name name) "include"))
                  ;; TODO: More cases needed here. For example to check up
@@ -29,7 +29,7 @@
     table))
 
 (defun get-types (node document)
-  (with-slots (definitions) document
+  (with-accessors ((definitions definitions)) document
     (let ((node-table (make-hash-table :test #'equal))
           (nodes
             (remove-if-not
@@ -56,7 +56,7 @@
           (mapcar
            (lambda (node)
              (when (location node)
-               (with-slots (line column) (start-token (location node))
+               (with-accessors ((line line) (column column)) (start-token (location node))
                  (make-instance
                   'error-location
                   :line line
@@ -73,7 +73,7 @@
         *errors*))
 
 (defun name-or-alias (field)
-  (with-slots (alias name) field
+  (with-accessors ((alias alias) (name name)) field
     (if alias
         (name alias)
         (name name))))

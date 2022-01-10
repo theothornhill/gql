@@ -41,31 +41,31 @@
     :gql-type (! *string*)
     :description "The id of the human."
     :resolver (lambda ()
-                (with-slots (object-value) (execution-context *context*)
+                (with-accessors ((object-value object-value)) (execution-context *context*)
                   (id object-value))))
    (|name|
     :gql-type *string*
     :description "The name of the human."
     :resolver (lambda ()
-                (with-slots (object-value) (execution-context *context*)
+                (with-accessors ((object-value object-value)) (execution-context *context*)
                   (name object-value))))
    (|friends|
     :gql-type ([] "Character")
     :description "The friends of the human, or an empty list if they have none."
     :resolver (lambda ()
-                (with-slots (object-value) (execution-context *context*)
+                (with-accessors ((object-value object-value)) (execution-context *context*)
                   (get-friends object-value))))
    (|appearsIn|
     :gql-type ([] "Episode")
     :description "Which movies they appear in."
     :resolver (lambda ()
-                (with-slots (object-value) (execution-context *context*)
+                (with-accessors ((object-value object-value)) (execution-context *context*)
                   (appears-in object-value))))
    (|homePlanet|
     :gql-type *string*
     :description "Which movies they appear in."
     :resolver (lambda ()
-                (with-slots (object-value) (execution-context *context*)
+                (with-accessors ((object-value object-value)) (execution-context *context*)
                   (home-planet object-value)))))
   `(,(gql::find-item '|Character|)))
 
@@ -75,31 +75,31 @@
     :gql-type (! *string*)
     :description "The id of the droid."
     :resolver (lambda ()
-                (with-slots (object-value) (execution-context *context*)
+                (with-accessors ((object-value object-value)) (execution-context *context*)
                   (id object-value))))
    (|name|
     :gql-type *string*
     :description "The name of the droid."
     :resolver (lambda ()
-                (with-slots (object-value) (execution-context *context*)
+                (with-accessors ((object-value object-value)) (execution-context *context*)
                   (name object-value))))
    (|friends|
     :gql-type ([] "Character")
     :description "The friends of the droid, or an empty list if they have none."
     :resolver (lambda ()
-                (with-slots (object-value) (execution-context *context*)
+                (with-accessors ((object-value object-value)) (execution-context *context*)
                   (get-friends object-value))))
    (|appearsIn|
     :gql-type ([] "Episode")
     :description "Which movies they appear in."
     :resolver (lambda ()
-                (with-slots (object-value) (execution-context *context*)
+                (with-accessors ((object-value object-value)) (execution-context *context*)
                   (appears-in object-value))))
    (|primaryFunction|
     :gql-type *string*
     :description "The primary function of the droid."
     :resolver (lambda ()
-                (with-slots (object-value) (execution-context *context*)
+                (with-accessors ((object-value object-value)) (execution-context *context*)
                   (primary-function object-value))))))
 
 (defobject |Query|
@@ -111,7 +111,7 @@
               :description "If omitted, returns the hero of the whole saga. If provided, returns the hero of that particular episode."
               :gql-type (named "Episode")))
     :resolver (lambda ()
-                (with-slots (arg-values) (execution-context *context*)
+                (with-accessors ((arg-values arg-values)) (execution-context *context*)
                   (get-hero (gethash "episode" arg-values)))))
    (|human|
     :gql-type (named "Human")
@@ -120,7 +120,7 @@
               :description "id of the human"
               :gql-type (! *string*)))
     :resolver (lambda ()
-                (with-slots (arg-values) (execution-context *context*)
+                (with-accessors ((arg-values arg-values)) (execution-context *context*)
                   (get-human (gethash "id" arg-values)))))
    (|droid|
     :gql-type (named "Droid")
@@ -129,7 +129,7 @@
               :description "id of the droid"
               :gql-type (! *string*)))
     :resolver (lambda ()
-                (with-slots (arg-values) (execution-context *context*)
+                (with-accessors ((arg-values arg-values)) (execution-context *context*)
                   (get-droid (gethash "id" arg-values)))))))
 
 (defschema

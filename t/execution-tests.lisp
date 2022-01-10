@@ -147,9 +147,9 @@
                            (lambda () (name (gql::object-value gql::*execution-context*))))
         (gql::set-resolver "Dog" "doesKnowCommand"
                            (lambda ()
-                             (with-slots (%does-know-command) (gql::object-value (gql::execution-context gql::*context*))
+                             (with-accessors ((dkc does-know-command)) (gql::object-value (gql::execution-context gql::*context*))
                                (if (member (gethash "dogCommand" (gql::arg-values (gql::execution-context gql::*context*)))
-                                           %does-know-command
+                                           dkc
                                            :test #'equal)
                                    'true 'false))))
         (gql::set-resolver "Query" "dog" (lambda () (make-instance 'dog
@@ -250,7 +250,7 @@
       (defobject |Human| "A Human is a human!"
         ((|name| :gql-type (gql::named "String")
                  :resolver (lambda () (name (gql::object-value (gql::execution-context gql::*context*)))))
-         ("pets" :gql-type (gql::list-type (gql::non-null-type (gql::named "Pet")))
+         (|pets| :gql-type (gql::list-type (gql::non-null-type (gql::named "Pet")))
                  :resolver (lambda () (pets (gql::object-value (gql::execution-context gql::*context*)))))))
 
       (defobject |Dog| "A Dog is a dog!"
